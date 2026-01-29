@@ -134,9 +134,6 @@ dist-ssr/
 Thumbs.db
 
 # Database backups (keep local)
-*.json
-!manifest.json
-!tsconfig.json
-!package.json
+psiq-titulo-backup-*.json
 
 Banco de dados/
