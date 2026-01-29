@@ -135,11 +135,17 @@ export default function Dashboard() {
 
                 {/* Recent Simulations */}
                 <section className="card">
-                    <div className="card-header">
-                        <h3 className="card-title">
+                    <div className="card-header flex justify-between items-center mb-4">
+                        <h3 className="card-title mb-0">
                             <Clock size={20} style={{ marginRight: 8 }} />
                             Simulados Recentes
                         </h3>
+                        <button
+                            className="btn btn-ghost btn-sm text-primary"
+                            onClick={() => navigate('/historico')}
+                        >
+                            Ver Tudo
+                        </button>
                     </div>
 
                     {recentSimulations.length > 0 ? (
@@ -147,7 +153,8 @@ export default function Dashboard() {
                             {recentSimulations.map((sim) => (
                                 <div
                                     key={sim.id}
-                                    className="flex items-center justify-between"
+                                    className="flex items-center justify-between card-interactive"
+                                    onClick={() => navigate(`/simulado/${sim.id}/resultado`)}
                                     style={{
                                         padding: 'var(--spacing-3) var(--spacing-4)',
                                         background: 'var(--bg-tertiary)',
@@ -246,7 +253,7 @@ export default function Dashboard() {
                                     </span>
                                     <span
                                         className={`badge ${data && data.accuracy >= 70 ? 'badge-success' :
-                                                data && data.accuracy >= 50 ? 'badge-warning' : 'badge-error'
+                                            data && data.accuracy >= 50 ? 'badge-warning' : 'badge-error'
                                             }`}
                                     >
                                         {data?.accuracy.toFixed(0)}%

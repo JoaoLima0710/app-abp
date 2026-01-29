@@ -98,7 +98,7 @@ export default function StatisticsPanel() {
                         <div className="stat-card">
                             <Target size={24} color="var(--secondary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
                             <div className="stat-value">{progress?.totalQuestionsAnswered || 0}</div>
-                            <div className="stat-label">Questões Respondidas</div>
+                            <div className="stat-label">Questões Totais</div>
                         </div>
                         <div className="stat-card">
                             <Award size={24} color="var(--success-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
@@ -273,8 +273,9 @@ export default function StatisticsPanel() {
                                                     {getTrendIcon(data?.trend)}
                                                     <span style={{
                                                         fontSize: 'var(--font-size-xs)',
-                                                        color: data?.trend === 'improving' ? 'var(--success-600)' :
-                                                            data?.trend === 'declining' ? 'var(--error-600)' : 'var(--gray-500)',
+                                                        color: data?.trend === 'improving' ? 'var(--success-700)' :
+                                                            data?.trend === 'declining' ? 'var(--error-700)' : 'var(--gray-700)',
+                                                        fontWeight: 700,
                                                     }}>
                                                         {data?.trend === 'improving' ? 'Melhorando' :
                                                             data?.trend === 'declining' ? 'Caindo' : 'Estável'}

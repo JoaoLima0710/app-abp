@@ -240,7 +240,7 @@ export default function TrendsPage() {
                                         <span className="font-medium text-sm text-primary">{st.name}</span>
                                         <span className="badge badge-sm bg-background">{st.count} q</span>
                                     </div>
-                                    <span className="text-xs text-secondary uppercase tracking-wider block">
+                                    <span className="text-xs text-primary font-bold uppercase tracking-wider block">
                                         {THEME_LABELS[st.theme as keyof typeof THEME_LABELS]}
                                     </span>
                                 </div>
@@ -257,7 +257,7 @@ export default function TrendsPage() {
                             <AlertOctagon size={20} />
                             Seus Pontos de Atenção
                         </h3>
-                        <p className="text-sm text-secondary mb-4">
+                        <p className="text-sm text-primary font-medium mb-4">
                             Subtemas onde você apresenta maior taxa de erro:
                         </p>
                         <div className="flex flex-col gap-3">
@@ -273,7 +273,7 @@ export default function TrendsPage() {
                                             style={{ width: `${100 - ws.accuracy}%` }}
                                         />
                                     </div>
-                                    <span className="text-xs text-red-400 mt-1 block text-right">
+                                    <span className="text-xs text-red-700 font-bold mt-1 block text-right">
                                         {ws.accuracy.toFixed(0)}% de acerto
                                     </span>
                                 </div>

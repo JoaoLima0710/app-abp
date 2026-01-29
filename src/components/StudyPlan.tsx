@@ -143,24 +143,26 @@ export default function StudyPlan() {
                                                     rec.type === 'review' ? 'var(--warning-50)' : 'var(--primary-50)',
                                             borderRadius: 'var(--radius-lg)',
                                             borderLeft: `4px solid ${rec.type === 'priority' ? 'var(--error-500)' :
-                                                    rec.type === 'celebrate' ? 'var(--success-500)' :
-                                                        rec.type === 'review' ? 'var(--warning-500)' : 'var(--primary-500)'
+                                                rec.type === 'celebrate' ? 'var(--success-500)' :
+                                                    rec.type === 'review' ? 'var(--warning-500)' : 'var(--primary-500)'
                                                 }`,
                                         }}
                                     >
                                         <div className="flex items-start gap-3">
-                                            {rec.type === 'priority' && <AlertTriangle size={20} color="var(--error-500)" />}
-                                            {rec.type === 'celebrate' && <Award size={20} color="var(--success-500)" />}
-                                            {rec.type === 'maintain' && <TrendingUp size={20} color="var(--primary-500)" />}
-                                            {rec.type === 'review' && <Target size={20} color="var(--warning-500)" />}
+                                            {rec.type === 'priority' && <AlertTriangle size={20} color="var(--error-600)" />}
+                                            {rec.type === 'celebrate' && <Award size={20} color="var(--success-600)" />}
+                                            {rec.type === 'maintain' && <TrendingUp size={20} color="var(--primary-600)" />}
+                                            {rec.type === 'review' && <Target size={20} color="var(--warning-600)" />}
                                             <div>
-                                                <p style={{ margin: 0, fontWeight: 500, color: 'var(--text-primary)' }}>
+                                                <p style={{ margin: 0, fontWeight: 700, color: 'var(--text-primary)' }}>
                                                     {rec.message}
                                                 </p>
                                                 <p style={{
                                                     margin: 'var(--spacing-1) 0 0 0',
                                                     fontSize: 'var(--font-size-sm)',
                                                     color: 'var(--text-secondary)',
+                                                    lineHeight: 1.5,
+                                                    fontWeight: 500,
                                                 }}>
                                                     💡 {rec.suggestedAction}
                                                 </p>
@@ -203,8 +205,10 @@ export default function StudyPlan() {
                                                 <span
                                                     className="badge"
                                                     style={{
-                                                        background: `${priorityInfo.color}20`,
+                                                        background: `${priorityInfo.color}15`,
                                                         color: priorityInfo.color,
+                                                        fontWeight: 700,
+                                                        border: `1px solid ${priorityInfo.color}40`,
                                                     }}
                                                 >
                                                     {priorityInfo.label}
@@ -257,7 +261,7 @@ export default function StudyPlan() {
                                                     {item.accuracy.toFixed(0)}%
                                                 </span>
                                             </div>
-                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)', fontWeight: 500 }}>
                                                 Bom desempenho! Continue revisando periodicamente.
                                             </div>
                                         </div>
@@ -290,11 +294,12 @@ export default function StudyPlan() {
                                 <h4 style={{
                                     margin: '0 0 var(--spacing-2) 0',
                                     fontSize: 'var(--font-size-base)',
-                                    color: 'var(--primary-600)',
+                                    color: 'var(--primary-700)',
+                                    fontWeight: 700,
                                 }}>
                                     📚 Foque nas Lacunas
                                 </h4>
-                                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)', fontWeight: 500 }}>
                                     Dedique mais tempo às áreas com baixo aproveitamento. Use simulados focados.
                                 </p>
                             </div>

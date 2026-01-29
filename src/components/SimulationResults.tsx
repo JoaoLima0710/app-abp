@@ -18,16 +18,27 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
-    const { simulation, questions, resetSimulation } = useSimulationStore();
+    const { id } = useParams<{ id: string }>();
+    const { simulation, questions, resetSimulation, loadPastSimulation, isLoading } = useSimulationStore();
     const { loadUserData } = useUserStore();
 
     useEffect(() => {
-        if (!simulation?.completedAt) {
+        if (id) {
+            loadPastSimulation(id);
+        } else if (!simulation?.completedAt) {
             navigate('/');
         }
         // Reload user data to update statistics
         loadUserData();
-    }, [simulation, navigate, loadUserData]);
+    }, [id, simulation?.completedAt, navigate, loadUserData, loadPastSimulation]);
+
+    if (isLoading) {
+        return (
+            <div className="page flex items-center justify-center">
+                <div className="animate-pulse text-xl text-primary font-bold">Carregando Resultados...</div>
+            </div>
+        );
+    }
 
     if (!simulation) return null;
 
@@ -95,8 +106,9 @@ export default function SimulationResults() {
                 </div>
                 <p style={{
                     fontSize: 'var(--font-size-lg)',
-                    color: 'var(--text-secondary)',
+                    color: 'var(--text-primary)',
                     margin: 'var(--spacing-2) 0 0 0',
+                    fontWeight: 600,
                 }}>
                     de aproveitamento
                 </p>
@@ -113,7 +125,7 @@ export default function SimulationResults() {
                     }}>
                         {stats.correct}
                     </div>
-                    <div className="stat-label">Acertos</div>
+                    <div className="stat-label" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Acertos</div>
                 </div>
                 <div className="stat-card">
                     <XCircle size={32} color="var(--error-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
@@ -124,17 +136,17 @@ export default function SimulationResults() {
                     }}>
                         {stats.incorrect}
                     </div>
-                    <div className="stat-label">Erros</div>
+                    <div className="stat-label" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Erros</div>
                 </div>
                 <div className="stat-card">
                     <Target size={32} color="var(--primary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
                     <div className="stat-value">{stats.totalQuestions}</div>
-                    <div className="stat-label">Total de Questões</div>
+                    <div className="stat-label" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Total de Questões</div>
                 </div>
                 <div className="stat-card">
                     <Clock size={32} color="var(--secondary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
                     <div className="stat-value">{stats.avgTimePerQuestion.toFixed(0)}s</div>
-                    <div className="stat-label">Tempo Médio / Questão</div>
+                    <div className="stat-label" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Tempo Médio / Questão</div>
                 </div>
             </div>
 
@@ -266,10 +278,10 @@ export default function SimulationResults() {
                                                 {q.statement.length > 150 ? q.statement.substring(0, 150) + '...' : q.statement}
                                             </p>
                                             <div className="flex items-center gap-4">
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--error-600)' }}>
+                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--error-700)', fontWeight: 700 }}>
                                                     Sua resposta: {sq.userAnswer}
                                                 </span>
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-600)' }}>
+                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-700)', fontWeight: 700 }}>
                                                     Correta: {q.correctAnswer}
                                                 </span>
                                                 <span

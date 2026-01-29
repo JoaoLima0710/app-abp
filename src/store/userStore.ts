@@ -126,13 +126,13 @@ export const useUserStore = create<UserState>((set, get) => ({
         const strongThemes = themeAccuracies.filter(t => t.accuracy >= 70).map(t => t.theme).slice(0, 3);
         const weakThemes = themeAccuracies.filter(t => t.accuracy < 60).map(t => t.theme).slice(0, 3);
 
-        const totalAnswered = completedSims.reduce((sum, s) => sum + s.stats.answered, 0);
+        const totalQuestions = completedSims.reduce((sum, s) => sum + s.stats.totalQuestions, 0);
         const totalCorrect = completedSims.reduce((sum, s) => sum + s.stats.correct, 0);
 
         const progress: UserProgress = {
             totalSimulations: completedSims.length,
-            totalQuestionsAnswered: totalAnswered,
-            overallAccuracy: totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0,
+            totalQuestionsAnswered: totalQuestions, // Now includes all presented questions
+            overallAccuracy: totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0,
             byTheme,
             subthemeStats,
             trends: {

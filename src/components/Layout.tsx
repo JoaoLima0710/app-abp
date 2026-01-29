@@ -11,7 +11,8 @@ import {
     Menu,
     X,
     TrendingUp,
-    Settings
+    Settings,
+    History
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,6 +28,7 @@ export default function Layout() {
     const navItems = [
         { path: '/', icon: Home, label: 'Dashboard' },
         { path: '/simulado/novo', icon: PlusCircle, label: 'Novo Simulado' },
+        { path: '/historico', icon: History, label: 'Histórico' },
         { path: '/estatisticas', icon: BarChart3, label: 'Estatísticas' },
         { path: '/plano-de-estudos', icon: BookOpen, label: 'Plano de Estudos' },
         { path: '/tendencias', icon: TrendingUp, label: 'Tendências' },

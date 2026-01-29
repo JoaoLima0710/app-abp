@@ -22,6 +22,7 @@ interface SimulationState {
     toggleExplanation: () => void;
     finishSimulation: () => Promise<void>;
     resetSimulation: () => void;
+    loadPastSimulation: (id: string) => Promise<void>;
 
     // Getters
     getCurrentQuestion: () => Question | null;
@@ -208,6 +209,40 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
             startTime: null,
             questionStartTime: null,
         });
+    },
+
+    loadPastSimulation: async (id: string) => {
+        set({ isLoading: true });
+        try {
+            const { getSimulation, getQuestionById } = await import('../db/database');
+            const simulation = await getSimulation(id);
+
+            if (!simulation) {
+                set({ isLoading: false });
+                return;
+            }
+
+            // Load all questions for this simulation
+            const questions: Question[] = [];
+            for (const sq of simulation.questions) {
+                const q = await getQuestionById(sq.questionId);
+                if (q) questions.push(q);
+            }
+
+            set({
+                simulation,
+                questions,
+                currentIndex: 0,
+                isLoading: false,
+                isCompleted: true,
+                showExplanation: true,
+                startTime: null,
+                questionStartTime: null,
+            });
+        } catch (error) {
+            console.error('Error loading simulation:', error);
+            set({ isLoading: false });
+        }
     },
 
     getCurrentQuestion: () => {

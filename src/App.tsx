@@ -10,6 +10,7 @@ import StatisticsPanel from './components/StatisticsPanel';
 import StudyPlan from './components/StudyPlan';
 import TrendsPage from './components/TrendsPage';
 import SettingsPage from './components/SettingsPage';
+import HistoryPage from './components/HistoryPage';
 
 function App() {
     const { loadUserData, isDarkMode } = useUserStore();
@@ -29,6 +30,7 @@ function App() {
                 <Route path="estatisticas" element={<StatisticsPanel />} />
                 <Route path="plano-de-estudos" element={<StudyPlan />} />
                 <Route path="tendencias" element={<TrendsPage />} />
+                <Route path="historico" element={<HistoryPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
