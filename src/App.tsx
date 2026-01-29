@@ -1,0 +1,39 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useUserStore } from './store/userStore';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import SimulationSetup from './components/SimulationSetup';
+import SimulationPage from './components/SimulationPage';
+import SimulationResults from './components/SimulationResults';
+import StatisticsPanel from './components/StatisticsPanel';
+import StudyPlan from './components/StudyPlan';
+import TrendsPage from './components/TrendsPage';
+import SettingsPage from './components/SettingsPage';
+
+function App() {
+    const { loadUserData, isDarkMode } = useUserStore();
+
+    useEffect(() => {
+        loadUserData();
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    }, []);
+
+    return (
+        <Routes>
+            <Route path="/" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="simulado/novo" element={<SimulationSetup />} />
+                <Route path="simulado/active" element={<SimulationPage />} />
+                <Route path="simulado/:id/resultado" element={<SimulationResults />} />
+                <Route path="estatisticas" element={<StatisticsPanel />} />
+                <Route path="plano-de-estudos" element={<StudyPlan />} />
+                <Route path="tendencias" element={<TrendsPage />} />
+                <Route path="configuracoes" element={<SettingsPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+        </Routes>
+    );
+}
+
+export default App;
