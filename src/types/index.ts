@@ -16,7 +16,8 @@ export type PsychiatryTheme =
     | 'psiquiatria_forense'
     | 'saude_publica'
     | 'neurociencias'
-    | 'psicogeriatria';
+    | 'psicogeriatria'
+    | 'transtornos_alimentares';
 
 export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     transtornos_humor: 'Transtornos do Humor',
@@ -35,6 +36,7 @@ export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     saude_publica: 'Saúde Pública',
     neurociencias: 'Neurociências Básicas',
     psicogeriatria: 'Psicogeriatria',
+    transtornos_alimentares: 'Transtornos Alimentares',
 };
 
 export const THEME_COLORS: Record<PsychiatryTheme, string> = {
@@ -54,6 +56,7 @@ export const THEME_COLORS: Record<PsychiatryTheme, string> = {
     saude_publica: '#3b82f6',
     neurociencias: '#8b5cf6',
     psicogeriatria: '#64748b',
+    transtornos_alimentares: '#ec4899',
 };
 
 export type AnswerOption = 'A' | 'B' | 'C' | 'D' | 'E';

@@ -6,7 +6,10 @@ import {
     Play,
     Shuffle,
     Target,
-    Loader2
+    Loader2,
+    BookOpen,
+    Sparkles,
+    Calendar
 } from 'lucide-react';
 
 const QUESTION_COUNTS = [5, 10, 15, 20, 30, 50, 90];
@@ -17,10 +20,11 @@ export default function SimulationSetup() {
     const [questionCount, setQuestionCount] = useState(10);
     const [focusTheme, setFocusTheme] = useState<PsychiatryTheme | 'all'>('all');
     const [mode, setMode] = useState<'mixed' | 'focused'>('mixed');
+    const [source, setSource] = useState<'standard' | 'treaty' | '2025'>('standard');
 
     const handleStart = async () => {
         const theme = mode === 'focused' && focusTheme !== 'all' ? focusTheme : undefined;
-        await startSimulation(questionCount, theme);
+        await startSimulation(questionCount, theme, source);
         navigate('/simulado/active');
     };
 
@@ -36,6 +40,36 @@ export default function SimulationSetup() {
             </header>
 
             <div style={{ maxWidth: 600 }}>
+                <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
+                    <h3 className="card-title mb-4">Fonte das Questões</h3>
+                    <div className="flex gap-3 flex-wrap">
+                        <button
+                            className={`btn ${source === 'standard' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setSource('standard')}
+                            style={{ flex: 1, minWidth: '150px' }}
+                        >
+                            <BookOpen size={20} />
+                            Provas Anteriores
+                        </button>
+                        <button
+                            className={`btn ${source === '2025' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setSource('2025')}
+                            style={{ flex: 1, minWidth: '150px' }}
+                        >
+                            <Calendar size={20} />
+                            Provas 2025 (Novas)
+                        </button>
+                        <button
+                            className={`btn ${source === 'treaty' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setSource('treaty')}
+                            style={{ flex: 1, minWidth: '150px' }}
+                        >
+                            <Sparkles size={20} />
+                            Inéditas (Tratado)
+                        </button>
+                    </div>
+                </section>
+
                 {/* Question Count */}
                 <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
                     <h3 className="card-title mb-4">Número de Questões</h3>

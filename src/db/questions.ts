@@ -1,6 +1,8 @@
 import { Question } from '../types';
+import { questions2025 } from './questions_2025';
 
 export const seedQuestions: Question[] = [
+    ...questions2025,
     // ===== TRANSTORNOS DO HUMOR =====
     {
         id: 'th001',

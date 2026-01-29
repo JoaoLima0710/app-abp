@@ -12,7 +12,8 @@ import {
     Filter,
     Layers,
     AlertCircle,
-    AlertOctagon
+    AlertOctagon,
+    ChevronRight
 } from 'lucide-react';
 import {
     LineChart,
@@ -30,6 +31,7 @@ import {
 export default function TrendsPage() {
     const { progress } = useUserStore();
     const [selectedYear, setSelectedYear] = useState<string>('todos');
+    const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
     const years = ['2019', '2020', '2021', '2022.1', '2022.2', '2023.1', '2023.2', '2024', '2025'];
 
     const getTrendIcon = (trend: 'rising' | 'stable' | 'declining') => {
@@ -303,47 +305,107 @@ export default function TrendsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredStats.map(item => (
-                                <tr key={item.theme} className="border-b border-border hover:bg-tertiary/50 transition-colors">
-                                    <td className="p-3">
-                                        <div className="flex items-center gap-3">
-                                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: THEME_COLORS[item.theme] }} />
-                                            <div>
-                                                <div className="font-medium">{THEME_LABELS[item.theme]}</div>
-                                                {/* Show subthemes inline if relevant */}
-                                                {item.subthemes && item.subthemes.length > 0 && selectedYear !== 'todos' && item.yearlyFrequency[selectedYear] > 0 && (
-                                                    <div className="text-xs text-secondary mt-1">
-                                                        Foco: {item.subthemes.map(s => s.name).slice(0, 2).join(', ')}
+                            {filteredStats.map(item => {
+                                const isExpanded = expandedTheme === item.theme;
+                                const hasSubthemes = item.subthemes && item.subthemes.length > 0;
+
+                                return (
+                                    <>
+                                        <tr
+                                            key={item.theme}
+                                            className={`border-b border-border transition-all duration-300 cursor-pointer ${isExpanded ? 'bg-primary-500/5' : 'hover:bg-secondary/50'}`}
+                                            onClick={() => hasSubthemes && setExpandedTheme(isExpanded ? null : item.theme)}
+                                        >
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`transition-all duration-300 ${isExpanded ? 'rotate-90 text-primary-500' : 'text-secondary'}`}>
+                                                        {hasSubthemes ? (
+                                                            <ChevronRight size={18} />
+                                                        ) : (
+                                                            <div className="w-4 h-4" />
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="text-center p-3 font-mono">
-                                        {item.displayCount}
-                                    </td>
-                                    <td className="text-center p-3">
-                                        <div className="flex items-center justify-center gap-1">
-                                            {getTrendIcon(item.trend)}
-                                        </div>
-                                    </td>
-                                    <td className="text-center p-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full transition-all"
-                                                    style={{
-                                                        width: `${item.probability}%`,
-                                                        background: item.probability > 80 ? 'var(--success-500)' :
-                                                            item.probability > 60 ? 'var(--warning-500)' : 'var(--gray-400)'
-                                                    }}
-                                                />
-                                            </div>
-                                            <span className="text-xs w-8 text-right">{item.probability}%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                                    <span
+                                                        className="shadow-sm"
+                                                        style={{ width: 12, height: 12, borderRadius: '50%', background: THEME_COLORS[item.theme], border: '2px solid white' }}
+                                                    />
+                                                    <div>
+                                                        <div className={`font-semibold transition-colors ${isExpanded ? 'text-primary-600' : 'text-foreground'}`}>
+                                                            {THEME_LABELS[item.theme]}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="text-center p-4 font-mono font-bold text-primary-700">
+                                                {item.displayCount}
+                                            </td>
+                                            <td className="text-center p-4">
+                                                <div className="inline-flex items-center justify-center p-2 rounded-full bg-background shadow-inner">
+                                                    {getTrendIcon(item.trend)}
+                                                </div>
+                                            </td>
+                                            <td className="text-center p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-700 ease-out"
+                                                            style={{
+                                                                width: `${item.probability}%`,
+                                                                background: `linear-gradient(90deg, ${THEME_COLORS[item.theme]} 0%, ${item.probability > 80 ? 'var(--success-500)' : 'var(--primary-500)'} 100%)`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs font-bold w-10 text-right text-secondary-600">{item.probability}%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && hasSubthemes && (
+                                            <tr className="bg-primary-500/5 border-b border-primary-500/10 animate-fade-in-down">
+                                                <td colSpan={4} className="p-0">
+                                                    <div className="p-6 pl-14 pb-8">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <h4 className="text-xs font-black text-primary-600 uppercase tracking-widest flex items-center gap-2">
+                                                                <Layers size={14} />
+                                                                Distribuição de Subtemas ({selectedYear === 'todos' ? 'Histórico Geral' : selectedYear})
+                                                            </h4>
+                                                            <span className="text-[10px] text-muted-foreground italic">Exclusivo Prova de Título ABP</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                            {item.subthemes
+                                                                .map(st => {
+                                                                    const count = selectedYear === 'todos'
+                                                                        ? Object.values(st.yearlyFrequency).reduce((a, b) => a + b, 0)
+                                                                        : st.yearlyFrequency[selectedYear] || 0;
+                                                                    return { ...st, currentCount: count };
+                                                                })
+                                                                .sort((a, b) => b.currentCount - a.currentCount)
+                                                                .map((st, idx) => (
+                                                                    <div key={idx} className="group flex flex-col p-3 rounded-xl bg-white border border-border shadow-sm hover:shadow-md hover:border-primary-300 transition-all duration-200">
+                                                                        <div className="flex justify-between items-center mb-2">
+                                                                            <span className="text-sm font-bold text-gray-700 group-hover:text-primary-600 transition-colors line-clamp-1">{st.name}</span>
+                                                                            <span className="text-xs font-black text-primary-500 bg-primary-50 px-2 py-0.5 rounded-full">
+                                                                                {st.currentCount}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                                            <div
+                                                                                className="h-full bg-primary-500 rounded-full transition-all duration-1000"
+                                                                                style={{ width: `${(st.currentCount / Math.max(1, Number(item.displayCount) * (selectedYear === 'todos' ? years.length : 1))) * 100}%` }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                        </div>
+                                                        {item.subthemes.length === 0 && (
+                                                            <p className="text-xs text-secondary-400 italic py-4">Nenhum subtema detalhado registrado para este período.</p>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

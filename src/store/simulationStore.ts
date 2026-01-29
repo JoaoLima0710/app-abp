@@ -14,7 +14,7 @@ interface SimulationState {
     questionStartTime: number | null;
 
     // Actions
-    startSimulation: (count: number, theme?: PsychiatryTheme) => Promise<void>;
+    startSimulation: (count: number, theme?: PsychiatryTheme, source?: 'standard' | 'treaty' | '2025') => Promise<void>;
     answerQuestion: (answer: AnswerOption) => void;
     nextQuestion: () => void;
     previousQuestion: () => void;
@@ -39,10 +39,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     startTime: null,
     questionStartTime: null,
 
-    startSimulation: async (count: number, theme?: PsychiatryTheme) => {
+    startSimulation: async (count: number, theme?: PsychiatryTheme, source: 'standard' | 'treaty' | '2025' = 'standard') => {
         set({ isLoading: true });
 
-        const questions = await getRandomQuestions(count, theme);
+        const questions = await getRandomQuestions(count, theme, source);
 
         const simulation: Simulation = {
             id: `sim_${Date.now()}`,

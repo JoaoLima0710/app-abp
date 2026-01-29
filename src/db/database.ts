@@ -38,13 +38,30 @@ export async function initializeDatabase() {
     }
 }
 
-export async function getRandomQuestions(count: number, theme?: string): Promise<Question[]> {
-    let questions: Question[];
-    if (theme) {
-        questions = await db.questions.where('theme').equals(theme).toArray();
+import { treatyQuestions } from './questions_treaty';
+import { questions2025 } from './questions_2025';
+
+export async function getRandomQuestions(count: number, theme?: string, source: 'standard' | 'treaty' | '2025' = 'standard'): Promise<Question[]> {
+    let questions: Question[] = [];
+
+    if (source === 'treaty') {
+        questions = treatyQuestions;
+        if (theme) {
+            questions = questions.filter(q => q.theme === theme);
+        }
+    } else if (source === '2025') {
+        questions = questions2025;
+        if (theme) {
+            questions = questions.filter(q => q.theme === theme);
+        }
     } else {
-        questions = await db.questions.toArray();
+        if (theme) {
+            questions = await db.questions.where('theme').equals(theme).toArray();
+        } else {
+            questions = await db.questions.toArray();
+        }
     }
+
     const shuffled = questions.sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(count, shuffled.length));
 }
