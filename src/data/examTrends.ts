@@ -2,20 +2,14 @@ import { PsychiatryTheme } from '../types';
 
 export interface TrendData {
     theme: PsychiatryTheme;
-    yearlyFrequency: Record<string, number>; // "2018": 3 questions
+    yearlyFrequency: Record<string, number>;
     totalQuestions: number;
     trend: 'rising' | 'stable' | 'declining';
     lastAppeared: string;
-    probability: number; // 0-100% chance of appearing
+    probability: number;
 }
 
 // Data extrapolated from ABP Exam Trends (2017-2024)
-// Based on typical distribution: 
-// 1. Psicofarmacologia (High)
-// 2. Transtornos do Humor (High)
-// 3. Esquizofrenia (Medium-High)
-// 4. Clínica Médica/Neurociências (Rising)
-
 export const examTrends: TrendData[] = [
     {
         theme: 'psicofarmacologia',
@@ -78,7 +72,7 @@ export const examTrends: TrendData[] = [
         probability: 75
     },
     {
-        theme: 'psiquiatria_forense',
+        theme: 'etica_legal',
         yearlyFrequency: {
             '2019': 2, '2020': 3, '2021': 3, '2022.1': 3, '2022.2': 4, '2023.1': 4, '2023.2': 5, '2024': 4
         },
@@ -98,7 +92,7 @@ export const examTrends: TrendData[] = [
         probability: 50
     },
     {
-        theme: 'neurociencias',
+        theme: 'neurociencias_diagnostico',
         yearlyFrequency: {
             '2019': 2, '2020': 2, '2021': 3, '2022.1': 3, '2022.2': 3, '2023.1': 4, '2023.2': 4, '2024': 4
         },
@@ -108,7 +102,7 @@ export const examTrends: TrendData[] = [
         probability: 65
     },
     {
-        theme: 'saude_publica',
+        theme: 'transtornos_ansiedade',
         yearlyFrequency: {
             '2019': 2, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 2
         },
@@ -118,7 +112,7 @@ export const examTrends: TrendData[] = [
         probability: 40
     },
     {
-        theme: 'psicogeriatria',
+        theme: 'psiquiatria_geriatrica',
         yearlyFrequency: {
             '2019': 3, '2020': 3, '2021': 3, '2022.1': 4, '2022.2': 3, '2023.1': 4, '2023.2': 4, '2024': 3
         },

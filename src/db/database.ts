@@ -27,6 +27,7 @@ export async function initializeDatabase() {
     const progress = await db.userProgress.get('main');
     if (!progress) {
         await db.userProgress.add({
+            id: 'main',
             totalSimulations: 0,
             totalQuestionsAnswered: 0,
             overallAccuracy: 0,

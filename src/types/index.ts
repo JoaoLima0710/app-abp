@@ -12,7 +12,11 @@ export type PsychiatryTheme =
     | 'transtornos_ansiedade'
     | 'transtornos_personalidade'
     | 'dependencia_quimica'
-    | 'psiquiatria_geriatrica';
+    | 'psiquiatria_geriatrica'
+    | 'psiquiatria_forense'
+    | 'saude_publica'
+    | 'neurociencias'
+    | 'psicogeriatria';
 
 export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     transtornos_humor: 'Transtornos do Humor',
@@ -27,6 +31,10 @@ export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     transtornos_personalidade: 'Transtornos de Personalidade',
     dependencia_quimica: 'Dependência Química',
     psiquiatria_geriatrica: 'Psiquiatria Geriátrica',
+    psiquiatria_forense: 'Psiquiatria Forense',
+    saude_publica: 'Saúde Pública',
+    neurociencias: 'Neurociências Básicas',
+    psicogeriatria: 'Psicogeriatria',
 };
 
 export const THEME_COLORS: Record<PsychiatryTheme, string> = {
@@ -42,6 +50,10 @@ export const THEME_COLORS: Record<PsychiatryTheme, string> = {
     transtornos_personalidade: '#14b8a6',
     dependencia_quimica: '#a855f7',
     psiquiatria_geriatrica: '#64748b',
+    psiquiatria_forense: '#f59e0b',
+    saude_publica: '#3b82f6',
+    neurociencias: '#8b5cf6',
+    psicogeriatria: '#64748b',
 };
 
 export type AnswerOption = 'A' | 'B' | 'C' | 'D' | 'E';

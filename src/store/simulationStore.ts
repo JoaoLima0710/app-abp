@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Question, Simulation, SimulationQuestion, SimulationStats, AnswerOption, PsychiatryTheme } from '../types';
-import { getRandomQuestions, getQuestionById, saveSimulation } from '../db/database';
+import { Question, Simulation, SimulationQuestion, AnswerOption, PsychiatryTheme } from '../types';
+import { getRandomQuestions, saveSimulation } from '../db/database';
 
 interface SimulationState {
     // Current simulation

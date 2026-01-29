@@ -20,12 +20,10 @@ export default function SimulationPage() {
         simulation,
         questions,
         currentIndex,
-        showExplanation,
         answerQuestion,
         nextQuestion,
         previousQuestion,
         goToQuestion,
-        toggleExplanation,
         finishSimulation,
         getCurrentQuestion,
         getCurrentSimulationQuestion,
@@ -341,9 +339,9 @@ export default function SimulationPage() {
                             <button
                                 key={idx}
                                 className={`question-nav-item ${idx === currentIndex ? 'question-nav-item--current' :
-                                        q.isCorrect === true ? 'question-nav-item--correct' :
-                                            q.isCorrect === false ? 'question-nav-item--incorrect' :
-                                                q.userAnswer ? 'question-nav-item--answered' : ''
+                                    q.isCorrect === true ? 'question-nav-item--correct' :
+                                        q.isCorrect === false ? 'question-nav-item--incorrect' :
+                                            q.userAnswer ? 'question-nav-item--answered' : ''
                                     }`}
                                 onClick={() => goToQuestion(idx)}
                             >

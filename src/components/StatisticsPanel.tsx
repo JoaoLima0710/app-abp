@@ -192,7 +192,7 @@ export default function StatisticsPanel() {
                                                 border: '1px solid var(--border-color)',
                                                 borderRadius: 'var(--radius-lg)',
                                             }}
-                                            formatter={(value: number, name: string, props: any) => [
+                                            formatter={(value: number, _name: string, props: any) => [
                                                 `${value.toFixed(1)}%`,
                                                 props.payload.fullName
                                             ]}
@@ -263,7 +263,7 @@ export default function StatisticsPanel() {
                                             </td>
                                             <td style={{ textAlign: 'center', padding: 'var(--spacing-3)' }}>
                                                 <span className={`badge ${(data?.accuracy || 0) >= 70 ? 'badge-success' :
-                                                        (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
+                                                    (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
                                                     }`}>
                                                     {data?.accuracy?.toFixed(1) || 0}%
                                                 </span>

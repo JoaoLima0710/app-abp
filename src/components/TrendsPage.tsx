@@ -6,9 +6,7 @@ import {
     Minus,
     BarChart2,
     Calendar,
-    AlertTriangle,
     Zap,
-    Search
 } from 'lucide-react';
 import {
     LineChart,
@@ -18,10 +16,6 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    BarChart,
-    Bar,
-    Cell,
-    ReferenceLine
 } from 'recharts';
 
 export default function TrendsPage() {
@@ -92,7 +86,7 @@ export default function TrendsPage() {
                             <Tooltip
                                 contentStyle={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)' }}
                             />
-                            {examTrends.slice(0, 5).map((trend, idx) => (
+                            {examTrends.slice(0, 5).map((trend) => (
                                 <Line
                                     key={trend.theme}
                                     type="monotone"

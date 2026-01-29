@@ -14,7 +14,7 @@ import {
     TrendingUp,
     Award
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
@@ -195,7 +195,7 @@ export default function SimulationResults() {
                                         {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
                                     </span>
                                     <span className={`badge ${(data?.accuracy || 0) >= 70 ? 'badge-success' :
-                                            (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
+                                        (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
                                         }`}>
                                         {data?.correct}/{data?.total} ({data?.accuracy.toFixed(0)}%)
                                     </span>
