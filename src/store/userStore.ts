@@ -45,17 +45,36 @@ export const useUserStore = create<UserState>((set, get) => ({
         const completedSims = simulations.filter(s => s.completedAt);
         if (completedSims.length === 0) return;
 
+        // 1. Calculate Theme Stats
         const themeData: Record<string, { attempts: number[]; correct: number; total: number }> = {};
 
+        // 2. Calculate Subtheme Stats
+        const allQuestions = await import('../db/questions').then(m => m.seedQuestions);
+        const subthemeStats: Record<string, { total: number; incorrect: number }> = {};
+
         for (const sim of completedSims) {
+            // Theme Stats
             for (const [theme, stats] of Object.entries(sim.stats.byTheme)) {
+                if (!stats) continue;
                 if (!themeData[theme]) {
                     themeData[theme] = { attempts: [], correct: 0, total: 0 };
                 }
-                themeData[theme].correct += stats?.correct || 0;
-                themeData[theme].total += stats?.total || 0;
-                if (stats) {
-                    themeData[theme].attempts.push(stats.accuracy);
+                themeData[theme].correct += stats.correct;
+                themeData[theme].total += stats.total;
+                themeData[theme].attempts.push(stats.accuracy);
+            }
+
+            // Subtheme Stats
+            for (const sq of sim.questions) {
+                const question = allQuestions.find(q => q.id === sq.questionId);
+                if (question && question.subtheme) {
+                    if (!subthemeStats[question.subtheme]) {
+                        subthemeStats[question.subtheme] = { total: 0, incorrect: 0 };
+                    }
+                    subthemeStats[question.subtheme].total++;
+                    if (sq.userAnswer && !sq.isCorrect) {
+                        subthemeStats[question.subtheme].incorrect++;
+                    }
                 }
             }
         }
@@ -115,6 +134,7 @@ export const useUserStore = create<UserState>((set, get) => ({
             totalQuestionsAnswered: totalAnswered,
             overallAccuracy: totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0,
             byTheme,
+            subthemeStats,
             trends: {
                 overallTrend: 'stable',
                 strongThemes,

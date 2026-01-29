@@ -61,6 +61,7 @@ export type AnswerOption = 'A' | 'B' | 'C' | 'D' | 'E';
 export interface Question {
     id: string;
     theme: PsychiatryTheme;
+    subtheme?: string;
     difficulty: 1 | 2 | 3;
     statement: string;
     options: {
@@ -140,6 +141,7 @@ export interface UserProgress {
     totalQuestionsAnswered: number;
     overallAccuracy: number;
     byTheme: Partial<Record<PsychiatryTheme, ThemeProgress>>;
+    subthemeStats?: Record<string, { total: number; incorrect: number }>;
     trends: TrendAnalysis;
     lastUpdated: Date;
 }

@@ -5,6 +5,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'th001',
         theme: 'transtornos_humor',
+        subtheme: 'Depressão Resistente',
         difficulty: 2,
         statement: 'Paciente feminina, 35 anos, apresenta humor deprimido há 3 semanas, anedonia, insônia terminal, perda de 4kg, lentificação psicomotora e ideação suicida passiva. Qual o diagnóstico mais provável segundo o DSM-5?',
         options: {
@@ -30,6 +31,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'th002',
         theme: 'transtornos_humor',
+        subtheme: 'Diagnóstico Diferencial TB x TDM',
         difficulty: 3,
         statement: 'Qual das seguintes características diferencia o Transtorno Bipolar tipo II do tipo I?',
         options: {
@@ -55,6 +57,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'th003',
         theme: 'transtornos_humor',
+        subtheme: 'Diagnóstico Diferencial TB x TDM',
         difficulty: 2,
         statement: 'O especificador "com características mistas" em um episódio depressivo maior requer a presença de quantos sintomas maníacos/hipomaníacos?',
         options: {
@@ -80,6 +83,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'th004',
         theme: 'transtornos_humor',
+        subtheme: 'Depressão Resistente',
         difficulty: 3,
         statement: 'Paciente com depressão maior grave e sintomas psicóticos. Qual a melhor conduta inicial?',
         options: {
@@ -107,6 +111,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pf001',
         theme: 'psicofarmacologia',
+        subtheme: 'Lítio e Estabilizadores',
         difficulty: 2,
         statement: 'Qual o principal mecanismo de ação dos antidepressivos ISRS?',
         options: {
@@ -132,6 +137,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pf002',
         theme: 'psicofarmacologia',
+        subtheme: 'Interações Medicamentosas (CYP450)',
         difficulty: 3,
         statement: 'Paciente em uso de IMAO. Qual alimento deve ser rigorosamente evitado?',
         options: {
@@ -157,6 +163,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pf003',
         theme: 'psicofarmacologia',
+        subtheme: 'Clozapina e Manejo de Riscos',
         difficulty: 2,
         statement: 'Qual antipsicótico atípico apresenta maior risco de agranulocitose?',
         options: {
@@ -182,6 +189,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pf004',
         theme: 'psicofarmacologia',
+        subtheme: 'Lítio e Estabilizadores',
         difficulty: 2,
         statement: 'O principal efeito adverso que limita o uso de lítio a longo prazo é:',
         options: {
@@ -209,6 +217,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'ep001',
         theme: 'esquizofrenia_psicose',
+        subtheme: 'Primeiro Episódio Psicótico',
         difficulty: 2,
         statement: 'Qual é a duração mínima de sintomas para diagnóstico de esquizofrenia segundo o DSM-5?',
         options: {
@@ -234,6 +243,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'ep002',
         theme: 'esquizofrenia_psicose',
+        subtheme: 'Clozapina e Manejo de Riscos',
         difficulty: 3,
         statement: 'Paciente com esquizofrenia refratária a dois antipsicóticos adequadamente utilizados. Qual a conduta recomendada?',
         options: {
@@ -259,6 +269,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'ep003',
         theme: 'esquizofrenia_psicose',
+        subtheme: 'Primeiro Episódio Psicótico',
         difficulty: 2,
         statement: 'Qual dos seguintes NÃO é considerado sintoma negativo da esquizofrenia?',
         options: {
@@ -286,6 +297,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pi001',
         theme: 'psiquiatria_infantojuvenil',
+        subtheme: 'TDAH ao Longo da Vida',
         difficulty: 2,
         statement: 'Qual a idade máxima para início dos sintomas de TDAH, segundo o DSM-5?',
         options: {
@@ -311,6 +323,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pi002',
         theme: 'psiquiatria_infantojuvenil',
+        subtheme: 'TDAH ao Longo da Vida',
         difficulty: 2,
         statement: 'Qual medicação é primeira linha no tratamento do TDAH em crianças?',
         options: {
@@ -336,6 +349,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'pi003',
         theme: 'psiquiatria_infantojuvenil',
+        subtheme: 'TEA (Autismo) em Adultos',
         difficulty: 3,
         statement: 'Qual característica é mais sugestiva de Transtorno do Espectro Autista nível 1 (necessita apoio)?',
         options: {
@@ -363,6 +377,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'up001',
         theme: 'urgencias_psiquiatricas',
+        subtheme: 'Síndrome Neuroléptica Maligna',
         difficulty: 3,
         statement: 'Paciente em uso de haloperidol desenvolve rigidez muscular, hipertermia (40°C), instabilidade autonômica e CPK elevada. O diagnóstico mais provável é:',
         options: {
@@ -388,6 +403,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'up002',
         theme: 'urgencias_psiquiatricas',
+        subtheme: 'Agitação Psicomotora',
         difficulty: 2,
         statement: 'Qual o tratamento de primeira linha para agitação psicomotora grave em paciente com esquizofrenia no pronto-socorro?',
         options: {
@@ -467,6 +483,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'el001',
         theme: 'etica_legal',
+        subtheme: 'Capacidade Civil e Interdição',
         difficulty: 2,
         statement: 'Segundo a Lei 10.216/2001, qual modalidade de internação psiquiátrica requer comunicação ao Ministério Público em 72 horas?',
         options: {
@@ -492,6 +509,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'el002',
         theme: 'etica_legal',
+        subtheme: 'Sigilo Médico',
         difficulty: 3,
         statement: 'Em que situação é permitida a quebra do sigilo médico sem autorização do paciente?',
         options: {
@@ -700,6 +718,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'dq001',
         theme: 'dependencia_quimica',
+        subtheme: 'Alcoolismo',
         difficulty: 2,
         statement: 'Qual medicação é primeira linha para tratamento da dependência de álcool?',
         options: {
@@ -725,6 +744,7 @@ export const seedQuestions: Question[] = [
     {
         id: 'dq002',
         theme: 'dependencia_quimica',
+        subtheme: 'Alcoolismo',
         difficulty: 3,
         statement: 'Paciente com abstinência alcoólica apresenta tremores, sudorese, taquicardia e alucinações visuais. Qual a conduta?',
         options: {
