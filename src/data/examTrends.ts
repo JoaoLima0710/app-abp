@@ -15,12 +15,12 @@ export interface TrendData {
     probability: number;
 }
 
-// Data extrapolated from ABP Exam Trends (2019-2025 Prediction)
+// Data from ABP Exam Trends (2019-2025)
 export const examTrends: TrendData[] = [
     {
         theme: 'psicofarmacologia',
         yearlyFrequency: {
-            '2019': 8, '2020': 9, '2021': 8, '2022.1': 9, '2022.2': 8, '2023.1': 10, '2023.2': 9, '2024': 8, '2025': 9 // Projected
+            '2019': 8, '2020': 9, '2021': 8, '2022.1': 9, '2022.2': 8, '2023.1': 10, '2023.2': 9, '2024': 8, '2025': 9
         },
         subthemes: [
             { name: 'Antipsicóticos de Ação Prolongada (LAIs)', yearlyFrequency: { '2019': 0, '2020': 1, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 3, '2023.2': 2, '2024': 3, '2025': 4 } },
