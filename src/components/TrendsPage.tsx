@@ -1,7 +1,7 @@
-// ... imports
-import { useState, useMemo } from 'react';
+
+import { useState, useMemo, useEffect } from 'react';
 import { THEME_LABELS, THEME_COLORS } from '../types';
-import { examTrends } from '../data/examTrends';
+import { calculateTrends, getAvailableYears, TrendData } from '../utils/statistics';
 
 import {
     TrendingUp, TrendingDown, Minus, BarChart2, Calendar,
@@ -15,7 +15,14 @@ import {
 export default function TrendsPage() {
     const [selectedYear, setSelectedYear] = useState<string>('todos');
     const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
-    const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+    // Dynamic Years
+    const [years, setYears] = useState<string[]>([]);
+    const [examTrends, setExamTrends] = useState<TrendData[]>([]);
+
+    useEffect(() => {
+        setYears(getAvailableYears());
+        setExamTrends(calculateTrends());
+    }, []);
 
     const getTrendIcon = (trend: 'rising' | 'stable' | 'declining') => {
         switch (trend) {
@@ -27,6 +34,8 @@ export default function TrendsPage() {
 
     // Filtered Data
     const filteredStats = useMemo(() => {
+        if (examTrends.length === 0) return [];
+
         const totalForPeriod = selectedYear === 'todos'
             ? examTrends.reduce((acc, t) => acc + t.totalQuestions, 0)
             : examTrends.reduce((acc, t) => acc + (t.yearlyFrequency[selectedYear] || 0), 0);
@@ -39,10 +48,12 @@ export default function TrendsPage() {
                 percentage: totalForPeriod > 0 ? (count / totalForPeriod) * 100 : 0
             };
         }).sort((a, b) => b.currentCount - a.currentCount);
-    }, [selectedYear]);
+    }, [selectedYear, examTrends]);
 
     // Chart Data
     const chartData = useMemo(() => {
+        if (examTrends.length === 0) return [];
+
         if (selectedYear === 'todos') {
             return years.map(year => {
                 const entry: any = { name: year };
@@ -60,7 +71,7 @@ export default function TrendsPage() {
                     color: THEME_COLORS[t.theme]
                 }));
         }
-    }, [selectedYear, filteredStats]);
+    }, [selectedYear, filteredStats, years, examTrends]);
 
     // Top Subthemes
     const topSubthemes = useMemo(() => {
@@ -81,7 +92,11 @@ export default function TrendsPage() {
             }
         });
         return allSubthemes.sort((a, b) => b.count - a.count).slice(0, 5);
-    }, [selectedYear]);
+    }, [selectedYear, examTrends]);
+
+    if (examTrends.length === 0) {
+        return <div className="p-8 text-center text-gray-500">Carregando dados estatísticos...</div>;
+    }
 
     return (
         <div className="page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -268,7 +283,7 @@ export default function TrendsPage() {
                                                         <div
                                                             className="h-full rounded-full"
                                                             style={{
-                                                                width: `${(st.rawCount / item.currentCount) * 100}%`,
+                                                                width: `${item.currentCount > 0 ? (st.rawCount / item.currentCount) * 100 : 0}%`,
                                                                 backgroundColor: THEME_COLORS[item.theme],
                                                                 opacity: 0.8
                                                             }}
