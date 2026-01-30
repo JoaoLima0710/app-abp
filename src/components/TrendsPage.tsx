@@ -41,7 +41,6 @@ export default function TrendsPage() {
         }).sort((a, b) => b.currentCount - a.currentCount);
     }, [selectedYear, examTrends]);
 
-    // Chart Data
     const chartData = useMemo(() => {
         if (examTrends.length === 0) return [];
 
@@ -92,7 +91,7 @@ export default function TrendsPage() {
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8">
             {/* Header Section */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
@@ -168,7 +167,7 @@ export default function TrendsPage() {
                     </h2>
                 </div>
 
-                <div className="h-[400px] w-full">
+                <div className="w-full" style={{ height: 400 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         {selectedYear === 'todos' ? (
                             <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
