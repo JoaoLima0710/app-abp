@@ -2,10 +2,10 @@
 import { useState, useMemo } from 'react';
 import { THEME_LABELS, THEME_COLORS } from '../types';
 import { examTrends } from '../data/examTrends';
-import { useUserStore } from '../store/userStore';
+
 import {
-    TrendingUp, TrendingDown, Minus, BarChart2, Calendar, Filter,
-    Layers, ChevronRight, ChevronDown, PieChart, Zap, AlertCircle, AlertOctagon
+    TrendingUp, TrendingDown, Minus, BarChart2, Calendar,
+    Layers, ChevronRight, ChevronDown, PieChart, Zap
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -13,7 +13,6 @@ import {
 } from 'recharts';
 
 export default function TrendsPage() {
-    const { progress } = useUserStore();
     const [selectedYear, setSelectedYear] = useState<string>('todos');
     const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
     const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
@@ -83,21 +82,6 @@ export default function TrendsPage() {
         });
         return allSubthemes.sort((a, b) => b.count - a.count).slice(0, 5);
     }, [selectedYear]);
-
-    // User Weak Spots
-    const userWeakSpots = useMemo(() => {
-        if (!progress?.subthemeStats) return [];
-        return Object.entries(progress.subthemeStats)
-            .map(([subtheme, stats]) => ({
-                name: subtheme,
-                incorrect: stats.incorrect,
-                total: stats.total,
-                accuracy: stats.total > 0 ? ((stats.total - stats.incorrect) / stats.total) * 100 : 0
-            }))
-            .filter(s => s.incorrect > 0)
-            .sort((a, b) => b.incorrect - a.incorrect)
-            .slice(0, 5);
-    }, [progress]);
 
     return (
         <div className="page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -185,7 +169,7 @@ export default function TrendsPage() {
                                     contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     itemStyle={{ fontSize: '12px', fontWeight: 500 }}
                                 />
-                                {examTrends.slice(0, 5).map((trend, i) => (
+                                {examTrends.slice(0, 5).map((trend) => (
                                     <Line
                                         key={trend.theme}
                                         type="monotone"
