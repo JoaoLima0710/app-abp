@@ -45,7 +45,7 @@ export default function Layout() {
     }
 
     return (
-        <div className="layout-with-sidebar">
+        <div className="layout-with-sidebar md:flex min-h-screen bg-gray-50">
             {/* Mobile menu button */}
             <button
                 className="btn btn-icon mobile-menu-btn"
@@ -62,7 +62,7 @@ export default function Layout() {
             </button>
 
             {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''} md:block md:w-72 md:shrink-0 md:h-screen md:sticky md:top-0 bg-white border-r border-gray-200`}>
                 <div className="sidebar-header" style={{ marginBottom: 'var(--spacing-8)' }}>
                     <div className="flex items-center gap-3">
                         <div
@@ -135,7 +135,7 @@ export default function Layout() {
             </aside>
 
             {/* Main content */}
-            <main className="main-content">
+            <main className="main-content flex-1 min-w-0 p-8">
                 <div className="container">
                     <Outlet />
                 </div>
