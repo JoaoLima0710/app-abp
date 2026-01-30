@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { THEME_LABELS, THEME_COLORS } from '../types';
-import { calculateTrends, getAvailableYears, TrendData } from '../utils/statistics';
+import { calculateTrends, TrendData } from '../utils/statistics';
 
 import {
     TrendingUp, TrendingDown, Minus, BarChart2, Calendar,
@@ -15,13 +15,14 @@ import {
 export default function TrendsPage() {
     const [selectedYear, setSelectedYear] = useState<string>('todos');
     const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
-    // Dynamic Years
-    const [years, setYears] = useState<string[]>([]);
+    const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']; // Restored hardcoded years for stability
+
     const [examTrends, setExamTrends] = useState<TrendData[]>([]);
 
     useEffect(() => {
-        setYears(getAvailableYears());
-        setExamTrends(calculateTrends());
+        // Load stats synchronously (or async if needed later)
+        const stats = calculateTrends();
+        setExamTrends(stats);
     }, []);
 
     const getTrendIcon = (trend: 'rising' | 'stable' | 'declining') => {
@@ -58,12 +59,7 @@ export default function TrendsPage() {
             return years.map(year => {
                 const entry: any = { name: year };
                 examTrends.forEach(t => {
-                    // Use null for missing data to allow interpolation if configured, 
-                    // BUT for LineChart to show 0 we need 0. 
-                    // However, to bridge the 2024 gap visually (if we want to hide it), we use null + connectNulls.
-                    // If we want to show 0, we use 0.
-                    // The user said "raw and ugly", suggesting the V-drop was bad.
-                    // We will use null to skip the gap smoothly.
+                    // Use null for missing 2024 data to allow 'connectNulls' to bridge the gap
                     const val = t.yearlyFrequency[year];
                     entry[THEME_LABELS[t.theme]] = val !== undefined ? val : null;
                 });
@@ -102,7 +98,8 @@ export default function TrendsPage() {
     }, [selectedYear, examTrends]);
 
     if (examTrends.length === 0) {
-        return <div className="p-8 text-center text-gray-500">Carregando dados estatísticos...</div>;
+        // Show shell/loading state but maintain layout to prevent layout shift
+        return <div className="p-8 text-center text-gray-500">Calculando estatísticas...</div>;
     }
 
     return (
@@ -115,7 +112,7 @@ export default function TrendsPage() {
                         Análise de Tendências
                     </h1>
                     <p className="text-gray-500 mt-2 text-lg">
-                        Inteligência de dados baseada nas provas da ABP ({years[0]}-{years[years.length - 1]}).
+                        Inteligência de dados baseada nas provas da ABP (2019-2025).
                     </p>
                 </div>
 
@@ -176,7 +173,7 @@ export default function TrendsPage() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         {selectedYear === 'todos' ? <TrendingUp size={20} className="text-primary-500" /> : <PieChart size={20} className="text-primary-500" />}
-                        {selectedYear === 'todos' ? 'Evolução dos Temas (2019-2025)' : `Distribuição em ${selectedYear}`}
+                        {selectedYear === 'todos' ? 'Evolução dos Temas' : `Distribuição em ${selectedYear}`}
                     </h2>
                 </div>
 
