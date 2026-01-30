@@ -5,7 +5,7 @@ import { examTrends } from '../data/examTrends';
 
 import {
     TrendingUp, TrendingDown, Minus, BarChart2, Calendar,
-    Layers, ChevronRight, ChevronDown, PieChart, Zap
+    Layers, ChevronDown, PieChart, Zap
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

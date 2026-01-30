@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
 import { useUserStore } from '../store/userStore';
 import { THEME_LABELS, THEME_COLORS } from '../types';

@@ -224,7 +224,8 @@ export const questions2025: Question[] = [
         "difficulty": 2,
         "statement": "De acordo com a referência NARDI, A. E.; SILVA, A. G.; QUEVEDO, J. (org.). Tratado\nde Psiquiatriada Associação Brasileira de Psiquiatria. Porto Alegre: Artmed, 2022,\nantes do surgimento do quadro clínico que caracteriza o transtorno bipolar (TB), os\nindivíduos podem apresentar alterações fenotípicas específcas. Dessa maneira,\nhá estudos que avaliam como ocorre o TB antes do diagnóstico formal. Duﬀy e\ncolaboradores propuseram um modelo longitudinal sobre ocurso\ndesenvolvimental do TB. No primeiro estágio, há presença de sintomas de\nansiedade, problemas de sono, difculdades de aprendizagem e TDAH. No\nsegundo estágio, são prevalentes sintomas depressivos inespecífcos (por\nexemplo, apatia, anedonia), distimia e ciclotimia. O terceiro estágio é\ncaracterizado pela presença de um quadro clínico específco com episódio único.\nNesse estágio, já é clinicamente perceptível o início do declínio funcional dessas\npessoas. O quarto estágio apresenta o quadro característico do TB, isto é, um\nindivíduo com episódios maníacos e/ou hipomaníacos.\nAssinale a alternativa com o quadro clínico com episódio único característico do\nterceiro estágio.",
         "options": {
-            "A": "Distimia. B Hipomania.",
+            "A": "Distimia.",
+            "B": "Hipomania.",
             "C": "Transtorno de pânico.",
             "D": "Transtorno de ansiedade generalizada (TAG).",
             "E": "Transtorno depressivo maior (TDM)."
@@ -844,7 +845,8 @@ export const questions2025: Question[] = [
         "difficulty": 2,
         "statement": "De acordo com a referência BRASIL. Presidência da República. Casa Civil.\nSubchefa para assuntosjurídicos. LEI Nº 13.819 DE 26 DE ABRIL DE 2019,\nconhecida como “Vovó Rose”, que instituiu a Política Nacional de Prevenção da\nAutomutilação e do Suicídio, os casos suspeitos ou confrmados de violência\nautoprovocada são de notifcação compulsória pelos estabelecimentos de saúde\npúblicos e privados às autoridades sanitárias, e pelos estabelecimentos de ensino\npúblicos e privados ao Conselho Tutelar (artigo. 6º). O parágrafo 1º do artigo. 6º\nlista o que é entendido por violência autoprovocada para os efeitos da Lei. De\nacordo com o texto da lei, não faz parte do que é entendido por violência\nautoprovocada:",
         "options": {
-            "A": "Ideação suicida. B.Ato de automutilação, com ideação suicida.",
+            "A": "Ideação suicida.",
+            "B": "Ato de automutilação, com ideação suicida.",
             "C": "Ato de automutilação, sem ideação suicida.",
             "D": "Suicídio consumado.",
             "E": "Tentativa de suicídio."
