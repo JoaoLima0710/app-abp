@@ -58,7 +58,14 @@ export default function TrendsPage() {
             return years.map(year => {
                 const entry: any = { name: year };
                 examTrends.forEach(t => {
-                    entry[THEME_LABELS[t.theme]] = t.yearlyFrequency[year] || 0;
+                    // Use null for missing data to allow interpolation if configured, 
+                    // BUT for LineChart to show 0 we need 0. 
+                    // However, to bridge the 2024 gap visually (if we want to hide it), we use null + connectNulls.
+                    // If we want to show 0, we use 0.
+                    // The user said "raw and ugly", suggesting the V-drop was bad.
+                    // We will use null to skip the gap smoothly.
+                    const val = t.yearlyFrequency[year];
+                    entry[THEME_LABELS[t.theme]] = val !== undefined ? val : null;
                 });
                 return entry;
             });
@@ -193,6 +200,7 @@ export default function TrendsPage() {
                                         strokeWidth={3}
                                         dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
                                         activeDot={{ r: 6, strokeWidth: 0 }}
+                                        connectNulls={true}
                                     />
                                 ))}
                             </LineChart>

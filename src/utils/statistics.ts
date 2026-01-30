@@ -40,13 +40,13 @@ export function calculateTrends(): TrendData[] {
         subthemes: Record<string, Record<string, number>>;
     }> = {};
 
-    const availableYears = new Set<string>();
+    const availableYearsSet = new Set<string>();
 
     // 1. Aggregate Counts
     ALL_QUESTIONS.forEach(q => {
         const year = getYear(q);
         if (!year) return;
-        availableYears.add(year);
+        availableYearsSet.add(year);
 
         if (!themeMap[q.theme]) {
             themeMap[q.theme] = { yearlyFrequency: {}, subthemes: {} };
@@ -66,18 +66,26 @@ export function calculateTrends(): TrendData[] {
         themeMap[q.theme].subthemes[cleanSubtheme][year] = (themeMap[q.theme].subthemes[cleanSubtheme][year] || 0) + 1;
     });
 
-    const years = Array.from(availableYears).sort();
-    const latestYear = years[years.length - 1]; // 2025
-    const previousYear = years.includes('2024') ? '2024' : years[years.length - 2]; // 2024 or 2023
+    // 2. Determine Contiguous Year Range
+    const yearsSorted = Array.from(availableYearsSet).sort();
+    const minYear = parseInt(yearsSorted[0]);
+    const maxYear = parseInt(yearsSorted[yearsSorted.length - 1]);
+    const allYears: string[] = [];
+    for (let y = minYear; y <= maxYear; y++) {
+        allYears.push(y.toString());
+    }
 
-    // Total questions per year (for calculating percentage/probability)
+    // 2025
+    // Previous year in data might not be latest - 1 if data is missing, so we check availability or fallback
+    // But for statistics we want the contiguous previous year if possible, or the last available one
+
     const questionsPerYear: Record<string, number> = {};
-    years.forEach(y => {
+    allYears.forEach(y => {
         questionsPerYear[y] = ALL_QUESTIONS.filter(q => getYear(q) === y).length;
     });
 
 
-    // 2. Build TrendData Objects
+    // 3. Build TrendData Objects
     const trends: TrendData[] = Object.entries(themeMap).map(([themeKey, data]) => {
         const theme = themeKey as PsychiatryTheme;
         const total = Object.values(data.yearlyFrequency).reduce((a, b) => a + b, 0);
@@ -88,16 +96,19 @@ export function calculateTrends(): TrendData[] {
             yearlyFrequency: freq
         }));
 
-        // Calculate Frequency % for Latest vs Previous
-        // Using Frequency % is better than raw count if totals differ
-        const countLatest = data.yearlyFrequency[latestYear] || 0;
-        const countPrev = data.yearlyFrequency[previousYear] || 0;
+        // Calculate Trend Direction
+        // Compare latest year freq vs previous AVAILABLE year freq (since 2024 is missing)
+        const yearsWithData = Object.keys(data.yearlyFrequency).sort();
+        const lastYearWithData = yearsWithData[yearsWithData.length - 1];
+        const prevYearWithData = yearsWithData.length > 1 ? yearsWithData[yearsWithData.length - 2] : null;
 
-        const totalLatest = questionsPerYear[latestYear] || 1;
-        const totalPrev = questionsPerYear[previousYear] || 1;
+        let freqLatest = 0;
+        let freqPrev = 0;
 
-        const freqLatest = countLatest / totalLatest;
-        const freqPrev = countPrev / totalPrev;
+        if (lastYearWithData && prevYearWithData) {
+            freqLatest = data.yearlyFrequency[lastYearWithData] / (questionsPerYear[lastYearWithData] || 1);
+            freqPrev = data.yearlyFrequency[prevYearWithData] / (questionsPerYear[prevYearWithData] || 1);
+        }
 
         let trend: 'rising' | 'stable' | 'declining' = 'stable';
         const threshold = 0.02; // 2% change threshold
@@ -105,16 +116,16 @@ export function calculateTrends(): TrendData[] {
         if (freqLatest > freqPrev + threshold) trend = 'rising';
         else if (freqLatest < freqPrev - threshold) trend = 'declining';
 
-        // Probability (Frequency in latest exam as proxy for probability)
+        // Probability (Frequency in latest exam as proxy)
         const probability = Math.round(freqLatest * 100);
 
         return {
             theme,
-            yearlyFrequency: data.yearlyFrequency,
+            yearlyFrequency: data.yearlyFrequency, // Sparse map is fine, we handle filling in UI or here
             subthemes,
             totalQuestions: total,
             trend,
-            lastAppeared: countLatest > 0 ? latestYear : (countPrev > 0 ? previousYear : 'Antigo'),
+            lastAppeared: lastYearWithData || 'Antigo',
             probability
         };
     });
@@ -128,5 +139,12 @@ export const getAvailableYears = () => {
         const y = getYear(q);
         if (y) years.add(y);
     });
-    return Array.from(years).sort();
+    const sorted = Array.from(years).sort();
+    if (sorted.length === 0) return [];
+
+    const min = parseInt(sorted[0]);
+    const max = parseInt(sorted[sorted.length - 1]);
+    const contiguous: string[] = [];
+    for (let i = min; i <= max; i++) contiguous.push(i.toString());
+    return contiguous;
 };
