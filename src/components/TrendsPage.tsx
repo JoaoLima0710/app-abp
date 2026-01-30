@@ -1,28 +1,19 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { THEME_LABELS, THEME_COLORS } from '../types';
 import { calculateTrends, TrendData } from '../utils/statistics';
-
-import {
-    TrendingUp, TrendingDown, Minus, BarChart2, Calendar,
-    Layers, ChevronDown, PieChart, Zap
-} from 'lucide-react';
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    BarChart, Bar, Cell
-} from 'recharts';
+import { TrendingUp, TrendingDown, Minus, BarChart2, Calendar, Layers, ChevronDown, PieChart, Zap } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 export default function TrendsPage() {
     const [selectedYear, setSelectedYear] = useState<string>('todos');
     const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
-    const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']; // Restored hardcoded years for stability
+    const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
 
+    // State to hold calculated trends
     const [examTrends, setExamTrends] = useState<TrendData[]>([]);
 
     useEffect(() => {
-        // Load stats synchronously (or async if needed later)
-        const stats = calculateTrends();
-        setExamTrends(stats);
+        setExamTrends(calculateTrends());
     }, []);
 
     const getTrendIcon = (trend: 'rising' | 'stable' | 'declining') => {
@@ -36,7 +27,6 @@ export default function TrendsPage() {
     // Filtered Data
     const filteredStats = useMemo(() => {
         if (examTrends.length === 0) return [];
-
         const totalForPeriod = selectedYear === 'todos'
             ? examTrends.reduce((acc, t) => acc + t.totalQuestions, 0)
             : examTrends.reduce((acc, t) => acc + (t.yearlyFrequency[selectedYear] || 0), 0);
@@ -59,8 +49,8 @@ export default function TrendsPage() {
             return years.map(year => {
                 const entry: any = { name: year };
                 examTrends.forEach(t => {
-                    // Use null for missing 2024 data to allow 'connectNulls' to bridge the gap
                     const val = t.yearlyFrequency[year];
+                    // null + connectNulls allows bridging the 2024 gap
                     entry[THEME_LABELS[t.theme]] = val !== undefined ? val : null;
                 });
                 return entry;
@@ -98,32 +88,33 @@ export default function TrendsPage() {
     }, [selectedYear, examTrends]);
 
     if (examTrends.length === 0) {
-        // Show shell/loading state but maintain layout to prevent layout shift
         return <div className="p-8 text-center text-gray-500">Calculando estatísticas...</div>;
     }
 
     return (
-        <div className="page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in">
             {/* Header Section */}
-            <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-                        <BarChart2 className="text-primary-600" size={32} />
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <BarChart2 className="text-primary-600" size={28} />
                         Análise de Tendências
                     </h1>
-                    <p className="text-gray-500 mt-2 text-lg">
+                    <p className="text-gray-500 mt-1">
                         Inteligência de dados baseada nas provas da ABP (2019-2025).
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200">
-                    <div className={`px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all ${selectedYear === 'todos' ? 'bg-primary-50 text-primary-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
-                        onClick={() => setSelectedYear('todos')}>
-                        Histórico Completo
-                    </div>
-                    <div className="h-6 w-px bg-gray-200 mx-1" />
+                <div className="flex items-center gap-3 bg-white p-1 rounded-lg shadow-sm border border-gray-200">
+                    <button
+                        onClick={() => setSelectedYear('todos')}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${selectedYear === 'todos' ? 'bg-primary-50 text-primary-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Histórico
+                    </button>
+                    <div className="h-4 w-px bg-gray-200" />
                     <select
-                        className="bg-transparent border-none text-sm font-medium text-gray-700 focus:ring-0 cursor-pointer py-2 pr-8"
+                        className="bg-transparent border-none text-sm font-medium text-gray-700 focus:ring-0 cursor-pointer py-1.5 pr-8 pl-2"
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
                     >
@@ -134,9 +125,9 @@ export default function TrendsPage() {
             </header>
 
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-2xl border border-warning-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-warning-50 rounded-xl text-warning-600">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
                         <Zap size={24} />
                     </div>
                     <div>
@@ -146,8 +137,8 @@ export default function TrendsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl border border-primary-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-primary-50 rounded-xl text-primary-600">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                         <Layers size={24} />
                     </div>
                     <div>
@@ -155,8 +146,8 @@ export default function TrendsPage() {
                         <div className="text-xl font-bold text-gray-900">{topSubthemes[0]?.name || '-'}</div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl border border-success-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-success-50 rounded-xl text-success-600">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
                         <Calendar size={24} />
                     </div>
                     <div>
@@ -169,10 +160,10 @@ export default function TrendsPage() {
             </div>
 
             {/* Main Visual: Evolution Chart */}
-            <section className="mb-12 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        {selectedYear === 'todos' ? <TrendingUp size={20} className="text-primary-500" /> : <PieChart size={20} className="text-primary-500" />}
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        {selectedYear === 'todos' ? <TrendingUp size={20} className="text-indigo-500" /> : <PieChart size={20} className="text-indigo-500" />}
                         {selectedYear === 'todos' ? 'Evolução dos Temas' : `Distribuição em ${selectedYear}`}
                     </h2>
                 </div>
@@ -216,11 +207,11 @@ export default function TrendsPage() {
                         )}
                     </ResponsiveContainer>
                 </div>
-            </section>
+            </div>
 
             {/* Detailed Breakdown List */}
-            <section className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 px-2">Detalhamento por Tema</h3>
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 px-1">Detalhamento por Tema</h3>
 
                 {filteredStats.map((item) => {
                     const isExpanded = expandedTheme === item.theme;
@@ -228,7 +219,7 @@ export default function TrendsPage() {
 
                     return (
                         <div key={item.theme}
-                            className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'border-primary-200 shadow-md ring-1 ring-primary-100' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'}`}>
+                            className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden ${isExpanded ? 'border-primary-200 shadow-md ring-1 ring-primary-100' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'}`}>
 
                             <div
                                 className="p-5 flex items-center gap-6 cursor-pointer"
@@ -265,10 +256,6 @@ export default function TrendsPage() {
                             {/* Subthemes Expansion */}
                             {isExpanded && hasSubthemes && (
                                 <div className="bg-gray-50/50 border-t border-gray-100 p-6 animate-slide-down">
-                                    <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                        <Layers size={14} /> Subtemas Recorrentes
-                                    </h5>
-
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                         {item.subthemes
                                             .map(st => {
@@ -302,7 +289,7 @@ export default function TrendsPage() {
                         </div>
                     );
                 })}
-            </section>
+            </div>
         </div>
     );
 }
