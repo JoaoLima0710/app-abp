@@ -40,8 +40,9 @@ export async function initializeDatabase() {
 
 import { treatyQuestions } from './questions_treaty';
 import { questions2025 } from './questions_2025';
+import { questionsHistorical } from './questions_historical';
 
-export async function getRandomQuestions(count: number, theme?: string, source: 'standard' | 'treaty' | '2025' = 'standard'): Promise<Question[]> {
+export async function getRandomQuestions(count: number, theme?: string, source: 'standard' | 'treaty' | '2025' | 'historical' = 'standard'): Promise<Question[]> {
     let questions: Question[] = [];
 
     if (source === 'treaty') {
@@ -51,6 +52,11 @@ export async function getRandomQuestions(count: number, theme?: string, source: 
         }
     } else if (source === '2025') {
         questions = questions2025;
+        if (theme) {
+            questions = questions.filter(q => q.theme === theme);
+        }
+    } else if (source === 'historical') {
+        questions = questionsHistorical;
         if (theme) {
             questions = questions.filter(q => q.theme === theme);
         }
