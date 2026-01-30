@@ -16,88 +16,147 @@ async function ingest() {
         console.log("Parsing PDF...");
         const instance = new PDFParse(uint8Array);
         const result = await instance.getText();
-        const text = result.text;
+        const fullText = result.text;
 
-        console.log("Processing text...");
+        const resetRegex = /(?:Questão|QUESTÃO)\s*0?1(?!\d)/g;
+        let match;
+        const startIndices = [];
 
-        const lines = text.split('\n');
-        const questions = [];
-
-        let currentYear = '2019';
-        let currentQuestion = null;
-
-        // Regex helpers
-        // "Abp 2019", "Prova objetiva 2020", "Prova ABP 2022.2", "TEP - 2023.2"
-        const yearHeaderRegex = /(?:^|\s)(?:ABP|PROVA|TEP).{0,30}(20(?:19|20|21|22|23|24)(?:\.\d)?)/i;
-        const questionStartRegex = /^(?:Questão|QUESTÃO)\s*(\d+)/i;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-
-            // Check for Year Header
-            // We want to avoid false positives like references inside text or "2024" in a law number.
-            // Strict check: Line should be short-ish or contain keywords
-            if (line.length < 100 && yearHeaderRegex.test(line)) {
-                const match = line.match(yearHeaderRegex);
-                if (match) {
-                    const newYear = match[1];
-                    // Only update if it looks like a meaningful change or initialization
-                    // And exclude widely off matches if any
-                    console.log(`[INFO] Found potential year header: "${line}" -> ${newYear}`);
-                    currentYear = newYear;
-                }
-            }
-
-            // Check for Question Start
-            const qMatch = line.match(questionStartRegex);
-            if (qMatch) {
-                // Save previous question
-                if (currentQuestion) {
-                    questions.push(currentQuestion);
-                }
-
-                // Start new question
-                const qNum = qMatch[1].padStart(3, '0');
-                const id = `p${currentYear.replace('.', '_')}_${qNum}`; // e.g. p2019_001
-
-                currentQuestion = {
-                    id: id,
-                    theme: 'general', // Default, needs tagging logic later
-                    subtheme: 'Geral',
-                    difficulty: 3,
-                    statement: line, // Start with this line
-                    options: {}, // Parsing options is hard without structure, usually they are A)... B)...
-                    correctAnswer: '?',
-                    explanation: 'Imported from PDF',
-                    tags: [currentYear, 'imported', 'pdf_ingestion']
-                };
-            } else {
-                // Append to current question
-                if (currentQuestion) {
-                    // Try to detect options like "A)" or "(A)"
-                    // For now, simplify: just append to statement.
-                    // We can refine option parsing if the format is consistent (e.g. ^A\))
-                    currentQuestion.statement += '\n' + line;
-                }
-            }
+        while ((match = resetRegex.exec(fullText)) !== null) {
+            startIndices.push(match.index);
         }
 
-        // Push last question
-        if (currentQuestion) {
-            questions.push(currentQuestion);
+        console.log(`Found ${startIndices.length} exam blocks.`);
+
+        const allQuestions = [];
+
+        for (let i = 0; i < startIndices.length; i++) {
+            const start = startIndices[i];
+            const end = (i + 1 < startIndices.length) ? startIndices[i + 1] : fullText.length;
+            const blockText = fullText.substring(start, end);
+
+            // Lookback for headers
+            const lookback = fullText.substring(Math.max(0, start - 2000), start).toLowerCase();
+
+            if (lookback.includes("gabarito")) {
+                console.log(`[Block ${i}] Skipped (Gabarito context)`);
+                continue;
+            }
+
+            let detectedYear = "Unknown";
+
+            // Precise Index Mapping
+            if (i === 0) detectedYear = "2019";
+            else if (i === 1) detectedYear = "2020";
+            else if (start >= 210000 && start < 220000) detectedYear = "2021"; // Block 3 (~214k)
+            else if (start >= 430000 && start < 440000) detectedYear = "2022"; // Block 5 (~433k)
+            else if (start >= 640000) detectedYear = "2023"; // Block 6 (~647k)
+            else {
+                // Fallback regex in lookback
+                if (lookback.includes("2024")) detectedYear = "2024";
+                else if (lookback.includes("2023")) detectedYear = "2023";
+                else if (lookback.includes("2022")) detectedYear = "2022";
+                else if (lookback.includes("2021")) detectedYear = "2021";
+            }
+
+            console.log(`[Block ${i}] Parsing as: ${detectedYear} (Index: ${start})`);
+
+            const blockQs = parseBlock(blockText, detectedYear);
+            allQuestions.push(...blockQs);
         }
 
-        console.log(`Extracted ${questions.length} questions.`);
+        console.log(`Final Total: ${allQuestions.length} questions.`);
 
-        // Write to file
-        const content = `import { Question } from './questions';\n\nexport const questionsHistorical: Question[] = ${JSON.stringify(questions, null, 4)};`;
+        const content = `import { Question } from '../types';\n\nexport const questionsHistorical: Question[] = ${JSON.stringify(allQuestions, null, 4)};`;
         fs.writeFileSync(outputPath, content);
         console.log(`Written to ${outputPath}`);
 
     } catch (e) {
-        console.error("Error:", e);
+        console.error(e);
     }
+}
+
+// Define Keywords
+const THEME_KEYWORDS = {
+    'neurociencias_diagnostico': ['neurociência', 'neuroimagem', 'neurotransmissor', 'sinapse', 'genética', 'diagnóstico', 'dsm-5', 'cid-11', 'exame psíquico', 'anamnese', 'frontal', 'dopamina', 'delirium', 'alzheimer', 'demência', 'sono', 'insônia'],
+    'psicofarmacologia': ['farmacologia', 'mecanismo de ação', 'antidepressivo', 'isrs', 'antipsicótico', 'clozapina', 'lítio', 'estabilizador', 'ácido valproico', 'benzodiazepínico', 'metilfenidato', 'cetamina', 'medicamento'],
+    'transtornos_humor': ['depressão', 'depressivo', 'distimia', 'bipolar', 'mania', 'hipomania', 'suicídio', 'humor'],
+    'esquizofrenia_psicose': ['esquizofrenia', 'psicose', 'psicótico', 'delírio', 'alucinação', 'catatonia'],
+    'transtornos_ansiedade': ['ansiedade', 'pânico', 'fobia', 'tag', 'obsessivo', 'compulsivo', 'toc', 'tept', 'estresse'],
+    'psiquiatria_infantojuvenil': ['infância', 'adolescência', 'autismo', 'tea', 'tdah', 'hiperatividade', 'deficiência intelectual', 'infantil'],
+    'psicogeriatria': ['idoso', 'envelhecimento', 'geriatria'],
+    'transtornos_personalidade': ['personalidade', 'borderline', 'narcisista', 'histriônica', 'anissocial', 'paranoide'],
+    'dependencia_quimica': ['dependência', 'abuso', 'abstinência', 'álcool', 'tabaco', 'cocaína', 'maconha', 'opioide', 'droga'],
+    'psiquiatria_forense': ['forense', 'lei', 'ética', 'cfm', 'imputabilidade', 'interdição', 'perícia', 'sigilo', 'internação'],
+    'urgencias_psiquiatricas': ['emergência', 'urgência', 'agitação', 'contenção']
+};
+
+const TARGET_THEMES = Object.keys(THEME_KEYWORDS);
+
+function classifyText(text) {
+    const lowerText = text.toLowerCase();
+    const scores = {};
+    for (const theme of TARGET_THEMES) {
+        scores[theme] = 0;
+        for (const kw of THEME_KEYWORDS[theme]) {
+            if (lowerText.includes(kw)) scores[theme]++;
+        }
+    }
+    let maxScore = 0;
+    let bestTheme = 'neurociencias_diagnostico';
+    for (const theme of TARGET_THEMES) {
+        if (scores[theme] > maxScore) {
+            maxScore = scores[theme];
+            bestTheme = theme;
+        }
+    }
+    return bestTheme;
+}
+
+function parseBlock(text, year) {
+    const lines = text.split('\n');
+    const questions = [];
+    let currentQuestion = null;
+    const qStartRegex = /^(?:Questão|QUESTÃO)\s*(\d+)/i;
+
+    // Normalize year for ID
+    const yearId = year.replace('.', '_');
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        const match = trimmed.match(qStartRegex);
+        if (match) {
+            if (currentQuestion) {
+                // Classify before pushing
+                currentQuestion.theme = classifyText(currentQuestion.statement);
+                questions.push(currentQuestion);
+            }
+
+            const num = match[1].padStart(3, '0');
+            const id = `p${yearId}_${num}`;
+
+            currentQuestion = {
+                id: id,
+                theme: 'general', // Will be classified on push
+                subtheme: 'Classificado Automaticamente',
+                difficulty: 3,
+                statement: trimmed,
+                options: {},
+                correctAnswer: '?',
+                explanation: 'Imported from PDF',
+                tags: [year, 'pdf_ingestion']
+            };
+        } else {
+            if (currentQuestion) currentQuestion.statement += '\n' + trimmed;
+        }
+    }
+    if (currentQuestion) {
+        currentQuestion.theme = classifyText(currentQuestion.statement);
+        questions.push(currentQuestion);
+    }
+    return questions;
 }
 
 ingest();

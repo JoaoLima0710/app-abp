@@ -2101,7 +2101,7 @@ export const questions2025: Question[] = [
         },
         "tags": [
             "2025",
-            "prova_2"
+            "2025_1"
         ]
     },
     {
@@ -2640,7 +2640,7 @@ export const questions2025: Question[] = [
         },
         "tags": [
             "2025",
-            "prova_2"
+            "2025_1"
         ]
     },
     {
@@ -2666,7 +2666,7 @@ export const questions2025: Question[] = [
         },
         "tags": [
             "2025",
-            "prova_2"
+            "2025_1"
         ]
     },
     {
@@ -2692,7 +2692,7 @@ export const questions2025: Question[] = [
         },
         "tags": [
             "2025",
-            "prova_2"
+            "2025_1"
         ]
     },
     {
@@ -2718,7 +2718,7 @@ export const questions2025: Question[] = [
         },
         "tags": [
             "2025",
-            "prova_2"
+            "2025_1"
         ]
     },
     {

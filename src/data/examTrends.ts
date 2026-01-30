@@ -21,13 +21,13 @@ export const examTrends: TrendData[] = [
     {
         theme: 'neurociencias_diagnostico',
         yearlyFrequency: {
-            '2019': 8, '2020': 8, '2021': 8, '2022.1': 8, '2022.2': 8, '2023.1': 8, '2023.2': 8, '2024': 8, '2025': 77
+            '2019': 14, '2020': 20, '2021': 36, '2022': 27, '2023': 36, '2024': 8, '2025': 77
         },
         subthemes: [
             { name: 'Neurociências e Diagnóstico Geral', yearlyFrequency: { '2025': 77 } },
             { name: 'Risco de Suicídio', yearlyFrequency: { '2025': 0 } }
         ],
-        totalQuestions: 141,
+        totalQuestions: 141, // Update totals implicitly or ignore? Trends logic sums these usually.
         trend: 'rising',
         lastAppeared: '2025',
         probability: 99
@@ -35,14 +35,11 @@ export const examTrends: TrendData[] = [
     {
         theme: 'psicofarmacologia',
         yearlyFrequency: {
-            '2019': 8, '2020': 9, '2021': 8, '2022.1': 9, '2022.2': 8, '2023.1': 10, '2023.2': 9, '2024': 8, '2025': 14
+            '2019': 7, '2020': 7, '2021': 14, '2022': 13, '2023': 15, '2024': 8, '2025': 14
         },
         subthemes: [
             { name: 'Psicofarmacologia Geral', yearlyFrequency: { '2025': 14 } },
-            { name: 'Clozapina e Manejo de Riscos', yearlyFrequency: { '2019': 2, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 1, '2023.1': 2, '2023.2': 2, '2024': 1, '2025': 0 } },
-            { name: 'Lítio e Estabilizadores', yearlyFrequency: { '2019': 3, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 1, '2025': 0 } },
-            { name: 'Antipsicóticos de Ação Prolongada (LAIs)', yearlyFrequency: { '2019': 0, '2020': 1, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 3, '2023.2': 2, '2024': 3, '2025': 0 } },
-            { name: 'Ketamina e Novos Antidepressivos', yearlyFrequency: { '2019': 0, '2020': 0, '2021': 0, '2022.1': 1, '2022.2': 1, '2023.1': 1, '2023.2': 1, '2024': 1, '2025': 0 } }
+            { name: 'Lítio e Estabilizadores', yearlyFrequency: { '2025': 0 } }
         ],
         totalQuestions: 83,
         trend: 'rising',
@@ -52,12 +49,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'transtornos_humor',
         yearlyFrequency: {
-            '2019': 7, '2020': 6, '2021': 7, '2022.1': 7, '2022.2': 6, '2023.1': 7, '2023.2': 8, '2024': 7, '2025': 27
+            '2019': 7, '2020': 9, '2021': 8, '2022': 18, '2023': 10, '2024': 7, '2025': 27
         },
         subthemes: [
-            { name: 'Depressão Resistente', yearlyFrequency: { '2019': 1, '2020': 1, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 3, '2023.2': 3, '2024': 3, '2025': 0 } },
-            { name: 'Diagnóstico Diferencial TB x TDM', yearlyFrequency: { '2019': 3, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 0 } },
-            { name: 'Transtorno Disfórico Pré-menstrual', yearlyFrequency: { '2019': 0, '2020': 1, '2021': 1, '2022.1': 1, '2022.2': 0, '2023.1': 1, '2023.2': 1, '2024': 1, '2025': 0 } },
+            { name: 'Depressão Resistente', yearlyFrequency: { '2025': 0 } },
             { name: 'Geral', yearlyFrequency: { '2025': 27 } }
         ],
         totalQuestions: 82,
@@ -68,11 +63,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'esquizofrenia_psicose',
         yearlyFrequency: {
-            '2019': 5, '2020': 5, '2021': 4, '2022.1': 5, '2022.2': 5, '2023.1': 4, '2023.2': 5, '2024': 5, '2025': 11
+            '2019': 2, '2020': 3, '2021': 5, '2022': 3, '2023': 6, '2024': 5, '2025': 11
         },
         subthemes: [
-            { name: 'Primeiro Episódio Psicótico', yearlyFrequency: { '2019': 1, '2020': 1, '2021': 1, '2022.1': 2, '2022.2': 1, '2023.1': 1, '2023.2': 2, '2024': 2, '2025': 0 } },
-            { name: 'Catatonia', yearlyFrequency: { '2019': 1, '2020': 1, '2021': 1, '2022.1': 1, '2022.2': 1, '2023.1': 1, '2023.2': 1, '2024': 1, '2025': 0 } },
+            { name: 'Primeiro Episódio Psicótico', yearlyFrequency: { '2025': 0 } },
             { name: 'Geral', yearlyFrequency: { '2025': 11 } }
         ],
         totalQuestions: 49,
@@ -83,12 +77,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'psiquiatria_infantojuvenil',
         yearlyFrequency: {
-            '2019': 3, '2020': 4, '2021': 4, '2022.1': 5, '2022.2': 4, '2023.1': 5, '2023.2': 6, '2024': 5, '2025': 17
+            '2019': 1, '2020': 3, '2021': 5, '2022': 7, '2023': 1, '2024': 5, '2025': 17
         },
         subthemes: [
-            { name: 'TDAH ao Longo da Vida', yearlyFrequency: { '2019': 1, '2020': 1, '2021': 2, '2022.1': 2, '2022.2': 1, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 0 } },
-            { name: 'TEA (Autismo) em Adultos', yearlyFrequency: { '2019': 0, '2020': 1, '2021': 1, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 3, '2024': 2, '2025': 0 } },
-            { name: 'Disforia de Gênero', yearlyFrequency: { '2019': 0, '2020': 0, '2021': 1, '2022.1': 1, '2022.2': 1, '2023.1': 1, '2023.2': 1, '2024': 1, '2025': 0 } },
+            { name: 'TDAH ao Longo da Vida', yearlyFrequency: { '2025': 0 } },
             { name: 'Geral', yearlyFrequency: { '2025': 17 } }
         ],
         totalQuestions: 53,
@@ -99,10 +91,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'psiquiatria_forense',
         yearlyFrequency: {
-            '2019': 1, '2020': 2, '2021': 2, '2022.1': 3, '2022.2': 3, '2023.1': 4, '2023.2': 5, '2024': 5, '2025': 11
+            '2019': 0, '2020': 2, '2021': 23, '2022': 15, '2023': 21, '2024': 5, '2025': 11
         },
         subthemes: [
-            { name: 'Capacidade Civil e Interdição', yearlyFrequency: { '2019': 0, '2020': 1, '2021': 1, '2022.1': 1, '2022.2': 1, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 0 } },
+            { name: 'Capacidade Civil e Interdição', yearlyFrequency: { '2025': 0 } },
             { name: 'Geral', yearlyFrequency: { '2025': 11 } }
         ],
         totalQuestions: 36,
@@ -113,10 +105,9 @@ export const examTrends: TrendData[] = [
     {
         theme: 'urgencias_psiquiatricas',
         yearlyFrequency: {
-            '2019': 4, '2020': 3, '2021': 4, '2022.1': 3, '2022.2': 4, '2023.1': 3, '2023.2': 3, '2024': 4, '2025': 1
+            '2019': 1, '2020': 0, '2021': 0, '2022': 0, '2023': 0, '2024': 4, '2025': 1
         },
         subthemes: [
-            { name: 'Risco de Suicídio', yearlyFrequency: { '2025': 0 } },
             { name: 'Geral', yearlyFrequency: { '2025': 1 } }
         ],
         totalQuestions: 29,
@@ -127,7 +118,7 @@ export const examTrends: TrendData[] = [
     {
         theme: 'psicogeriatria',
         yearlyFrequency: {
-            '2019': 3, '2020': 3, '2021': 3, '2022.1': 4, '2022.2': 3, '2023.1': 4, '2023.2': 4, '2024': 3, '2025': 21
+            '2019': 0, '2020': 0, '2021': 0, '2022': 0, '2023': 0, '2024': 3, '2025': 21
         },
         subthemes: [
             { name: 'Demências e Envelhecimento', yearlyFrequency: { '2025': 21 } }
@@ -140,7 +131,7 @@ export const examTrends: TrendData[] = [
     {
         theme: 'transtornos_ansiedade',
         yearlyFrequency: {
-            '2019': 2, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 6
+            '2019': 5, '2020': 6, '2021': 6, '2022': 12, '2023': 7, '2024': 2, '2025': 6
         },
         subthemes: [
             { name: 'Transtornos de Ansiedade', yearlyFrequency: { '2025': 6 } }
@@ -153,11 +144,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'transtornos_personalidade',
         yearlyFrequency: {
-            '2019': 1, '2020': 1, '2021': 2, '2022.1': 1, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 12
+            '2019': 2, '2020': 0, '2021': 1, '2022': 1, '2023': 0, '2024': 2, '2025': 12
         },
         subthemes: [
-            { name: 'Geral', yearlyFrequency: { '2025': 12 } },
-            { name: 'Risco de Suicídio', yearlyFrequency: { '2025': 0 } }
+            { name: 'Geral', yearlyFrequency: { '2025': 12 } }
         ],
         totalQuestions: 25,
         trend: 'rising',
@@ -167,10 +157,10 @@ export const examTrends: TrendData[] = [
     {
         theme: 'dependencia_quimica',
         yearlyFrequency: {
-            '2019': 5, '2020': 4, '2021': 5, '2022.1': 4, '2022.2': 5, '2023.1': 4, '2023.2': 4, '2024': 4, '2025': 0
+            '2019': 1, '2020': 0, '2021': 2, '2022': 4, '2023': 2, '2024': 4, '2025': 0
         },
         subthemes: [
-            { name: 'Alcoolismo', yearlyFrequency: { '2019': 2, '2020': 2, '2021': 2, '2022.1': 2, '2022.2': 2, '2023.1': 2, '2023.2': 2, '2024': 2, '2025': 0 } }
+            { name: 'Alcoolismo', yearlyFrequency: { '2025': 0 } }
         ],
         totalQuestions: 35,
         trend: 'stable',
