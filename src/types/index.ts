@@ -9,6 +9,7 @@ export type PsychiatryTheme =
     | 'psicoterapia'
     | 'etica_legal'
     | 'neurociencias_diagnostico'
+    | 'diagnostico'
     | 'transtornos_ansiedade'
     | 'transtornos_personalidade'
     | 'dependencia_quimica'
@@ -27,14 +28,15 @@ export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     urgencias_psiquiatricas: 'Urgências Psiquiátricas',
     psicoterapia: 'Psicoterapia',
     etica_legal: 'Ética e Psiquiatria Legal',
-    neurociencias_diagnostico: 'Neurociências e Diagnóstico',
+    neurociencias_diagnostico: 'Neurociências e Diagnóstico (Legado)',
+    diagnostico: 'Diagnóstico e Psicopatologia',
     transtornos_ansiedade: 'Transtornos de Ansiedade',
     transtornos_personalidade: 'Transtornos de Personalidade',
     dependencia_quimica: 'Dependência Química',
     psiquiatria_geriatrica: 'Psiquiatria Geriátrica',
     psiquiatria_forense: 'Psiquiatria Forense',
     saude_publica: 'Saúde Pública',
-    neurociencias: 'Neurociências Básicas',
+    neurociencias: 'Neurociências',
     psicogeriatria: 'Psicogeriatria',
     transtornos_alimentares: 'Transtornos Alimentares',
 };
@@ -48,6 +50,7 @@ export const THEME_COLORS: Record<PsychiatryTheme, string> = {
     psicoterapia: '#10b981',
     etica_legal: '#6366f1',
     neurociencias_diagnostico: '#ec4899',
+    diagnostico: '#be185d',
     transtornos_ansiedade: '#eab308',
     transtornos_personalidade: '#14b8a6',
     dependencia_quimica: '#a855f7',
