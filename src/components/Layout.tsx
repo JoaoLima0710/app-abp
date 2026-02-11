@@ -49,36 +49,39 @@ export default function Layout() {
             <button
                 className="btn btn-icon mobile-menu-btn"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{
-                    position: 'fixed',
-                    top: '1rem',
-                    left: '1rem',
-                    zIndex: 100,
-                    display: 'none',
-                }}
+                aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
             >
                 {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
+            {/* Mobile overlay backdrop */}
+            {sidebarOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''} animate-slide-in-left`}>
-                <div className="sidebar-header" style={{ marginBottom: 'var(--spacing-8)', padding: 'var(--spacing-4) 0' }}>
+            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+                <div className="sidebar-header" style={{ marginBottom: 'var(--spacing-6)', padding: 'var(--spacing-3) 0' }}>
                     <div className="flex items-center gap-3">
                         <div
                             style={{
-                                width: 44,
-                                height: 44,
+                                width: 40,
+                                height: 40,
                                 borderRadius: 'var(--radius-lg)',
                                 background: 'linear-gradient(135deg, var(--primary-500), var(--secondary-500))',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                flexShrink: 0,
                             }}
                         >
-                            <Brain size={24} color="white" />
+                            <Brain size={22} color="white" />
                         </div>
                         <div>
-                            <h1 className="text-h4 gradient-text-primary" style={{ margin: 0 }}>
+                            <h1 className="text-h4 gradient-text-primary" style={{ margin: 0, fontSize: '1.1rem' }}>
                                 PsiqTítulo
                             </h1>
                             <p className="text-caption" style={{ color: 'var(--text-tertiary)', margin: 0 }}>
@@ -99,7 +102,7 @@ export default function Layout() {
                                     }
                                     onClick={() => setSidebarOpen(false)}
                                 >
-                                    <item.icon size={20} />
+                                    <item.icon size={18} />
                                     {item.label}
                                 </NavLink>
                             </li>
@@ -109,15 +112,15 @@ export default function Layout() {
 
                 <div style={{
                     marginTop: 'auto',
-                    paddingTop: 'var(--spacing-8)',
+                    paddingTop: 'var(--spacing-6)',
                     borderTop: '1px solid var(--border-color)',
                 }}>
                     <button
                         className="btn btn-ghost w-full"
                         onClick={toggleDarkMode}
-                        style={{ justifyContent: 'flex-start' }}
+                        style={{ justifyContent: 'flex-start', fontSize: 'var(--font-size-sm)' }}
                     >
-                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
                         {isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
                 </div>
@@ -129,14 +132,6 @@ export default function Layout() {
                     <Outlet />
                 </div>
             </main>
-
-            <style>{`
-        @media (max-width: 768px) {
-          .mobile-menu-btn {
-            display: flex !important;
-          }
-        }
-      `}</style>
         </div>
     );
 }

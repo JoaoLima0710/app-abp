@@ -73,6 +73,7 @@
   /* Spacing */
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
+  --spacing-2-5: 0.625rem;
   --spacing-3: 0.75rem;
   --spacing-4: 1rem;
   --spacing-5: 1.25rem;
@@ -618,7 +619,7 @@ a:hover {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--spacing-4);
+  padding: 0;
 }
 
 .page {
@@ -659,7 +660,7 @@ a:hover {
 }
 
 .main-content {
-  padding: var(--spacing-8);
+  padding: var(--spacing-6) var(--spacing-8);
   overflow-y: auto;
 }
 
@@ -809,111 +810,230 @@ a:hover {
 
 .hidden { display: none; }
 
-/* Ocultar botão mobile em desktop */
+/* ==================== Dashboard Grids ==================== */
+.dashboard-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.theme-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--spacing-3);
+}
+
+/* CTA Button - desktop default */
+.btn-cta {
+  padding: var(--spacing-4) var(--spacing-8);
+  font-size: var(--font-size-base);
+}
+
+/* Ocultar botão mobile e overlay em desktop */
 .mobile-menu-btn {
   display: none;
 }
 
+.sidebar-overlay {
+  display: none;
+}
+
 /* ==================== Responsive ==================== */
-/* Mobile & Tablet (max-width: 1023px) */
+
+/* Tablet & Mobile (max-width: 1023px) */
 @media (max-width: 1023px) {
   .layout-with-sidebar {
     grid-template-columns: 1fr;
   }
-  
+
   .mobile-menu-btn {
     display: flex !important;
     position: fixed;
-    top: 1rem;
-    left: 1rem;
+    top: 0.75rem;
+    left: 0.75rem;
     z-index: 100;
+    padding: var(--spacing-2);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
   }
-  
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 40;
+    animation: fade-in 0.2s ease-out;
+  }
+
   .sidebar {
     position: fixed;
     left: -280px;
     top: 0;
     bottom: 0;
     z-index: 50;
-    transition: left 0.3s ease;
-    width: 280px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 260px;
     height: 100vh;
     overflow-y: auto;
+    box-shadow: none;
   }
-  
+
   .sidebar--open {
     left: 0;
     box-shadow: var(--shadow-xl);
   }
-  
-  .page-title {
-    font-size: var(--font-size-2xl);
+
+  .main-content {
+    padding: var(--spacing-4);
+    padding-top: 3.5rem;
   }
-  
+
+  .container {
+    padding: var(--spacing-3);
+  }
+
+  .page-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .btn-cta {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-3) var(--spacing-5);
+    font-size: var(--font-size-sm);
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-3);
   }
-  
+
   .stat-card {
-    padding: var(--spacing-4);
+    padding: var(--spacing-3);
   }
-  
-  .question-nav-grid {
-    grid-template-columns: repeat(5, 1fr);
+
+  .stat-value {
+    font-size: var(--font-size-xl);
   }
-  
-  .container {
-    padding: var(--spacing-4);
+
+  .stat-label {
+    font-size: var(--font-size-xs);
   }
-  
+
   .card {
     padding: var(--spacing-4);
   }
-  
+
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+
+  .theme-performance-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .question-nav-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
   .btn-lg {
     width: 100%;
     justify-content: center;
+    padding: var(--spacing-3) var(--spacing-5);
+    font-size: var(--font-size-sm);
   }
 }
 
 /* iPhone & Small Mobile (max-width: 480px) */
 @media (max-width: 480px) {
+  .main-content {
+    padding: var(--spacing-3);
+    padding-top: 3.25rem;
+  }
+
+  .container {
+    padding: var(--spacing-2);
+  }
+
+  .page-title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-2);
+  }
+
+  .page-header p {
+    font-size: var(--font-size-xs);
+  }
+
+  .btn-cta {
+    padding: var(--spacing-2-5) var(--spacing-4);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-lg);
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-2);
   }
-  
+
   .stat-card {
-    padding: var(--spacing-3);
-  }
-  
-  .btn {
     padding: var(--spacing-2) var(--spacing-3);
-    font-size: var(--font-size-sm);
+    border-radius: var(--radius-md);
   }
-  
-  .btn-lg {
-    padding: var(--spacing-3) var(--spacing-4);
-    font-size: var(--font-size-base);
+
+  .stat-value {
+    font-size: var(--font-size-lg);
   }
-  
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
   .card {
     padding: var(--spacing-3);
     border-radius: var(--radius-lg);
   }
-  
-  .container {
-    padding: var(--spacing-3);
+
+  .card-title {
+    font-size: var(--font-size-sm);
   }
-  
-  .page-header {
-    margin-bottom: var(--spacing-4);
+
+  .dashboard-cards-grid {
+    gap: var(--spacing-3);
   }
-  
-  .question-nav-grid {
-    grid-template-columns: repeat(4, 1fr);
+
+  .theme-performance-grid {
+    grid-template-columns: 1fr;
     gap: var(--spacing-2);
+  }
+
+  .btn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
+  }
+
+  .btn-lg {
+    padding: var(--spacing-2-5) var(--spacing-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .question-nav-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--spacing-1);
+  }
+
+  .sidebar {
+    width: 240px;
+  }
+
+  .nav-item {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
   }
 }
 

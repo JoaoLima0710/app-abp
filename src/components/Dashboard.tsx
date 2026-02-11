@@ -21,30 +21,26 @@ export default function Dashboard() {
     return (
         <div className="page animate-fade-in">
             <header className="page-header animate-slide-down">
-                <h1 className="text-h1" style={{ marginBottom: 'var(--spacing-2)', color: 'var(--text-primary)' }}>Dashboard</h1>
-                <p className="text-body-sm" style={{ color: 'var(--text-secondary)' }}>
+                <h1 className="page-title" style={{ marginBottom: 'var(--spacing-1)', color: 'var(--text-primary)' }}>Dashboard</h1>
+                <p className="text-body-sm" style={{ color: 'var(--text-secondary)', margin: 0 }}>
                     Acompanhe seu progresso na preparação para a Prova de Título
                 </p>
             </header>
 
             {/* Quick Actions */}
-            <section style={{ marginBottom: 'var(--spacing-8)' }}>
+            <section style={{ marginBottom: 'var(--spacing-6)' }}>
                 <button
-                    className="btn btn-primary btn-lg"
+                    className="btn btn-primary btn-lg btn-cta"
                     onClick={() => navigate('/simulado/novo')}
-                    style={{
-                        padding: 'var(--spacing-6) var(--spacing-10)',
-                        fontSize: 'var(--font-size-lg)',
-                    }}
                 >
-                    <Zap size={24} />
+                    <Zap size={18} />
                     Iniciar Novo Simulado
-                    <ArrowRight size={20} />
+                    <ArrowRight size={16} />
                 </button>
             </section>
 
-            {/* Stats Grid */}
-            <section className="stats-grid animate-stagger" style={{ marginBottom: 'var(--spacing-8)' }}>
+            {/* Stats Grid - 2x2 on mobile */}
+            <section className="stats-grid animate-stagger" style={{ marginBottom: 'var(--spacing-6)' }}>
                 <div className="stat-card hover-lift">
                     <div className="stat-value">{progress?.totalSimulations || 0}</div>
                     <div className="stat-label">Simulados Realizados</div>
@@ -75,16 +71,12 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                gap: 'var(--spacing-6)',
-            }}>
+            <div className="dashboard-cards-grid">
                 {/* Recommendations */}
                 <section className="card">
                     <div className="card-header">
                         <h3 className="card-title">
-                            <Target size={20} style={{ marginRight: 8 }} />
+                            <Target size={18} style={{ marginRight: 6 }} />
                             Recomendações
                         </h3>
                     </div>
@@ -101,10 +93,10 @@ export default function Dashboard() {
                                         borderRadius: 'var(--radius-lg)',
                                     }}
                                 >
-                                    {rec.type === 'priority' && <AlertCircle size={20} color="var(--error-500)" />}
-                                    {rec.type === 'celebrate' && <Award size={20} color="var(--success-500)" />}
-                                    {rec.type === 'maintain' && <TrendingUp size={20} color="var(--primary-500)" />}
-                                    {rec.type === 'review' && <Clock size={20} color="var(--warning-500)" />}
+                                    {rec.type === 'priority' && <AlertCircle size={18} color="var(--error-500)" />}
+                                    {rec.type === 'celebrate' && <Award size={18} color="var(--success-500)" />}
+                                    {rec.type === 'maintain' && <TrendingUp size={18} color="var(--primary-500)" />}
+                                    {rec.type === 'review' && <Clock size={18} color="var(--warning-500)" />}
                                     <div style={{ flex: 1 }}>
                                         <p style={{
                                             fontSize: 'var(--font-size-sm)',
@@ -125,8 +117,8 @@ export default function Dashboard() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
-                            <p style={{ color: 'var(--text-tertiary)', margin: 0 }}>
+                        <div className="text-center" style={{ padding: 'var(--spacing-6)' }}>
+                            <p style={{ color: 'var(--text-tertiary)', margin: 0, fontSize: 'var(--font-size-sm)' }}>
                                 Complete alguns simulados para receber recomendações personalizadas
                             </p>
                         </div>
@@ -137,7 +129,7 @@ export default function Dashboard() {
                 <section className="card">
                     <div className="card-header">
                         <h3 className="card-title">
-                            <Clock size={20} style={{ marginRight: 8 }} />
+                            <Clock size={18} style={{ marginRight: 6 }} />
                             Simulados Recentes
                         </h3>
                     </div>
@@ -197,13 +189,14 @@ export default function Dashboard() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
-                            <p style={{ color: 'var(--text-tertiary)', margin: 0 }}>
+                        <div className="text-center" style={{ padding: 'var(--spacing-6)' }}>
+                            <p style={{ color: 'var(--text-tertiary)', margin: 0, fontSize: 'var(--font-size-sm)' }}>
                                 Nenhum simulado realizado ainda
                             </p>
                             <button
                                 className="btn btn-primary mt-4"
                                 onClick={() => navigate('/simulado/novo')}
+                                style={{ fontSize: 'var(--font-size-sm)' }}
                             >
                                 Começar Primeiro Simulado
                             </button>
@@ -217,24 +210,20 @@ export default function Dashboard() {
                 <section className="card" style={{ marginTop: 'var(--spacing-6)' }}>
                     <div className="card-header">
                         <h3 className="card-title">
-                            <TrendingUp size={20} style={{ marginRight: 8 }} />
+                            <TrendingUp size={18} style={{ marginRight: 6 }} />
                             Desempenho por Área
                         </h3>
                     </div>
 
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: 'var(--spacing-3)',
-                    }}>
+                    <div className="theme-performance-grid">
                         {Object.entries(progress.byTheme).map(([theme, data]) => (
                             <div
                                 key={theme}
                                 style={{
-                                    padding: 'var(--spacing-4)',
+                                    padding: 'var(--spacing-3)',
                                     background: 'var(--bg-tertiary)',
                                     borderRadius: 'var(--radius-lg)',
-                                    borderLeft: `4px solid ${THEME_COLORS[theme as keyof typeof THEME_COLORS]}`,
+                                    borderLeft: `3px solid ${THEME_COLORS[theme as keyof typeof THEME_COLORS]}`,
                                 }}
                             >
                                 <div className="flex items-center justify-between mb-2">
