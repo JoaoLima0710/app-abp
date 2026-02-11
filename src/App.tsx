@@ -10,6 +10,10 @@ import StatisticsPanel from './components/StatisticsPanel';
 import StudyPlan from './components/StudyPlan';
 import TrendsPage from './components/TrendsPage';
 import SettingsPage from './components/SettingsPage';
+import FlashcardsPage from './pages/FlashcardsPage';
+import FlashcardStudyPage from './pages/FlashcardStudyPage';
+import TimedExamPage from './components/TimedExamPage';
+import CoverageHeatmap from './components/CoverageHeatmap';
 
 function App() {
     const { loadUserData, isDarkMode } = useUserStore();
@@ -29,6 +33,10 @@ function App() {
                 <Route path="estatisticas" element={<StatisticsPanel />} />
                 <Route path="plano-de-estudos" element={<StudyPlan />} />
                 <Route path="tendencias" element={<TrendsPage />} />
+                <Route path="flashcards" element={<FlashcardsPage />} />
+                <Route path="flashcards/estudo" element={<FlashcardStudyPage />} />
+                <Route path="prova" element={<TimedExamPage />} />
+                <Route path="cobertura" element={<CoverageHeatmap />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

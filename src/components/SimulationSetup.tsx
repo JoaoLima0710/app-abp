@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
 import { PsychiatryTheme, THEME_LABELS, THEME_COLORS } from '../types';
+import { Brain } from 'lucide-react';
 import {
     Play,
     Shuffle,
     Target,
-    Loader2
+    Loader2,
+    Gauge
 } from 'lucide-react';
 
 const QUESTION_COUNTS = [5, 10, 15, 20, 30, 50, 90];
@@ -16,11 +18,12 @@ export default function SimulationSetup() {
     const { startSimulation, isLoading } = useSimulationStore();
     const [questionCount, setQuestionCount] = useState(10);
     const [focusTheme, setFocusTheme] = useState<PsychiatryTheme | 'all'>('all');
-    const [mode, setMode] = useState<'mixed' | 'focused'>('mixed');
+    const [mode, setMode] = useState<'mixed' | 'focused' | 'adaptive'>('mixed');
+    const [difficulty, setDifficulty] = useState<1 | 2 | 3 | undefined>(undefined);
 
     const handleStart = async () => {
         const theme = mode === 'focused' && focusTheme !== 'all' ? focusTheme : undefined;
-        await startSimulation(questionCount, theme);
+        await startSimulation(questionCount, { theme, difficulty, adaptive: mode === 'adaptive' });
         navigate('/simulado/active');
     };
 
@@ -78,6 +81,14 @@ export default function SimulationSetup() {
                             <Target size={20} />
                             Focado
                         </button>
+                        <button
+                            className={`btn ${mode === 'adaptive' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setMode('adaptive')}
+                            style={{ flex: 1 }}
+                        >
+                            <Brain size={20} />
+                            Adaptativo
+                        </button>
                     </div>
                     <p style={{
                         fontSize: 'var(--font-size-sm)',
@@ -86,7 +97,9 @@ export default function SimulationSetup() {
                     }}>
                         {mode === 'mixed'
                             ? 'Questões de todas as áreas temáticas, simulando a prova real'
-                            : 'Pratique uma área específica para reforçar o aprendizado'
+                            : mode === 'focused'
+                                ? 'Pratique uma área específica para reforçar o aprendizado'
+                                : 'Prioriza suas áreas mais fracas com seleção inteligente'
                         }
                     </p>
                 </section>
@@ -118,6 +131,36 @@ export default function SimulationSetup() {
                         </div>
                     </section>
                 )}
+
+                {/* Difficulty Filter */}
+                <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
+                    <h3 className="card-title mb-4">
+                        <Gauge size={18} style={{ marginRight: 4 }} />
+                        Dificuldade
+                    </h3>
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(4, 1fr)',
+                            gap: 'var(--spacing-2)',
+                        }}
+                    >
+                        {[
+                            { value: undefined, label: 'Todas' },
+                            { value: 1 as const, label: 'Fácil' },
+                            { value: 2 as const, label: 'Médio' },
+                            { value: 3 as const, label: 'Difícil' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.label}
+                                className={`btn ${difficulty === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                                onClick={() => setDifficulty(opt.value)}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </section>
 
                 {/* Summary & Start */}
                 <section className="card" style={{

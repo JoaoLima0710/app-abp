@@ -26,6 +26,7 @@ export default function Layout() {
 
     const navItems = [
         { path: '/', icon: Home, label: 'Dashboard' },
+        { path: '/flashcards', icon: Brain, label: 'Flashcards' },
         { path: '/simulado/novo', icon: PlusCircle, label: 'Novo Simulado' },
         { path: '/estatisticas', icon: BarChart3, label: 'Estatísticas' },
         { path: '/plano-de-estudos', icon: BookOpen, label: 'Plano de Estudos' },

@@ -5,13 +5,15 @@ import { AnswerOption, THEME_LABELS, THEME_COLORS } from '../types';
 import {
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     Clock,
     CheckCircle2,
     XCircle,
     Flag,
     BookOpen,
     Lightbulb,
-    AlertTriangle
+    AlertTriangle,
+    List
 } from 'lucide-react';
 
 export default function SimulationPage() {
@@ -33,6 +35,7 @@ export default function SimulationPage() {
     } = useSimulationStore();
 
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [showItemAnalysis, setShowItemAnalysis] = useState(false);
 
     // Redirect if no simulation
     useEffect(() => {
@@ -301,6 +304,96 @@ export default function SimulationPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Item Analysis (per-option analysis) */}
+                        {question.itemAnalysis && (
+                            <div style={{ marginTop: 'var(--spacing-4)' }}>
+                                <button
+                                    onClick={() => setShowItemAnalysis(prev => !prev)}
+                                    style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 'var(--spacing-2)',
+                                        padding: 'var(--spacing-3)',
+                                        background: 'var(--bg-tertiary)',
+                                        border: '1px solid var(--border-primary)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        cursor: 'pointer',
+                                        color: 'var(--text-primary)',
+                                        fontWeight: 600,
+                                        fontSize: 'var(--font-size-sm)',
+                                    }}
+                                >
+                                    <List size={18} color="var(--primary-500)" />
+                                    Análise por Alternativa
+                                    <ChevronDown
+                                        size={18}
+                                        style={{
+                                            marginLeft: 'auto',
+                                            transform: showItemAnalysis ? 'rotate(180deg)' : 'rotate(0deg)',
+                                            transition: 'transform 0.2s ease',
+                                        }}
+                                    />
+                                </button>
+                                {showItemAnalysis && (
+                                    <div
+                                        className="animate-fade-in"
+                                        style={{
+                                            marginTop: 'var(--spacing-3)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 'var(--spacing-2)',
+                                        }}
+                                    >
+                                        {(['A', 'B', 'C', 'D', 'E'] as const).map((key) => {
+                                            const text = question.itemAnalysis?.[key];
+                                            if (!text) return null;
+                                            const isCorrect = key === question.correctAnswer;
+                                            const isUserWrong = key === simQuestion?.userAnswer && !simQuestion?.isCorrect;
+                                            return (
+                                                <div
+                                                    key={key}
+                                                    style={{
+                                                        padding: 'var(--spacing-3)',
+                                                        background: 'var(--bg-secondary)',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        borderLeft: `4px solid ${isCorrect ? 'var(--success-500)'
+                                                            : isUserWrong ? 'var(--error-500)'
+                                                                : 'var(--border-primary)'
+                                                            }`,
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span
+                                                            style={{
+                                                                fontWeight: 700,
+                                                                fontSize: 'var(--font-size-sm)',
+                                                                color: isCorrect ? 'var(--success-600)'
+                                                                    : isUserWrong ? 'var(--error-600)'
+                                                                        : 'var(--text-secondary)',
+                                                            }}
+                                                        >
+                                                            {key})
+                                                        </span>
+                                                        {isCorrect && <CheckCircle2 size={14} color="var(--success-500)" />}
+                                                        {isUserWrong && <XCircle size={14} color="var(--error-500)" />}
+                                                    </div>
+                                                    <p style={{
+                                                        margin: 0,
+                                                        fontSize: 'var(--font-size-sm)',
+                                                        color: 'var(--text-primary)',
+                                                        lineHeight: 1.6,
+                                                    }}>
+                                                        {text}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -341,9 +434,9 @@ export default function SimulationPage() {
                             <button
                                 key={idx}
                                 className={`question-nav-item ${idx === currentIndex ? 'question-nav-item--current' :
-                                        q.isCorrect === true ? 'question-nav-item--correct' :
-                                            q.isCorrect === false ? 'question-nav-item--incorrect' :
-                                                q.userAnswer ? 'question-nav-item--answered' : ''
+                                    q.isCorrect === true ? 'question-nav-item--correct' :
+                                        q.isCorrect === false ? 'question-nav-item--incorrect' :
+                                            q.userAnswer ? 'question-nav-item--answered' : ''
                                     }`}
                                 onClick={() => goToQuestion(idx)}
                             >

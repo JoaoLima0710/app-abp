@@ -45,20 +45,32 @@ export const useUserStore = create<UserState>((set, get) => ({
         const completedSims = simulations.filter(s => s.completedAt);
         if (completedSims.length === 0) return;
 
-        const themeData: Record<string, { attempts: number[]; correct: number; total: number }> = {};
+        const themeData: Record<string, { attempts: number[]; correct: number; total: number; errors: number }> = {};
 
         for (const sim of completedSims) {
             for (const [theme, stats] of Object.entries(sim.stats.byTheme)) {
                 if (!themeData[theme]) {
-                    themeData[theme] = { attempts: [], correct: 0, total: 0 };
+                    themeData[theme] = { attempts: [], correct: 0, total: 0, errors: 0 };
                 }
                 themeData[theme].correct += stats?.correct || 0;
                 themeData[theme].total += stats?.total || 0;
+                themeData[theme].errors += (stats?.total || 0) - (stats?.correct || 0);
                 if (stats) {
                     themeData[theme].attempts.push(stats.accuracy);
                 }
             }
         }
+
+        // Rank 5: aggregate commonMistakes — themes with most errors
+        const errorRanking = Object.entries(themeData)
+            .map(([theme, data]) => ({ theme, errors: data.errors, total: data.total }))
+            .filter(t => t.errors > 0)
+            .sort((a, b) => b.errors - a.errors)
+            .slice(0, 5)
+            .map(t => {
+                const label = THEME_LABELS[t.theme as PsychiatryTheme] || t.theme;
+                return `${label}: ${t.errors} erro(s) em ${t.total} questões`;
+            });
 
         const byTheme: Partial<Record<PsychiatryTheme, {
             totalAttempts: number;
@@ -96,7 +108,7 @@ export const useUserStore = create<UserState>((set, get) => ({
                 accuracy,
                 trend,
                 recentAccuracy,
-                commonMistakes: [],
+                commonMistakes: errorRanking.filter(e => e.startsWith(THEME_LABELS[theme as PsychiatryTheme] || theme)),
             };
 
             themeAccuracies.push({ theme: theme as PsychiatryTheme, accuracy });
@@ -110,6 +122,27 @@ export const useUserStore = create<UserState>((set, get) => ({
         const totalAnswered = completedSims.reduce((sum, s) => sum + s.stats.answered, 0);
         const totalCorrect = completedSims.reduce((sum, s) => sum + s.stats.correct, 0);
 
+        // Rank 6: functional streak calculation
+        const previousStreak = get().progress?.streak || 0;
+        const previousActivityDate = get().progress?.lastActivityDate;
+        let newStreak = 1;
+
+        if (previousActivityDate) {
+            const lastDate = new Date(previousActivityDate);
+            const today = new Date();
+            lastDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                newStreak = Math.max(previousStreak, 1);
+            } else if (diffDays === 1) {
+                newStreak = previousStreak + 1;
+            } else {
+                newStreak = 1;
+            }
+        }
+
         const progress: UserProgress = {
             totalSimulations: completedSims.length,
             totalQuestionsAnswered: totalAnswered,
@@ -121,6 +154,8 @@ export const useUserStore = create<UserState>((set, get) => ({
                 weakThemes,
                 recommendations: [],
             },
+            streak: newStreak,
+            lastActivityDate: new Date(),
             lastUpdated: new Date(),
         };
 

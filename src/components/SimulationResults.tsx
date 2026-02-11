@@ -15,6 +15,7 @@ import {
     Award
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { addCardsToReview } from '../hooks/useFlashcards';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
@@ -24,9 +25,18 @@ export default function SimulationResults() {
     useEffect(() => {
         if (!simulation?.completedAt) {
             navigate('/');
+            return;
         }
         // Reload user data to update statistics
         loadUserData();
+
+        // Bridge: add wrong answers to SRS queue for flashcard review
+        const wrongIds = simulation.questions
+            .filter(q => q.isCorrect === false)
+            .map(q => q.questionId);
+        if (wrongIds.length > 0) {
+            addCardsToReview(wrongIds);
+        }
     }, [simulation, navigate, loadUserData]);
 
     if (!simulation) return null;
@@ -195,7 +205,7 @@ export default function SimulationResults() {
                                         {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
                                     </span>
                                     <span className={`badge ${(data?.accuracy || 0) >= 70 ? 'badge-success' :
-                                            (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
+                                        (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
                                         }`}>
                                         {data?.correct}/{data?.total} ({data?.accuracy.toFixed(0)}%)
                                     </span>
@@ -229,63 +239,165 @@ export default function SimulationResults() {
                             if (!q) return null;
 
                             return (
-                                <div
+                                <details
                                     key={sq.questionId}
                                     style={{
-                                        padding: 'var(--spacing-4)',
                                         background: 'var(--bg-tertiary)',
                                         borderRadius: 'var(--radius-lg)',
                                         borderLeft: '4px solid var(--error-500)',
+                                        overflow: 'hidden',
                                     }}
                                 >
-                                    <div className="flex items-start gap-3">
-                                        <span
-                                            style={{
-                                                width: 28,
-                                                height: 28,
-                                                borderRadius: 'var(--radius-md)',
-                                                background: 'var(--error-100)',
-                                                color: 'var(--error-700)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: 'var(--font-size-sm)',
-                                                fontWeight: 600,
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            {idx + 1}
-                                        </span>
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{
-                                                fontSize: 'var(--font-size-sm)',
-                                                color: 'var(--text-primary)',
-                                                margin: '0 0 var(--spacing-2) 0',
-                                                lineHeight: 1.5,
-                                            }}>
-                                                {q.statement.length > 150 ? q.statement.substring(0, 150) + '...' : q.statement}
-                                            </p>
-                                            <div className="flex items-center gap-4">
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--error-600)' }}>
-                                                    Sua resposta: {sq.userAnswer}
-                                                </span>
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-600)' }}>
-                                                    Correta: {q.correctAnswer}
-                                                </span>
-                                                <span
-                                                    className="theme-tag"
-                                                    style={{ marginLeft: 'auto' }}
-                                                >
+                                    <summary
+                                        style={{
+                                            padding: 'var(--spacing-4)',
+                                            cursor: 'pointer',
+                                            listStyle: 'none',
+                                        }}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span
+                                                style={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    borderRadius: 'var(--radius-md)',
+                                                    background: 'var(--error-100)',
+                                                    color: 'var(--error-700)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: 'var(--font-size-sm)',
+                                                    fontWeight: 600,
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {idx + 1}
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{
+                                                    fontSize: 'var(--font-size-sm)',
+                                                    color: 'var(--text-primary)',
+                                                    margin: '0 0 var(--spacing-2) 0',
+                                                    lineHeight: 1.5,
+                                                }}>
+                                                    {q.statement.length > 150 ? q.statement.substring(0, 150) + '...' : q.statement}
+                                                </p>
+                                                <div className="flex items-center gap-4">
+                                                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--error-600)' }}>
+                                                        Sua resposta: {sq.userAnswer}
+                                                    </span>
+                                                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-600)' }}>
+                                                        Correta: {q.correctAnswer}
+                                                    </span>
                                                     <span
-                                                        className="theme-tag-dot"
-                                                        style={{ background: THEME_COLORS[q.theme] }}
-                                                    />
-                                                    {THEME_LABELS[q.theme]}
-                                                </span>
+                                                        className="theme-tag"
+                                                        style={{ marginLeft: 'auto' }}
+                                                    >
+                                                        <span
+                                                            className="theme-tag-dot"
+                                                            style={{ background: THEME_COLORS[q.theme] }}
+                                                        />
+                                                        {THEME_LABELS[q.theme]}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+                                    </summary>
+
+                                    {/* Expanded content: explanation + itemAnalysis */}
+                                    <div style={{
+                                        padding: '0 var(--spacing-4) var(--spacing-4)',
+                                        borderTop: '1px solid var(--border-primary)',
+                                    }}>
+                                        {/* Correct explanation */}
+                                        <div style={{
+                                            padding: 'var(--spacing-3)',
+                                            background: 'var(--bg-secondary)',
+                                            borderRadius: 'var(--radius-md)',
+                                            borderLeft: '4px solid var(--success-500)',
+                                            marginTop: 'var(--spacing-3)',
+                                        }}>
+                                            <strong style={{ fontSize: 'var(--font-size-sm)', color: 'var(--success-700)', display: 'block', marginBottom: 'var(--spacing-1)' }}>
+                                                Alternativa Correta: {q.correctAnswer}
+                                            </strong>
+                                            <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                                                {q.explanation.correct}
+                                            </p>
+                                        </div>
+
+                                        {/* Exam Tip */}
+                                        {q.explanation.examTip && (
+                                            <div style={{
+                                                padding: 'var(--spacing-3)',
+                                                background: 'linear-gradient(135deg, var(--warning-50), var(--bg-tertiary))',
+                                                borderRadius: 'var(--radius-md)',
+                                                marginTop: 'var(--spacing-2)',
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: 'var(--spacing-2)',
+                                            }}>
+                                                <Award size={16} color="var(--warning-600)" style={{ flexShrink: 0, marginTop: 2 }} />
+                                                <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-primary)' }}>
+                                                    {q.explanation.examTip}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Item Analysis */}
+                                        {q.itemAnalysis && (
+                                            <div style={{ marginTop: 'var(--spacing-3)' }}>
+                                                <strong style={{
+                                                    fontSize: 'var(--font-size-xs)',
+                                                    color: 'var(--text-secondary)',
+                                                    display: 'block',
+                                                    marginBottom: 'var(--spacing-2)',
+                                                }}>
+                                                    Análise por Alternativa:
+                                                </strong>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+                                                    {(['A', 'B', 'C', 'D', 'E'] as const).map((key) => {
+                                                        const text = q.itemAnalysis?.[key];
+                                                        if (!text) return null;
+                                                        const isCorrect = key === q.correctAnswer;
+                                                        const isUserWrong = key === sq.userAnswer && !sq.isCorrect;
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                style={{
+                                                                    padding: 'var(--spacing-2)',
+                                                                    background: 'var(--bg-secondary)',
+                                                                    borderRadius: 'var(--radius-sm)',
+                                                                    borderLeft: `3px solid ${isCorrect ? 'var(--success-500)'
+                                                                        : isUserWrong ? 'var(--error-500)'
+                                                                            : 'var(--border-primary)'
+                                                                        }`,
+                                                                }}
+                                                            >
+                                                                <span style={{
+                                                                    fontWeight: 700,
+                                                                    fontSize: 'var(--font-size-xs)',
+                                                                    color: isCorrect ? 'var(--success-600)' : isUserWrong ? 'var(--error-600)' : 'var(--text-secondary)',
+                                                                }}>
+                                                                    {key})
+                                                                </span>
+                                                                {isCorrect && ' ✓'}
+                                                                {isUserWrong && ' ✗'}
+                                                                <p style={{
+                                                                    margin: 'var(--spacing-1) 0 0',
+                                                                    fontSize: 'var(--font-size-xs)',
+                                                                    color: 'var(--text-primary)',
+                                                                    lineHeight: 1.5,
+                                                                }}>
+                                                                    {text}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                </details>
                             );
                         })}
                     </div>
