@@ -809,18 +809,34 @@ a:hover {
 
 .hidden { display: none; }
 
+/* Ocultar botão mobile em desktop */
+.mobile-menu-btn {
+  display: none;
+}
+
 /* ==================== Responsive ==================== */
-/* Mobile & Tablet (max-width: 768px) */
-@media (max-width: 768px) {
+/* Mobile & Tablet (max-width: 1023px) */
+@media (max-width: 1023px) {
   .layout-with-sidebar {
     grid-template-columns: 1fr;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
   }
   
   .sidebar {
     position: fixed;
     left: -280px;
+    top: 0;
+    bottom: 0;
     z-index: 50;
-    transition: left var(--transition-base);
+    transition: left 0.3s ease;
+    width: 280px;
     height: 100vh;
     overflow-y: auto;
   }
