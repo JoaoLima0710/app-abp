@@ -192,7 +192,7 @@ export default function StatisticsPanel() {
                                                 border: '1px solid var(--border-color)',
                                                 borderRadius: 'var(--radius-lg)',
                                             }}
-                                            formatter={(value: number, name: string, props: any) => [
+                                            formatter={(value: number, _name: string, props: any) => [
                                                 `${value.toFixed(1)}%`,
                                                 props.payload.fullName
                                             ]}

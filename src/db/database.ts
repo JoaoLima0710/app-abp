@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Question, Simulation, UserProgress, PsychiatryTheme } from '../types';
+import { Question, Simulation, UserProgress } from '../types';
 
 export interface FlashcardProgressRecord {
     questionId: string;

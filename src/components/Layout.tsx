@@ -61,8 +61,8 @@ export default function Layout() {
             </button>
 
             {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
-                <div className="sidebar-header" style={{ marginBottom: 'var(--spacing-8)' }}>
+            <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''} animate-slide-in-left`}>
+                <div className="sidebar-header" style={{ marginBottom: 'var(--spacing-8)', padding: 'var(--spacing-4) 0' }}>
                     <div className="flex items-center gap-3">
                         <div
                             style={{
@@ -78,20 +78,10 @@ export default function Layout() {
                             <Brain size={24} color="white" />
                         </div>
                         <div>
-                            <h1 style={{
-                                fontSize: 'var(--font-size-lg)',
-                                fontWeight: 700,
-                                background: 'linear-gradient(135deg, var(--primary-500), var(--secondary-500))',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                            }}>
+                            <h1 className="text-h4 gradient-text-primary" style={{ margin: 0 }}>
                                 PsiqTítulo
                             </h1>
-                            <p style={{
-                                fontSize: 'var(--font-size-xs)',
-                                color: 'var(--text-tertiary)',
-                                margin: 0,
-                            }}>
+                            <p className="text-caption" style={{ color: 'var(--text-tertiary)', margin: 0 }}>
                                 Prova de Título ABP
                             </p>
                         </div>

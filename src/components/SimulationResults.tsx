@@ -14,7 +14,7 @@ import {
     TrendingUp,
     Award
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { addCardsToReview } from '../hooks/useFlashcards';
 
 export default function SimulationResults() {

@@ -20,9 +20,9 @@ export default function Dashboard() {
 
     return (
         <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title">Dashboard</h1>
-                <p className="page-subtitle">
+            <header className="page-header animate-slide-down">
+                <h1 className="text-h1" style={{ marginBottom: 'var(--spacing-2)', color: 'var(--text-primary)' }}>Dashboard</h1>
+                <p className="text-body-sm" style={{ color: 'var(--text-secondary)' }}>
                     Acompanhe seu progresso na preparação para a Prova de Título
                 </p>
             </header>
@@ -44,16 +44,16 @@ export default function Dashboard() {
             </section>
 
             {/* Stats Grid */}
-            <section className="stats-grid" style={{ marginBottom: 'var(--spacing-8)' }}>
-                <div className="stat-card">
+            <section className="stats-grid animate-stagger" style={{ marginBottom: 'var(--spacing-8)' }}>
+                <div className="stat-card hover-lift">
                     <div className="stat-value">{progress?.totalSimulations || 0}</div>
                     <div className="stat-label">Simulados Realizados</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card hover-lift">
                     <div className="stat-value">{progress?.totalQuestionsAnswered || 0}</div>
                     <div className="stat-label">Questões Respondidas</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card hover-lift">
                     <div className="stat-value" style={{
                         background: progress?.overallAccuracy && progress.overallAccuracy >= 70
                             ? 'linear-gradient(135deg, var(--success-500), var(--success-400))'
@@ -67,7 +67,7 @@ export default function Dashboard() {
                     </div>
                     <div className="stat-label">Aproveitamento Geral</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card hover-lift">
                     <div className="stat-value">
                         {progress?.trends.strongThemes.length || 0}
                     </div>
