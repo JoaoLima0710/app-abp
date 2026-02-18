@@ -28,6 +28,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { AiExplanation } from '@/components/AiExplanation';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
@@ -228,6 +229,13 @@ export default function SimulationResults() {
                                                 <p className="text-[10px] lg:text-xs">{q.explanation.examTip}</p>
                                             </div>
                                         )}
+                                        <AiExplanation
+                                            questionBody={q.statement}
+                                            alternatives={q.options}
+                                            correctAnswer={q.correctAnswer}
+                                            userAnswer={sq.userAnswer}
+                                            className="mt-3 border-t pt-3"
+                                        />
                                     </CollapsibleContent>
                                 </Collapsible>
                             );

@@ -25,6 +25,7 @@ import {
     List,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AiExplanation } from '@/components/AiExplanation';
 
 export default function SimulationPage() {
     const navigate = useNavigate();
@@ -287,6 +288,13 @@ export default function SimulationPage() {
                                     </CollapsibleContent>
                                 </Collapsible>
                             )}
+                            <AiExplanation
+                                questionBody={question.statement}
+                                alternatives={question.options}
+                                correctAnswer={question.correctAnswer}
+                                userAnswer={simQuestion.userAnswer}
+                                className="mt-4 border-t pt-4"
+                            />
                         </CardContent>
                     </Card>
                 )}
