@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
-import { PsychiatryTheme, THEME_LABELS, THEME_COLORS } from '../types';
-import { Brain } from 'lucide-react';
+import { PsychiatryTheme, THEME_LABELS } from '../types';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
-    Play,
     Shuffle,
     Target,
     Loader2,
-    Gauge
+    Gauge,
+    Brain,
+    FileText,
+    ArrowRight,
+    CheckCircle2,
+    BookOpen,
 } from 'lucide-react';
 
 const QUESTION_COUNTS = [5, 10, 15, 20, 30, 50, 90];
@@ -30,195 +37,215 @@ export default function SimulationSetup() {
     const themes = Object.entries(THEME_LABELS) as [PsychiatryTheme, string][];
 
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title">Novo Simulado</h1>
-                <p className="page-subtitle">
-                    Configure seu simulado e comece a praticar
-                </p>
-            </header>
-
-            <div style={{ maxWidth: 600 }}>
-                {/* Question Count */}
-                <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
-                    <h3 className="card-title mb-4">Número de Questões</h3>
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-                            gap: 'var(--spacing-2)',
-                        }}
-                    >
-                        {QUESTION_COUNTS.map((count) => (
-                            <button
-                                key={count}
-                                className={`btn ${questionCount === count ? 'btn-primary' : 'btn-secondary'}`}
-                                onClick={() => setQuestionCount(count)}
-                            >
-                                {count}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Mode Selection */}
-                <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
-                    <h3 className="card-title mb-4">Modo do Simulado</h3>
-                    <div className="flex gap-3">
-                        <button
-                            className={`btn ${mode === 'mixed' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setMode('mixed')}
-                            style={{ flex: 1 }}
-                        >
-                            <Shuffle size={20} />
-                            Misto
-                        </button>
-                        <button
-                            className={`btn ${mode === 'focused' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setMode('focused')}
-                            style={{ flex: 1 }}
-                        >
-                            <Target size={20} />
-                            Focado
-                        </button>
-                        <button
-                            className={`btn ${mode === 'adaptive' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setMode('adaptive')}
-                            style={{ flex: 1 }}
-                        >
-                            <Brain size={20} />
-                            Adaptativo
-                        </button>
-                    </div>
-                    <p style={{
-                        fontSize: 'var(--font-size-sm)',
-                        color: 'var(--text-tertiary)',
-                        marginTop: 'var(--spacing-3)',
-                    }}>
-                        {mode === 'mixed'
-                            ? 'Questões de todas as áreas temáticas, simulando a prova real'
-                            : mode === 'focused'
-                                ? 'Pratique uma área específica para reforçar o aprendizado'
-                                : 'Prioriza suas áreas mais fracas com seleção inteligente'
-                        }
-                    </p>
-                </section>
-
-                {/* Theme Selection (only if focused mode) */}
-                {mode === 'focused' && (
-                    <section className="card animate-fade-in" style={{ marginBottom: 'var(--spacing-6)' }}>
-                        <h3 className="card-title mb-4">Área Temática</h3>
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                gap: 'var(--spacing-2)',
-                            }}
-                        >
-                            {themes.map(([key, label]) => (
-                                <button
-                                    key={key}
-                                    className={`btn ${focusTheme === key ? 'btn-primary' : 'btn-secondary'}`}
-                                    onClick={() => setFocusTheme(key)}
-                                    style={{
-                                        justifyContent: 'flex-start',
-                                        borderLeft: `4px solid ${THEME_COLORS[key]}`,
-                                    }}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Difficulty Filter */}
-                <section className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
-                    <h3 className="card-title mb-4">
-                        <Gauge size={18} style={{ marginRight: 4 }} />
-                        Dificuldade
-                    </h3>
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(4, 1fr)',
-                            gap: 'var(--spacing-2)',
-                        }}
-                    >
-                        {[
-                            { value: undefined, label: 'Todas' },
-                            { value: 1 as const, label: 'Fácil' },
-                            { value: 2 as const, label: 'Médio' },
-                            { value: 3 as const, label: 'Difícil' },
-                        ].map((opt) => (
-                            <button
-                                key={opt.label}
-                                className={`btn ${difficulty === opt.value ? 'btn-primary' : 'btn-secondary'}`}
-                                onClick={() => setDifficulty(opt.value)}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Summary & Start */}
-                <section className="card" style={{
-                    background: 'linear-gradient(135deg, var(--primary-50), var(--secondary-50))',
-                    border: 'none',
-                }}>
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, margin: 0 }}>
-                                Resumo do Simulado
-                            </h3>
-                            <p style={{
-                                fontSize: 'var(--font-size-sm)',
-                                color: 'var(--text-secondary)',
-                                margin: 'var(--spacing-1) 0 0 0',
-                            }}>
-                                {questionCount} questões • {mode === 'mixed' ? 'Todas as áreas' : THEME_LABELS[focusTheme as PsychiatryTheme] || 'Todas as áreas'}
-                            </p>
-                        </div>
-                        <div style={{
-                            padding: 'var(--spacing-3) var(--spacing-4)',
-                            background: 'var(--bg-secondary)',
-                            borderRadius: 'var(--radius-lg)',
-                            textAlign: 'center',
-                        }}>
-                            <div style={{
-                                fontSize: 'var(--font-size-2xl)',
-                                fontWeight: 700,
-                                color: 'var(--primary-600)',
-                            }}>
-                                ~{Math.round(questionCount * 1.5)}
+        <AppLayout title="Novo Simulado" subtitle="Configure e inicie">
+            <div className="grid gap-4 lg:grid-cols-5 lg:gap-6">
+                {/* Config - 3/5 */}
+                <div className="space-y-4 lg:col-span-3 lg:space-y-6">
+                    {/* Mode Selection */}
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                                <Shuffle className="h-3.5 w-3.5 text-primary lg:h-4 lg:w-4" />
+                                Modo do Simulado
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                            <div className="grid gap-2 sm:grid-cols-3 lg:gap-3">
+                                {[
+                                    {
+                                        key: 'mixed' as const,
+                                        label: 'Misto',
+                                        desc: 'Todas as áreas temáticas',
+                                        icon: Shuffle,
+                                    },
+                                    {
+                                        key: 'focused' as const,
+                                        label: 'Focado',
+                                        desc: 'Área específica',
+                                        icon: Target,
+                                    },
+                                    {
+                                        key: 'adaptive' as const,
+                                        label: 'Adaptativo',
+                                        desc: 'Prioriza áreas fracas',
+                                        icon: Brain,
+                                    },
+                                ].map((m) => (
+                                    <button
+                                        key={m.key}
+                                        onClick={() => setMode(m.key)}
+                                        className={`flex items-start gap-2.5 rounded-lg border-2 p-3 text-left transition-all lg:gap-3 lg:p-4 ${mode === m.key
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-primary/30'
+                                            }`}
+                                    >
+                                        <m.icon
+                                            className={`mt-0.5 h-4 w-4 shrink-0 lg:h-5 lg:w-5 ${mode === m.key ? 'text-primary' : 'text-muted-foreground'
+                                                }`}
+                                        />
+                                        <div>
+                                            <p className="text-[12px] font-medium lg:text-sm">{m.label}</p>
+                                            <p className="text-[10px] text-muted-foreground lg:text-xs">{m.desc}</p>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                minutos
-                            </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
-                    <button
-                        className="btn btn-primary btn-lg w-full"
-                        onClick={handleStart}
-                        disabled={isLoading}
-                        style={{ fontSize: 'var(--font-size-lg)' }}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 size={24} className="animate-spin" />
-                                Carregando...
-                            </>
-                        ) : (
-                            <>
-                                <Play size={24} />
-                                Iniciar Simulado
-                            </>
-                        )}
-                    </button>
-                </section>
+                    {/* Theme Selection (focused mode) */}
+                    {mode === 'focused' && (
+                        <Card>
+                            <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                                <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                                    <BookOpen className="h-3.5 w-3.5 text-primary lg:h-4 lg:w-4" />
+                                    Área Temática
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                                <div className="flex flex-wrap gap-1.5 lg:gap-2">
+                                    {themes.map(([key, label]) => (
+                                        <Badge
+                                            key={key}
+                                            variant={focusTheme === key ? 'default' : 'outline'}
+                                            className="cursor-pointer px-2 py-1 text-[11px] transition-all hover:scale-105 lg:px-3 lg:py-1.5 lg:text-sm"
+                                            onClick={() => setFocusTheme(key)}
+                                        >
+                                            {focusTheme === key && (
+                                                <CheckCircle2 className="mr-1 h-2.5 w-2.5 lg:h-3 lg:w-3" />
+                                            )}
+                                            {label}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                <p className="mt-2 text-[10px] text-muted-foreground lg:mt-3 lg:text-xs">
+                                    {focusTheme === 'all'
+                                        ? 'Nenhum selecionado — todas as áreas serão incluídas'
+                                        : `Tema: ${THEME_LABELS[focusTheme as PsychiatryTheme]}`}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Question count */}
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                                <FileText className="h-3.5 w-3.5 text-primary lg:h-4 lg:w-4" />
+                                Quantidade de Questões
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 lg:gap-3">
+                                {QUESTION_COUNTS.map((n) => (
+                                    <button
+                                        key={n}
+                                        onClick={() => setQuestionCount(n)}
+                                        className={`rounded-lg border-2 p-3 text-center transition-all lg:p-4 ${questionCount === n
+                                            ? 'border-primary bg-primary/5 text-primary'
+                                            : 'border-border hover:border-primary/30'
+                                            }`}
+                                    >
+                                        <span className="text-xl font-bold lg:text-2xl">{n}</span>
+                                        <p className="text-[10px] text-muted-foreground lg:text-xs">questões</p>
+                                    </button>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Difficulty */}
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                                <Gauge className="h-3.5 w-3.5 text-primary lg:h-4 lg:w-4" />
+                                Dificuldade
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:gap-3">
+                                {[
+                                    { value: undefined as 1 | 2 | 3 | undefined, label: 'Todas' },
+                                    { value: 1 as const, label: 'Fácil' },
+                                    { value: 2 as const, label: 'Médio' },
+                                    { value: 3 as const, label: 'Difícil' },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.label}
+                                        onClick={() => setDifficulty(opt.value)}
+                                        className={`rounded-lg border-2 p-3 text-center transition-all lg:p-4 ${difficulty === opt.value
+                                            ? 'border-primary bg-primary/5 text-primary'
+                                            : 'border-border hover:border-primary/30'
+                                            }`}
+                                    >
+                                        <p className="text-[12px] font-medium lg:text-sm">{opt.label}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Summary - 2/5 */}
+                <div className="lg:col-span-2">
+                    <Card className="sticky top-20">
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="text-base lg:text-lg">Resumo</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 px-4 pb-4 lg:space-y-4 lg:px-6 lg:pb-6">
+                            <div className="space-y-2 text-[12px] lg:space-y-3 lg:text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Modo</span>
+                                    <span className="font-medium">
+                                        {mode === 'mixed' ? 'Misto' : mode === 'focused' ? 'Focado' : 'Adaptativo'}
+                                    </span>
+                                </div>
+                                {mode === 'focused' && focusTheme !== 'all' && (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Tema</span>
+                                        <span className="font-medium">{THEME_LABELS[focusTheme as PsychiatryTheme]}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Questões</span>
+                                    <span className="font-medium">{questionCount}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Dificuldade</span>
+                                    <span className="font-medium">
+                                        {difficulty === undefined ? 'Todas' : difficulty === 1 ? 'Fácil' : difficulty === 2 ? 'Médio' : 'Difícil'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Tempo estimado</span>
+                                    <span className="font-medium">~{Math.round(questionCount * 1.5)} min</span>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <Button
+                                className="w-full gap-2 text-[12px] lg:text-sm"
+                                size="lg"
+                                onClick={handleStart}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Carregando...
+                                    </>
+                                ) : (
+                                    <>
+                                        Iniciar Simulado
+                                        <ArrowRight className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+                                    </>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </AppLayout>
     );
 }

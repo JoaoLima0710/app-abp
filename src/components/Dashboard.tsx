@@ -7,10 +7,14 @@ import {
     Award,
     ArrowRight,
     AlertCircle,
-    CheckCircle2,
-    Zap
+    FileText,
+    BookOpen,
 } from 'lucide-react';
-import { THEME_LABELS, THEME_COLORS } from '../types';
+import { THEME_LABELS } from '../types';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -18,262 +22,219 @@ export default function Dashboard() {
 
     const recentSimulations = simulations.slice(0, 5);
 
+    const stats = [
+        {
+            label: 'Questões Resolvidas',
+            value: progress?.totalQuestionsAnswered?.toLocaleString('pt-BR') || '0',
+            icon: Target,
+            color: 'text-primary',
+            bgColor: 'bg-primary/10',
+        },
+        {
+            label: 'Taxa de Acerto',
+            value: `${progress?.overallAccuracy?.toFixed(0) || 0}%`,
+            icon: TrendingUp,
+            color: progress?.overallAccuracy && progress.overallAccuracy >= 70 ? 'text-success' : progress?.overallAccuracy && progress.overallAccuracy >= 50 ? 'text-warning' : 'text-destructive',
+            bgColor: progress?.overallAccuracy && progress.overallAccuracy >= 70 ? 'bg-success/10' : progress?.overallAccuracy && progress.overallAccuracy >= 50 ? 'bg-warning/10' : 'bg-destructive/10',
+        },
+        {
+            label: 'Simulados Completos',
+            value: String(progress?.totalSimulations || 0),
+            icon: Award,
+            color: 'text-warning',
+            bgColor: 'bg-warning/10',
+        },
+        {
+            label: 'Áreas Fortes',
+            value: String(progress?.trends.strongThemes.length || 0),
+            icon: TrendingUp,
+            color: 'text-info',
+            bgColor: 'bg-info/10',
+        },
+    ];
+
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title">Dashboard</h1>
-                <p className="page-subtitle">
-                    Acompanhe seu progresso na preparação para a Prova de Título
-                </p>
-            </header>
-
-            {/* Quick Actions */}
-            <section style={{ marginBottom: 'var(--spacing-8)' }}>
-                <button
-                    className="btn btn-primary btn-lg"
-                    onClick={() => navigate('/simulado/novo')}
-                    style={{
-                        padding: 'var(--spacing-6) var(--spacing-10)',
-                        fontSize: 'var(--font-size-lg)',
-                    }}
-                >
-                    <Zap size={24} />
-                    Iniciar Novo Simulado
-                    <ArrowRight size={20} />
-                </button>
-            </section>
-
+        <AppLayout title="Dashboard" subtitle="Visão geral do seu progresso">
             {/* Stats Grid */}
-            <section className="stats-grid" style={{ marginBottom: 'var(--spacing-8)' }}>
-                <div className="stat-card">
-                    <div className="stat-value">{progress?.totalSimulations || 0}</div>
-                    <div className="stat-label">Simulados Realizados</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-value">{progress?.totalQuestionsAnswered || 0}</div>
-                    <div className="stat-label">Questões Respondidas</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-value" style={{
-                        background: progress?.overallAccuracy && progress.overallAccuracy >= 70
-                            ? 'linear-gradient(135deg, var(--success-500), var(--success-400))'
-                            : progress?.overallAccuracy && progress.overallAccuracy >= 50
-                                ? 'linear-gradient(135deg, var(--warning-500), var(--warning-400))'
-                                : 'linear-gradient(135deg, var(--error-500), var(--error-400))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}>
-                        {progress?.overallAccuracy?.toFixed(0) || 0}%
-                    </div>
-                    <div className="stat-label">Aproveitamento Geral</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-value">
-                        {progress?.trends.strongThemes.length || 0}
-                    </div>
-                    <div className="stat-label">Áreas Fortes</div>
-                </div>
-            </section>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {stats.map((stat) => (
+                    <Card key={stat.label} className="border-none shadow-sm">
+                        <CardContent className="flex flex-col gap-2 p-4 lg:flex-row lg:items-start lg:gap-4 lg:p-5">
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg lg:h-10 lg:w-10 ${stat.bgColor}`}>
+                                <stat.icon className={`h-4 w-4 lg:h-5 lg:w-5 ${stat.color}`} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xl font-bold lg:text-2xl">{stat.value}</span>
+                                <span className="text-[11px] leading-tight text-muted-foreground lg:text-xs">{stat.label}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                gap: 'var(--spacing-6)',
-            }}>
-                {/* Recommendations */}
-                <section className="card">
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <Target size={20} style={{ marginRight: 8 }} />
-                            Recomendações
-                        </h3>
-                    </div>
+            {/* CTA */}
+            <div className="mt-6">
+                <Button
+                    size="lg"
+                    className="w-full gap-2 sm:w-auto"
+                    onClick={() => navigate('/simulado')}
+                >
+                    <FileText className="h-4 w-4" />
+                    Iniciar Novo Simulado
+                    <ArrowRight className="h-4 w-4" />
+                </Button>
+            </div>
 
-                    {recommendations.length > 0 ? (
-                        <div className="flex flex-col gap-3">
-                            {recommendations.map((rec, idx) => (
-                                <div
-                                    key={idx}
-                                    className="flex items-start gap-3"
-                                    style={{
-                                        padding: 'var(--spacing-3)',
-                                        background: 'var(--bg-tertiary)',
-                                        borderRadius: 'var(--radius-lg)',
-                                    }}
-                                >
-                                    {rec.type === 'priority' && <AlertCircle size={20} color="var(--error-500)" />}
-                                    {rec.type === 'celebrate' && <Award size={20} color="var(--success-500)" />}
-                                    {rec.type === 'maintain' && <TrendingUp size={20} color="var(--primary-500)" />}
-                                    {rec.type === 'review' && <Clock size={20} color="var(--warning-500)" />}
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{
-                                            fontSize: 'var(--font-size-sm)',
-                                            margin: 0,
-                                            color: 'var(--text-primary)',
-                                        }}>
-                                            {rec.message}
-                                        </p>
-                                        <p style={{
-                                            fontSize: 'var(--font-size-xs)',
-                                            color: 'var(--text-tertiary)',
-                                            margin: 'var(--spacing-1) 0 0 0',
-                                        }}>
-                                            {rec.suggestedAction}
-                                        </p>
+            {/* Main Content Grid */}
+            <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-3 lg:gap-6">
+                {/* Recommendations - 2/3 */}
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="text-base lg:text-lg">Recomendações</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 px-4 pb-4 lg:space-y-3 lg:px-6 lg:pb-6">
+                            {recommendations.length > 0 ? (
+                                recommendations.map((rec, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 lg:gap-4 lg:p-4"
+                                    >
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 lg:h-9 lg:w-9 lg:rounded-lg">
+                                            {rec.type === 'priority' && <AlertCircle className="h-3.5 w-3.5 text-destructive lg:h-4 lg:w-4" />}
+                                            {rec.type === 'celebrate' && <Award className="h-3.5 w-3.5 text-success lg:h-4 lg:w-4" />}
+                                            {rec.type === 'maintain' && <TrendingUp className="h-3.5 w-3.5 text-primary lg:h-4 lg:w-4" />}
+                                            {rec.type === 'review' && <Clock className="h-3.5 w-3.5 text-warning lg:h-4 lg:w-4" />}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[13px] font-medium leading-tight lg:text-sm">{rec.message}</p>
+                                            <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground lg:text-xs">
+                                                {rec.suggestedAction}
+                                            </p>
+                                        </div>
+                                        <span
+                                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium lg:px-2.5 lg:text-xs ${rec.type === 'priority'
+                                                ? 'bg-destructive/10 text-destructive'
+                                                : rec.type === 'review'
+                                                    ? 'bg-warning/10 text-warning'
+                                                    : 'bg-muted text-muted-foreground'
+                                                }`}
+                                        >
+                                            {rec.type === 'priority' ? 'Alta' : rec.type === 'review' ? 'Média' : THEME_LABELS[rec.theme]}
+                                        </span>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <BookOpen className="mb-2 h-8 w-8 text-muted-foreground/30" />
+                                    <p className="text-xs text-muted-foreground">
+                                        Complete alguns simulados para receber recomendações personalizadas
+                                    </p>
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
-                            <p style={{ color: 'var(--text-tertiary)', margin: 0 }}>
-                                Complete alguns simulados para receber recomendações personalizadas
-                            </p>
-                        </div>
-                    )}
-                </section>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
 
-                {/* Recent Simulations */}
-                <section className="card">
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <Clock size={20} style={{ marginRight: 8 }} />
-                            Simulados Recentes
-                        </h3>
-                    </div>
-
-                    {recentSimulations.length > 0 ? (
-                        <div className="flex flex-col gap-2">
-                            {recentSimulations.map((sim) => (
-                                <div
-                                    key={sim.id}
-                                    className="flex items-center justify-between"
-                                    style={{
-                                        padding: 'var(--spacing-3) var(--spacing-4)',
-                                        background: 'var(--bg-tertiary)',
-                                        borderRadius: 'var(--radius-lg)',
-                                    }}
-                                >
-                                    <div>
-                                        <p style={{
-                                            fontSize: 'var(--font-size-sm)',
-                                            fontWeight: 500,
-                                            margin: 0,
-                                        }}>
-                                            {sim.questionCount} questões
-                                            {sim.focusTheme && (
-                                                <span className="theme-tag" style={{ marginLeft: 8 }}>
-                                                    <span
-                                                        className="theme-tag-dot"
-                                                        style={{ background: THEME_COLORS[sim.focusTheme] }}
-                                                    />
-                                                    {THEME_LABELS[sim.focusTheme]}
-                                                </span>
+                {/* Recent Simulations - 1/3 */}
+                <div>
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="text-base lg:text-lg">Simulados Recentes</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 px-4 pb-4 lg:space-y-4 lg:px-6 lg:pb-6">
+                            {recentSimulations.length > 0 ? (
+                                <>
+                                    {recentSimulations.map((sim) => (
+                                        <div key={sim.id} className="space-y-1.5">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-[13px] font-medium lg:text-sm">
+                                                        {sim.questionCount} questões
+                                                        {sim.focusTheme && ` · ${THEME_LABELS[sim.focusTheme]}`}
+                                                    </p>
+                                                    <p className="text-[11px] text-muted-foreground lg:text-xs">
+                                                        {new Date(sim.createdAt).toLocaleDateString('pt-BR')}
+                                                    </p>
+                                                </div>
+                                                {sim.completedAt ? (
+                                                    <span className="shrink-0 text-base font-bold text-primary lg:text-lg">
+                                                        {sim.stats.accuracy.toFixed(0)}%
+                                                    </span>
+                                                ) : (
+                                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                                        Em andamento
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {sim.completedAt && (
+                                                <Progress value={sim.stats.accuracy} className="h-1.5" />
                                             )}
-                                        </p>
-                                        <p style={{
-                                            fontSize: 'var(--font-size-xs)',
-                                            color: 'var(--text-tertiary)',
-                                            margin: 0,
-                                        }}>
-                                            {new Date(sim.createdAt).toLocaleDateString('pt-BR')}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {sim.completedAt ? (
-                                            <>
-                                                <span
-                                                    className={`badge ${sim.stats.accuracy >= 70 ? 'badge-success' : sim.stats.accuracy >= 50 ? 'badge-warning' : 'badge-error'}`}
-                                                >
-                                                    {sim.stats.accuracy.toFixed(0)}%
-                                                </span>
-                                                <CheckCircle2 size={16} color="var(--success-500)" />
-                                            </>
-                                        ) : (
-                                            <span className="badge badge-neutral">Em andamento</span>
-                                        )}
-                                    </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full gap-1 text-xs lg:text-sm"
+                                        onClick={() => navigate('/estatisticas')}
+                                    >
+                                        Ver todas
+                                        <ArrowRight className="h-3 w-3 lg:h-3.5 lg:w-3.5" />
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <FileText className="mb-2 h-8 w-8 text-muted-foreground/30" />
+                                    <p className="text-xs text-muted-foreground">
+                                        Nenhum simulado realizado ainda
+                                    </p>
+                                    <Button
+                                        size="sm"
+                                        className="mt-3 gap-1"
+                                        onClick={() => navigate('/simulado')}
+                                    >
+                                        Começar Primeiro Simulado
+                                        <ArrowRight className="h-3 w-3" />
+                                    </Button>
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
-                            <p style={{ color: 'var(--text-tertiary)', margin: 0 }}>
-                                Nenhum simulado realizado ainda
-                            </p>
-                            <button
-                                className="btn btn-primary mt-4"
-                                onClick={() => navigate('/simulado/novo')}
-                            >
-                                Começar Primeiro Simulado
-                            </button>
-                        </div>
-                    )}
-                </section>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
             {/* Theme Performance Overview */}
             {progress && Object.keys(progress.byTheme).length > 0 && (
-                <section className="card" style={{ marginTop: 'var(--spacing-6)' }}>
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <TrendingUp size={20} style={{ marginRight: 8 }} />
+                <Card className="mt-4 lg:mt-6">
+                    <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                        <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <TrendingUp className="h-4 w-4 text-primary" />
                             Desempenho por Área
-                        </h3>
-                    </div>
-
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: 'var(--spacing-3)',
-                    }}>
-                        {Object.entries(progress.byTheme).map(([theme, data]) => (
-                            <div
-                                key={theme}
-                                style={{
-                                    padding: 'var(--spacing-4)',
-                                    background: 'var(--bg-tertiary)',
-                                    borderRadius: 'var(--radius-lg)',
-                                    borderLeft: `4px solid ${THEME_COLORS[theme as keyof typeof THEME_COLORS]}`,
-                                }}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span style={{
-                                        fontSize: 'var(--font-size-sm)',
-                                        fontWeight: 500,
-                                    }}>
-                                        {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
-                                    </span>
-                                    <span
-                                        className={`badge ${data && data.accuracy >= 70 ? 'badge-success' :
-                                                data && data.accuracy >= 50 ? 'badge-warning' : 'badge-error'
-                                            }`}
-                                    >
-                                        {data?.accuracy.toFixed(0)}%
-                                    </span>
-                                </div>
-                                <div className="progress-bar">
-                                    <div
-                                        className="progress-bar-fill"
-                                        style={{
-                                            width: `${data?.accuracy || 0}%`,
-                                            background: THEME_COLORS[theme as keyof typeof THEME_COLORS],
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 px-4 pb-4 lg:space-y-4 lg:px-6 lg:pb-6">
+                        {Object.entries(progress.byTheme).map(([theme, data]) => {
+                            const accuracy = data?.accuracy || 0;
+                            return (
+                                <div key={theme} className="space-y-1">
+                                    <div className="flex items-center justify-between text-[12px] lg:text-sm">
+                                        <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS]}</span>
+                                        <span className={`font-bold ${accuracy >= 70 ? 'text-success' : accuracy >= 50 ? 'text-warning' : 'text-destructive'}`}>
+                                            {accuracy.toFixed(0)}%
+                                        </span>
+                                    </div>
+                                    <Progress value={accuracy} className="h-1.5" />
+                                    <p className="text-[10px] text-muted-foreground lg:text-xs">
                                         {data?.correctAnswers}/{data?.totalAttempts} corretas
-                                    </span>
-                                    {data?.trend === 'improving' && (
-                                        <TrendingUp size={14} color="var(--success-500)" />
-                                    )}
+                                        {data?.trend === 'improving' && ' · ↑ Melhorando'}
+                                        {data?.trend === 'declining' && ' · ↓ Em queda'}
+                                    </p>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                            );
+                        })}
+                    </CardContent>
+                </Card>
             )}
-        </div>
+        </AppLayout>
     );
 }

@@ -10,9 +10,11 @@ initializeDatabase().then(() => {
     console.log('Database initialized');
 });
 
-// Apply saved theme
-const savedTheme = localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light';
-document.documentElement.setAttribute('data-theme', savedTheme);
+// Apply saved theme (class-based for Tailwind)
+const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+if (savedDarkMode) {
+    document.documentElement.classList.add('dark');
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

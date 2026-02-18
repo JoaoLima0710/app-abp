@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { useUserStore } from '../store/userStore';
 import { THEME_LABELS, THEME_COLORS, PsychiatryTheme } from '../types';
 import { db } from '../db/database';
-import { Map } from 'lucide-react';
+import { Map, Loader2 } from 'lucide-react';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface CoverageData {
     theme: PsychiatryTheme;
@@ -11,8 +15,8 @@ interface CoverageData {
     totalQuestions: number;
     answeredQuestions: number;
     correctAnswers: number;
-    coverage: number; // 0-100
-    accuracy: number; // 0-100
+    coverage: number;
+    accuracy: number;
 }
 
 export default function CoverageHeatmap() {
@@ -25,7 +29,6 @@ export default function CoverageHeatmap() {
             setIsLoading(true);
             const allQuestions = await db.questions.toArray();
 
-            // Group questions by theme
             const byTheme: Record<string, { total: number; ids: Set<string> }> = {};
             for (const q of allQuestions) {
                 if (!byTheme[q.theme]) byTheme[q.theme] = { total: 0, ids: new Set() };
@@ -33,14 +36,13 @@ export default function CoverageHeatmap() {
                 byTheme[q.theme].ids.add(q.id);
             }
 
-            // Get answered question IDs from simulations
             const sims = await db.simulations.toArray();
             const answeredByTheme: Record<string, { answered: Set<string>; correct: number }> = {};
 
             for (const sim of sims) {
                 for (const sq of sim.questions) {
                     if (!sq.userAnswer) continue;
-                    const q = allQuestions.find(x => x.id === sq.questionId);
+                    const q = allQuestions.find((x) => x.id === sq.questionId);
                     if (!q) continue;
                     if (!answeredByTheme[q.theme]) answeredByTheme[q.theme] = { answered: new Set(), correct: 0 };
                     answeredByTheme[q.theme].answered.add(sq.questionId);
@@ -63,7 +65,7 @@ export default function CoverageHeatmap() {
                 };
             });
 
-            data.sort((a, b) => a.coverage - b.coverage); // weakest coverage first
+            data.sort((a, b) => a.coverage - b.coverage);
             setCoverageData(data);
             setIsLoading(false);
         })();
@@ -71,104 +73,63 @@ export default function CoverageHeatmap() {
 
     if (isLoading) {
         return (
-            <div className="page animate-fade-in" style={{ textAlign: 'center', paddingTop: 'var(--spacing-8)' }}>
-                <p>Carregando dados de cobertura...</p>
-            </div>
+            <AppLayout title="Cobertura" subtitle="Carregando...">
+                <div className="flex items-center justify-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            </AppLayout>
         );
     }
 
-    const overallCoverage = coverageData.length > 0
-        ? coverageData.reduce((sum, d) => sum + d.coverage, 0) / coverageData.length
-        : 0;
+    const overallCoverage =
+        coverageData.length > 0 ? coverageData.reduce((sum, d) => sum + d.coverage, 0) / coverageData.length : 0;
 
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-                    <Map size={28} />
-                    Mapa de Cobertura Temática
-                </h1>
-                <p className="page-subtitle">
-                    Visualize quais temas ainda precisam ser estudados
-                </p>
-            </header>
+        <AppLayout title="Cobertura Temática" subtitle="Quais temas ainda precisam ser estudados">
+            <div className="space-y-4 lg:space-y-6">
+                {/* Overview */}
+                <Card className="text-center">
+                    <CardContent className="p-4 lg:p-6">
+                        <Map className="mx-auto mb-2 h-8 w-8 text-primary lg:h-10 lg:w-10" />
+                        <span className="text-3xl font-bold text-primary lg:text-4xl">{overallCoverage.toFixed(0)}%</span>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Cobertura Geral</p>
+                        <Progress value={overallCoverage} className="mx-auto mt-3 h-2 max-w-xs" />
+                    </CardContent>
+                </Card>
 
-            {/* Overall coverage */}
-            <div className="card" style={{ marginBottom: 'var(--spacing-6)', textAlign: 'center' }}>
-                <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--primary-600)' }}>
-                    {overallCoverage.toFixed(0)}%
-                </div>
-                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
-                    Cobertura Geral
-                </div>
-                <div style={{
-                    marginTop: 'var(--spacing-3)', height: 8, background: 'var(--bg-tertiary)',
-                    borderRadius: 'var(--radius-full)', overflow: 'hidden',
-                }}>
-                    <div style={{
-                        height: '100%', width: `${overallCoverage}%`,
-                        background: 'linear-gradient(90deg, var(--primary-400), var(--primary-600))',
-                        borderRadius: 'var(--radius-full)', transition: 'width 0.5s ease',
-                    }} />
-                </div>
-            </div>
-
-            {/* Theme heatmap grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-4)' }}>
-                {coverageData.map((d) => (
-                    <div
-                        key={d.theme}
-                        className="card"
-                        style={{
-                            borderLeft: `4px solid ${d.color}`,
-                            position: 'relative',
-                            overflow: 'hidden',
-                        }}
-                    >
-                        {/* Background fill representing coverage */}
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, bottom: 0,
-                            width: `${d.coverage}%`,
-                            background: `${d.color}15`,
-                            transition: 'width 0.5s ease',
-                        }} />
-
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            <h4 style={{ fontWeight: 600, marginBottom: 'var(--spacing-2)', fontSize: 'var(--font-size-sm)' }}>
-                                {d.label}
-                            </h4>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-2)' }}>
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
-                                    {d.answeredQuestions}/{d.totalQuestions} questões
-                                </span>
-                                <span style={{
-                                    fontSize: 'var(--font-size-sm)', fontWeight: 700,
-                                    color: d.coverage > 70 ? 'var(--success-600)'
-                                        : d.coverage > 40 ? 'var(--warning-600)'
-                                            : 'var(--error-600)',
-                                }}>
-                                    {d.coverage.toFixed(0)}%
-                                </span>
-                            </div>
-                            <div style={{
-                                height: 6, background: 'var(--bg-tertiary)',
-                                borderRadius: 'var(--radius-full)', overflow: 'hidden',
-                            }}>
-                                <div style={{
-                                    height: '100%', width: `${d.coverage}%`,
-                                    background: d.color, borderRadius: 'var(--radius-full)',
-                                    transition: 'width 0.5s ease',
-                                }} />
-                            </div>
-                            {d.answeredQuestions > 0 && (
-                                <div style={{ marginTop: 'var(--spacing-2)', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                    Acurácia: {d.accuracy.toFixed(0)}%
+                {/* Theme Grid */}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+                    {coverageData.map((d) => (
+                        <Card key={d.theme} className="relative overflow-hidden" style={{ borderLeftWidth: 4, borderLeftColor: d.color }}>
+                            {/* Background fill */}
+                            <div
+                                className="absolute inset-y-0 left-0 opacity-10 transition-all duration-500"
+                                style={{ width: `${d.coverage}%`, background: d.color }}
+                            />
+                            <CardContent className="relative space-y-2 p-3 lg:p-4">
+                                <h4 className="text-xs font-semibold lg:text-sm">{d.label}</h4>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground lg:text-xs">
+                                        {d.answeredQuestions}/{d.totalQuestions} questões
+                                    </span>
+                                    <Badge
+                                        variant={d.coverage > 70 ? 'default' : d.coverage > 40 ? 'secondary' : 'destructive'}
+                                        className="text-[10px] lg:text-xs"
+                                    >
+                                        {d.coverage.toFixed(0)}%
+                                    </Badge>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                ))}
+                                <Progress value={d.coverage} className="h-1.5" />
+                                {d.answeredQuestions > 0 && (
+                                    <p className="text-[10px] text-muted-foreground lg:text-xs">
+                                        Acurácia: {d.accuracy.toFixed(0)}%
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
-        </div>
+        </AppLayout>
     );
 }

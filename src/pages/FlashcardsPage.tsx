@@ -1,12 +1,70 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Layers, CheckCircle, Clock, Sparkles, ArrowRight, Brain } from 'lucide-react';
+import { BookOpen, Heart, Pill, Brain, Zap, Baby, Wine, ArrowRight, Sparkles } from 'lucide-react';
 import { useFlashcards } from '../hooks/useFlashcards';
+import { questionsOriginais } from '../db/questions_originais';
+import { questionsTreaty } from '../db/questions_treaty';
+import { THEME_LABELS, PsychiatryTheme } from '../types';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+
+const allQuestions = [...questionsOriginais, ...questionsTreaty];
+
+const themeIcons: Record<string, React.ElementType> = {
+    transtornos_humor: Heart,
+    psicofarmacologia: Pill,
+    esquizofrenia: Brain,
+    transtornos_ansiedade: Zap,
+    psiquiatria_infantil: Baby,
+    dependencia_quimica: Wine,
+    transtornos_personalidade: Brain,
+    neuropsiquiatria: Brain,
+};
+
+const themeColors: Record<string, string> = {
+    transtornos_humor: 'text-destructive bg-destructive/10',
+    psicofarmacologia: 'text-primary bg-primary/10',
+    esquizofrenia: 'text-info bg-info/10',
+    transtornos_ansiedade: 'text-warning bg-warning/10',
+    psiquiatria_infantil: 'text-success bg-success/10',
+    dependencia_quimica: 'text-destructive bg-destructive/10',
+    transtornos_personalidade: 'text-primary bg-primary/10',
+    neuropsiquiatria: 'text-info bg-info/10',
+};
 
 const FlashcardsPage: React.FC = () => {
     const navigate = useNavigate();
-    const { getStats } = useFlashcards();
+    const { progress, getStats } = useFlashcards();
     const stats = getStats();
+
+    // Calculate per-theme stats
+    const categories = useMemo(() => {
+        // Group questions by theme
+        const byTheme: Record<string, { total: number; reviewed: number }> = {};
+
+        for (const q of allQuestions) {
+            const theme = q.theme;
+            if (!theme) continue;
+            if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
+            byTheme[theme].total++;
+            // Check if this question has been reviewed (has repetition > 0)
+            if (progress[q.id] && progress[q.id].repetition > 0) {
+                byTheme[theme].reviewed++;
+            }
+        }
+
+        return Object.entries(byTheme).map(([theme, data]) => ({
+            theme: theme as PsychiatryTheme,
+            name: THEME_LABELS[theme as PsychiatryTheme] || theme,
+            icon: themeIcons[theme] || BookOpen,
+            color: themeColors[theme] || 'text-primary bg-primary/10',
+            total: data.total,
+            reviewed: data.reviewed,
+            pct: data.total > 0 ? Math.round((data.reviewed / data.total) * 100) : 0,
+        }));
+    }, [progress]);
 
     const handleStartReview = () => {
         navigate('/flashcards/estudo', { state: { mode: 'due' } });
@@ -16,262 +74,90 @@ const FlashcardsPage: React.FC = () => {
         navigate('/flashcards/estudo', { state: { mode: 'new' } });
     };
 
-    // Progress percentage
-    const progressPct = stats.totalQuestions > 0
-        ? Math.round((stats.totalLearned / stats.totalQuestions) * 100)
-        : 0;
-
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                    <Brain size={32} />
-                    Flashcards
-                </h1>
-                <p className="page-subtitle">
-                    Revisão espaçada para memorização de longo prazo
-                </p>
-            </header>
+        <AppLayout title="Flashcards" subtitle="Revisão espaçada por tema">
+            {/* Category Grid */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+                {categories.map((cat) => (
+                    <Card
+                        key={cat.theme}
+                        className="cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
+                        onClick={() => navigate('/flashcards/estudo', { state: { mode: 'due', theme: cat.theme } })}
+                    >
+                        <CardContent className="p-3 lg:p-5">
+                            <div className="flex items-start gap-2.5 lg:gap-4">
+                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md lg:h-10 lg:w-10 lg:rounded-lg ${cat.color}`}>
+                                    <cat.icon className="h-3.5 w-3.5 lg:h-5 lg:w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1 space-y-1.5 lg:space-y-2">
+                                    <p className="truncate text-[12px] font-medium leading-tight lg:text-sm">{cat.name}</p>
+                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground lg:text-xs">
+                                        <span>{cat.reviewed}/{cat.total}</span>
+                                        <span className="font-medium">{cat.pct}%</span>
+                                    </div>
+                                    <Progress value={cat.pct} className="h-1.5" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
 
-            {/* Stats Row */}
-            <section style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: 'var(--spacing-4)',
-                marginBottom: 'var(--spacing-6)',
-            }}>
-                {/* Due Today */}
-                <div className="card" style={{
-                    padding: 'var(--spacing-5)',
-                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)',
-                    borderLeft: '4px solid var(--primary-500)',
-                }}>
-                    <div style={{
-                        width: 48, height: 48, borderRadius: 'var(--radius-lg)',
-                        background: 'var(--primary-50)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                    }}>
-                        <Clock size={24} color="var(--primary-500)" />
-                    </div>
-                    <div>
-                        <div style={{
-                            fontSize: 'var(--font-size-3xl)', fontWeight: 700,
-                            color: stats.dueCount > 0 ? 'var(--primary-600)' : 'var(--text-primary)',
-                            lineHeight: 1.1,
-                        }}>
-                            {stats.dueCount}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Para Revisar Hoje
-                        </div>
-                    </div>
-                </div>
-
-                {/* Learned */}
-                <div className="card" style={{
-                    padding: 'var(--spacing-5)',
-                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)',
-                    borderLeft: '4px solid var(--success-500)',
-                }}>
-                    <div style={{
-                        width: 48, height: 48, borderRadius: 'var(--radius-lg)',
-                        background: 'var(--success-50)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                    }}>
-                        <CheckCircle size={24} color="var(--success-500)" />
-                    </div>
-                    <div>
-                        <div style={{
-                            fontSize: 'var(--font-size-3xl)', fontWeight: 700,
-                            color: 'var(--text-primary)', lineHeight: 1.1,
-                        }}>
-                            {stats.totalLearned}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Cartões Aprendidos
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total */}
-                <div className="card" style={{
-                    padding: 'var(--spacing-5)',
-                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)',
-                    borderLeft: '4px solid var(--secondary-500)',
-                }}>
-                    <div style={{
-                        width: 48, height: 48, borderRadius: 'var(--radius-lg)',
-                        background: 'var(--secondary-50)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                    }}>
-                        <Layers size={24} color="var(--secondary-500)" />
-                    </div>
-                    <div>
-                        <div style={{
-                            fontSize: 'var(--font-size-3xl)', fontWeight: 700,
-                            color: 'var(--text-primary)', lineHeight: 1.1,
-                        }}>
-                            {stats.totalQuestions}
-                        </div>
-                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Total no Baralho
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Overall Progress Bar */}
-            <section className="card" style={{ padding: 'var(--spacing-5)', marginBottom: 'var(--spacing-6)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-3)' }}>
-                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        Progresso Geral
-                    </span>
-                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--primary-600)' }}>
-                        {progressPct}%
-                    </span>
-                </div>
-                <div style={{
-                    height: 10, borderRadius: 'var(--radius-full)',
-                    background: 'var(--bg-tertiary)', overflow: 'hidden',
-                }}>
-                    <div style={{
-                        height: '100%',
-                        width: `${progressPct}%`,
-                        background: 'linear-gradient(90deg, var(--primary-400), var(--primary-600))',
-                        borderRadius: 'var(--radius-full)',
-                        transition: 'width 0.6s ease',
-                    }} />
-                </div>
-                <div style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    marginTop: 'var(--spacing-2)',
-                    fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)',
-                }}>
-                    <span>{stats.totalLearned} aprendidos</span>
-                    <span>{stats.totalQuestions - stats.totalLearned} restantes</span>
-                </div>
-            </section>
-
-            {/* Action Cards */}
-            <section style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: 'var(--spacing-5)',
-            }}>
+            {/* Action section */}
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:mt-8 lg:gap-4">
                 {/* Daily Review */}
-                <div style={{
-                    background: 'linear-gradient(135deg, var(--primary-500), var(--primary-700))',
-                    borderRadius: 'var(--radius-xl)',
-                    padding: 'var(--spacing-6)',
-                    color: 'white',
-                    boxShadow: 'var(--shadow-lg)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}>
-                    {/* Decorative circle */}
-                    <div style={{
-                        position: 'absolute', top: -20, right: -20,
-                        width: 100, height: 100, borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.1)',
-                    }} />
-                    <div style={{
-                        position: 'absolute', bottom: -30, right: 40,
-                        width: 60, height: 60, borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.07)',
-                    }} />
-
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
-                            marginBottom: 'var(--spacing-2)',
-                        }}>
-                            <Sparkles size={20} />
-                            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'white', margin: 0 }}>
-                                Revisão Diária
-                            </h2>
+                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
+                    <div className="absolute -right-5 -top-5 h-24 w-24 rounded-full bg-white/10" />
+                    <div className="absolute -bottom-8 right-10 h-16 w-16 rounded-full bg-white/5" />
+                    <CardContent className="relative z-10 space-y-3 p-5 lg:p-6">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5" />
+                            <h3 className="text-lg font-bold">Revisão Diária</h3>
                         </div>
-                        <p style={{
-                            color: 'rgba(255,255,255,0.8)',
-                            fontSize: 'var(--font-size-sm)',
-                            marginBottom: 'var(--spacing-5)',
-                            lineHeight: 1.5,
-                        }}>
+                        <p className="text-xs leading-relaxed opacity-80 lg:text-sm">
                             {stats.dueCount > 0
-                                ? `Você tem ${stats.dueCount} cartão${stats.dueCount !== 1 ? 'ões' : ''} agendado${stats.dueCount !== 1 ? 's' : ''} para hoje. Mantenha sua ofensiva!`
-                                : 'Nenhum cartão pendente. Você está em dia! 🎉'
-                            }
+                                ? `${stats.dueCount} cartão${stats.dueCount !== 1 ? 'ões' : ''} agendado${stats.dueCount !== 1 ? 's' : ''} para hoje.`
+                                : 'Nenhum cartão pendente. Você está em dia! 🎉'}
                         </p>
-                        <button
-                            className="btn"
+                        <Button
+                            variant="secondary"
+                            className="gap-1.5 bg-white text-primary hover:bg-white/90"
                             onClick={handleStartReview}
                             disabled={stats.dueCount === 0}
-                            style={{
-                                background: stats.dueCount > 0 ? 'white' : 'rgba(255,255,255,0.2)',
-                                color: stats.dueCount > 0 ? 'var(--primary-600)' : 'rgba(255,255,255,0.5)',
-                                fontWeight: 600,
-                                padding: 'var(--spacing-3) var(--spacing-6)',
-                                cursor: stats.dueCount > 0 ? 'pointer' : 'not-allowed',
-                                border: 'none',
-                                fontSize: 'var(--font-size-sm)',
-                            }}
                         >
                             {stats.dueCount > 0 ? 'Iniciar Revisão' : 'Nada para revisar'}
-                            {stats.dueCount > 0 && <ArrowRight size={16} />}
-                        </button>
-                    </div>
-                </div>
+                            {stats.dueCount > 0 && <ArrowRight className="h-3.5 w-3.5" />}
+                        </Button>
+                    </CardContent>
+                </Card>
 
                 {/* Learn New */}
-                <div className="card" style={{
-                    padding: 'var(--spacing-6)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                }}>
-                    {/* Subtle gradient accent */}
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                        background: 'linear-gradient(90deg, var(--secondary-400), var(--secondary-600))',
-                    }} />
-
-                    <div>
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
-                            marginBottom: 'var(--spacing-2)',
-                        }}>
-                            <BookOpen size={20} color="var(--secondary-500)" />
-                            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, margin: 0 }}>
-                                Aprender Novos
-                            </h2>
+                <Card className="relative overflow-hidden border-t-4 border-t-muted-foreground/30">
+                    <CardContent className="flex h-full flex-col justify-between space-y-3 p-5 lg:p-6">
+                        <div>
+                            <div className="mb-1.5 flex items-center gap-2">
+                                <BookOpen className="h-5 w-5 text-muted-foreground" />
+                                <h3 className="text-lg font-bold">Aprender Novos</h3>
+                            </div>
+                            <p className="text-xs text-muted-foreground lg:text-sm">
+                                Adicione 10 novos cartões ao seu ciclo de aprendizado.
+                            </p>
                         </div>
-                        <p style={{
-                            color: 'var(--text-secondary)',
-                            fontSize: 'var(--font-size-sm)',
-                            marginBottom: 'var(--spacing-5)',
-                            lineHeight: 1.5,
-                        }}>
-                            Adicione 10 novos cartões ao seu ciclo de aprendizado. Expanda seu conhecimento gradualmente.
-                        </p>
-                    </div>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={handleStartNew}
-                        style={{
-                            fontWeight: 600,
-                            padding: 'var(--spacing-3) var(--spacing-6)',
-                            alignSelf: 'flex-start',
-                        }}
-                    >
-                        <BookOpen size={16} />
-                        Aprender +10
-                        <ArrowRight size={16} />
-                    </button>
-                </div>
-            </section>
-        </div>
+                        <Button variant="outline" className="gap-1.5 self-start text-xs lg:text-sm" onClick={handleStartNew}>
+                            <BookOpen className="h-3.5 w-3.5" />
+                            Aprender +10
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Help text */}
+            <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-muted-foreground lg:mt-8 lg:text-sm">
+                <BookOpen className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+                <span>Clique em uma categoria para iniciar a revisão</span>
+            </div>
+        </AppLayout>
     );
 };
 

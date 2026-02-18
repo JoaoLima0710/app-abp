@@ -8,7 +8,7 @@ import {
     Minus,
     Target,
     Calendar,
-    Award
+    Award,
 } from 'lucide-react';
 import {
     LineChart,
@@ -20,8 +20,21 @@ import {
     ResponsiveContainer,
     BarChart,
     Bar,
-    Cell
+    Cell,
 } from 'recharts';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 export default function StatisticsPanel() {
     const { simulations, progress, loadUserData } = useUserStore();
@@ -30,9 +43,8 @@ export default function StatisticsPanel() {
         loadUserData();
     }, [loadUserData]);
 
-    const completedSims = simulations.filter(s => s.completedAt);
+    const completedSims = simulations.filter((s) => s.completedAt);
 
-    // Prepare evolution data
     const evolutionData = completedSims
         .slice(-20)
         .reverse()
@@ -42,7 +54,6 @@ export default function StatisticsPanel() {
             date: new Date(sim.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         }));
 
-    // Theme performance data for bar chart
     const themePerformanceData = progress?.byTheme
         ? Object.entries(progress.byTheme)
             .map(([theme, data]) => ({
@@ -58,325 +69,219 @@ export default function StatisticsPanel() {
     const getTrendIcon = (trend?: 'improving' | 'stable' | 'declining') => {
         switch (trend) {
             case 'improving':
-                return <TrendingUp size={16} color="var(--success-500)" />;
+                return <TrendingUp className="h-4 w-4 text-green-500" />;
             case 'declining':
-                return <TrendingDown size={16} color="var(--error-500)" />;
+                return <TrendingDown className="h-4 w-4 text-red-500" />;
             default:
-                return <Minus size={16} color="var(--gray-400)" />;
+                return <Minus className="h-4 w-4 text-muted-foreground" />;
         }
     };
 
+    const getTrendLabel = (trend?: 'improving' | 'stable' | 'declining') => {
+        switch (trend) {
+            case 'improving':
+                return 'Melhorando';
+            case 'declining':
+                return 'Caindo';
+            default:
+                return 'Estável';
+        }
+    };
+
+    const kpis = [
+        { label: 'Simulados', value: completedSims.length, icon: Calendar, color: 'text-primary', bg: 'bg-primary/10' },
+        { label: 'Questões', value: progress?.totalQuestionsAnswered || 0, icon: Target, color: 'text-muted-foreground', bg: 'bg-muted' },
+        { label: 'Aproveitamento', value: `${progress?.overallAccuracy?.toFixed(1) || 0}%`, icon: Award, color: 'text-green-500', bg: 'bg-green-500/10' },
+        { label: 'Tendência', value: getTrendLabel(progress?.trends.overallTrend), icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10' },
+    ];
+
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header">
-                <h1 className="page-title">
-                    <BarChart3 size={32} style={{ marginRight: 12 }} />
-                    Estatísticas
-                </h1>
-                <p className="page-subtitle">
-                    Análise detalhada do seu desempenho ao longo do tempo
-                </p>
-            </header>
-
+        <AppLayout title="Estatísticas" subtitle="Análise detalhada do seu desempenho">
             {completedSims.length === 0 ? (
-                <div className="card text-center" style={{ padding: 'var(--spacing-16)' }}>
-                    <Target size={64} color="var(--text-tertiary)" style={{ margin: '0 auto var(--spacing-4)' }} />
-                    <h3 style={{ marginBottom: 'var(--spacing-2)' }}>Nenhum dado disponível</h3>
-                    <p style={{ color: 'var(--text-tertiary)' }}>
-                        Complete alguns simulados para ver suas estatísticas
-                    </p>
-                </div>
+                <Card className="py-16 text-center">
+                    <CardContent>
+                        <Target className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                        <h3 className="text-base font-semibold">Nenhum dado disponível</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">Complete alguns simulados para ver suas estatísticas</p>
+                    </CardContent>
+                </Card>
             ) : (
-                <>
-                    {/* Summary Cards */}
-                    <div className="stats-grid" style={{ marginBottom: 'var(--spacing-8)' }}>
-                        <div className="stat-card">
-                            <Calendar size={24} color="var(--primary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                            <div className="stat-value">{completedSims.length}</div>
-                            <div className="stat-label">Simulados Completos</div>
-                        </div>
-                        <div className="stat-card">
-                            <Target size={24} color="var(--secondary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                            <div className="stat-value">{progress?.totalQuestionsAnswered || 0}</div>
-                            <div className="stat-label">Questões Respondidas</div>
-                        </div>
-                        <div className="stat-card">
-                            <Award size={24} color="var(--success-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                            <div className="stat-value">{progress?.overallAccuracy?.toFixed(1) || 0}%</div>
-                            <div className="stat-label">Aproveitamento Geral</div>
-                        </div>
-                        <div className="stat-card">
-                            {getTrendIcon(progress?.trends.overallTrend)}
-                            <div className="stat-value" style={{ marginTop: 'var(--spacing-2)' }}>
-                                {progress?.trends.overallTrend === 'improving' ? 'Melhorando' :
-                                    progress?.trends.overallTrend === 'declining' ? 'Caindo' : 'Estável'}
-                            </div>
-                            <div className="stat-label">Tendência Geral</div>
-                        </div>
+                <div className="space-y-4 lg:space-y-6">
+                    {/* KPIs */}
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
+                        {kpis.map((k) => (
+                            <Card key={k.label} className="border-none shadow-sm">
+                                <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${k.bg}`}>
+                                        <k.icon className={`h-4 w-4 ${k.color}`} />
+                                    </div>
+                                    <div>
+                                        <span className="text-lg font-bold lg:text-xl">{k.value}</span>
+                                        <p className="text-[10px] text-muted-foreground lg:text-xs">{k.label}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
 
-                    {/* Charts Row */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-                        gap: 'var(--spacing-6)',
-                        marginBottom: 'var(--spacing-8)',
-                    }}>
+                    {/* Charts */}
+                    <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
                         {/* Evolution Chart */}
-                        <div className="card">
-                            <h3 className="card-title mb-4">
-                                <TrendingUp size={20} style={{ marginRight: 8 }} />
-                                Evolução do Desempenho
-                            </h3>
-                            <div style={{ height: 300 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={evolutionData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                        <XAxis
-                                            dataKey="date"
-                                            stroke="var(--text-tertiary)"
-                                            fontSize={12}
-                                        />
-                                        <YAxis
-                                            domain={[0, 100]}
-                                            stroke="var(--text-tertiary)"
-                                            fontSize={12}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border-color)',
-                                                borderRadius: 'var(--radius-lg)',
-                                            }}
-                                            formatter={(value: number) => [`${value.toFixed(1)}%`, 'Aproveitamento']}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="accuracy"
-                                            stroke="var(--primary-500)"
-                                            strokeWidth={3}
-                                            dot={{ fill: 'var(--primary-500)', strokeWidth: 2 }}
-                                            activeDot={{ r: 8, fill: 'var(--primary-600)' }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Theme Performance Chart */}
-                        <div className="card">
-                            <h3 className="card-title mb-4">
-                                <BarChart3 size={20} style={{ marginRight: 8 }} />
-                                Desempenho por Área
-                            </h3>
-                            <div style={{ height: 300 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={themePerformanceData} layout="vertical">
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                        <XAxis
-                                            type="number"
-                                            domain={[0, 100]}
-                                            stroke="var(--text-tertiary)"
-                                            fontSize={12}
-                                        />
-                                        <YAxis
-                                            type="category"
-                                            dataKey="name"
-                                            width={80}
-                                            stroke="var(--text-tertiary)"
-                                            fontSize={11}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                background: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border-color)',
-                                                borderRadius: 'var(--radius-lg)',
-                                            }}
-                                            formatter={(value: number, name: string, props: any) => [
-                                                `${value.toFixed(1)}%`,
-                                                props.payload.fullName
-                                            ]}
-                                        />
-                                        <Bar dataKey="accuracy" radius={[0, 4, 4, 0]}>
-                                            {themePerformanceData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Detailed Theme Stats */}
-                    <div className="card">
-                        <h3 className="card-title mb-4">Análise Detalhada por Área</h3>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{
-                                width: '100%',
-                                borderCollapse: 'collapse',
-                                fontSize: 'var(--font-size-sm)',
-                            }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                                        <th style={{ textAlign: 'left', padding: 'var(--spacing-3)', color: 'var(--text-secondary)' }}>
-                                            Área Temática
-                                        </th>
-                                        <th style={{ textAlign: 'center', padding: 'var(--spacing-3)', color: 'var(--text-secondary)' }}>
-                                            Questões
-                                        </th>
-                                        <th style={{ textAlign: 'center', padding: 'var(--spacing-3)', color: 'var(--text-secondary)' }}>
-                                            Acertos
-                                        </th>
-                                        <th style={{ textAlign: 'center', padding: 'var(--spacing-3)', color: 'var(--text-secondary)' }}>
-                                            Aproveitamento
-                                        </th>
-                                        <th style={{ textAlign: 'center', padding: 'var(--spacing-3)', color: 'var(--text-secondary)' }}>
-                                            Tendência
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Object.entries(progress?.byTheme || {}).map(([theme, data]) => (
-                                        <tr
-                                            key={theme}
-                                            style={{ borderBottom: '1px solid var(--border-color)' }}
-                                        >
-                                            <td style={{ padding: 'var(--spacing-3)' }}>
-                                                <div className="flex items-center gap-2">
-                                                    <span
-                                                        style={{
-                                                            width: 12,
-                                                            height: 12,
-                                                            borderRadius: '50%',
-                                                            background: THEME_COLORS[theme as keyof typeof THEME_COLORS],
-                                                        }}
-                                                    />
-                                                    {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
-                                                </div>
-                                            </td>
-                                            <td style={{ textAlign: 'center', padding: 'var(--spacing-3)' }}>
-                                                {data?.totalAttempts || 0}
-                                            </td>
-                                            <td style={{ textAlign: 'center', padding: 'var(--spacing-3)' }}>
-                                                {data?.correctAnswers || 0}
-                                            </td>
-                                            <td style={{ textAlign: 'center', padding: 'var(--spacing-3)' }}>
-                                                <span className={`badge ${(data?.accuracy || 0) >= 70 ? 'badge-success' :
-                                                        (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
-                                                    }`}>
-                                                    {data?.accuracy?.toFixed(1) || 0}%
-                                                </span>
-                                            </td>
-                                            <td style={{ textAlign: 'center', padding: 'var(--spacing-3)' }}>
-                                                <div className="flex items-center justify-center gap-1">
-                                                    {getTrendIcon(data?.trend)}
-                                                    <span style={{
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: data?.trend === 'improving' ? 'var(--success-600)' :
-                                                            data?.trend === 'declining' ? 'var(--error-600)' : 'var(--gray-500)',
-                                                    }}>
-                                                        {data?.trend === 'improving' ? 'Melhorando' :
-                                                            data?.trend === 'declining' ? 'Caindo' : 'Estável'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Strong and Weak Areas */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                        gap: 'var(--spacing-6)',
-                        marginTop: 'var(--spacing-6)',
-                    }}>
-                        {/* Strong Themes */}
-                        <div className="card" style={{ borderTop: '4px solid var(--success-500)' }}>
-                            <h3 className="card-title mb-4" style={{ color: 'var(--success-600)' }}>
-                                <Award size={20} style={{ marginRight: 8 }} />
-                                Áreas Fortes
-                            </h3>
-                            {progress?.trends.strongThemes && progress.trends.strongThemes.length > 0 ? (
-                                <div className="flex flex-col gap-2">
-                                    {progress.trends.strongThemes.map(theme => (
-                                        <div
-                                            key={theme}
-                                            className="flex items-center gap-3"
-                                            style={{
-                                                padding: 'var(--spacing-3)',
-                                                background: 'var(--success-50)',
-                                                borderRadius: 'var(--radius-lg)',
-                                            }}
-                                        >
-                                            <span
-                                                style={{
-                                                    width: 10,
-                                                    height: 10,
-                                                    borderRadius: '50%',
-                                                    background: THEME_COLORS[theme],
-                                                }}
-                                            />
-                                            <span style={{ flex: 1 }}>{THEME_LABELS[theme]}</span>
-                                            <span className="badge badge-success">
-                                                {progress.byTheme[theme]?.accuracy?.toFixed(0)}%
-                                            </span>
-                                        </div>
-                                    ))}
+                        <Card>
+                            <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                                <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
+                                    <TrendingUp className="h-4 w-4" />
+                                    Evolução
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                                <div className="h-[250px] lg:h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={evolutionData}>
+                                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                                            <XAxis dataKey="date" className="text-muted-foreground" fontSize={11} />
+                                            <YAxis domain={[0, 100]} className="text-muted-foreground" fontSize={11} />
+                                            <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Aproveitamento']} />
+                                            <Line type="monotone" dataKey="accuracy" className="stroke-primary" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 6 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </div>
-                            ) : (
-                                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                    Continue praticando para identificar suas áreas fortes
-                                </p>
-                            )}
-                        </div>
+                            </CardContent>
+                        </Card>
 
-                        {/* Weak Themes */}
-                        <div className="card" style={{ borderTop: '4px solid var(--error-500)' }}>
-                            <h3 className="card-title mb-4" style={{ color: 'var(--error-600)' }}>
-                                <Target size={20} style={{ marginRight: 8 }} />
-                                Áreas para Melhorar
-                            </h3>
-                            {progress?.trends.weakThemes && progress.trends.weakThemes.length > 0 ? (
-                                <div className="flex flex-col gap-2">
-                                    {progress.trends.weakThemes.map(theme => (
-                                        <div
-                                            key={theme}
-                                            className="flex items-center gap-3"
-                                            style={{
-                                                padding: 'var(--spacing-3)',
-                                                background: 'var(--error-50)',
-                                                borderRadius: 'var(--radius-lg)',
-                                            }}
-                                        >
-                                            <span
-                                                style={{
-                                                    width: 10,
-                                                    height: 10,
-                                                    borderRadius: '50%',
-                                                    background: THEME_COLORS[theme],
-                                                }}
-                                            />
-                                            <span style={{ flex: 1 }}>{THEME_LABELS[theme]}</span>
-                                            <span className="badge badge-error">
-                                                {progress.byTheme[theme]?.accuracy?.toFixed(0)}%
-                                            </span>
-                                        </div>
-                                    ))}
+                        {/* Bar Chart */}
+                        <Card>
+                            <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                                <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
+                                    <BarChart3 className="h-4 w-4" />
+                                    Por Área
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                                <div className="h-[250px] lg:h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={themePerformanceData} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                                            <XAxis type="number" domain={[0, 100]} fontSize={11} />
+                                            <YAxis type="category" dataKey="name" width={75} fontSize={10} />
+                                            <Tooltip formatter={(value: number, _name: string, props: any) => [`${value.toFixed(1)}%`, props.payload.fullName]} />
+                                            <Bar dataKey="accuracy" radius={[0, 4, 4, 0]}>
+                                                {themePerformanceData.map((entry, i) => (
+                                                    <Cell key={i} fill={entry.color} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
-                            ) : (
-                                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                    Ótimo! Nenhuma área crítica identificada
-                                </p>
-                            )}
-                        </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                </>
+
+                    {/* Table */}
+                    <Card>
+                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                            <CardTitle className="text-sm lg:text-base">Análise Detalhada por Área</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-0 pb-4 lg:pb-6">
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="text-xs">Área</TableHead>
+                                            <TableHead className="text-center text-xs">Questões</TableHead>
+                                            <TableHead className="text-center text-xs">Acertos</TableHead>
+                                            <TableHead className="text-center text-xs">%</TableHead>
+                                            <TableHead className="text-center text-xs">Tendência</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {Object.entries(progress?.byTheme || {}).map(([theme, data]) => {
+                                            const acc = data?.accuracy || 0;
+                                            return (
+                                                <TableRow key={theme}>
+                                                    <TableCell className="text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: THEME_COLORS[theme as keyof typeof THEME_COLORS] }} />
+                                                            {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-center text-xs">{data?.totalAttempts || 0}</TableCell>
+                                                    <TableCell className="text-center text-xs">{data?.correctAnswers || 0}</TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Badge variant={acc >= 70 ? 'default' : acc >= 50 ? 'secondary' : 'destructive'} className="text-[10px]">
+                                                            {acc.toFixed(1)}%
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            {getTrendIcon(data?.trend)}
+                                                            <span className={cn(
+                                                                'text-[10px]',
+                                                                data?.trend === 'improving' && 'text-green-500',
+                                                                data?.trend === 'declining' && 'text-red-500',
+                                                                data?.trend === 'stable' && 'text-muted-foreground',
+                                                            )}>
+                                                                {getTrendLabel(data?.trend)}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Strong vs Weak */}
+                    <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+                        <Card className="border-t-4 border-t-green-500">
+                            <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                                <CardTitle className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 lg:text-base">
+                                    <Award className="h-4 w-4" />
+                                    Áreas Fortes
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 px-4 pb-4 lg:px-6 lg:pb-6">
+                                {progress?.trends.strongThemes && progress.trends.strongThemes.length > 0 ? (
+                                    progress.trends.strongThemes.map((theme) => (
+                                        <div key={theme} className="flex items-center gap-2 rounded-lg bg-green-50 p-2 dark:bg-green-950/30 lg:p-3">
+                                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: THEME_COLORS[theme] }} />
+                                            <span className="flex-1 text-[11px] lg:text-xs">{THEME_LABELS[theme]}</span>
+                                            <Badge className="text-[10px]">{progress.byTheme[theme]?.accuracy?.toFixed(0)}%</Badge>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="py-4 text-center text-xs text-muted-foreground">Continue praticando</p>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-t-4 border-t-red-500">
+                            <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                                <CardTitle className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 lg:text-base">
+                                    <Target className="h-4 w-4" />
+                                    Áreas para Melhorar
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 px-4 pb-4 lg:px-6 lg:pb-6">
+                                {progress?.trends.weakThemes && progress.trends.weakThemes.length > 0 ? (
+                                    progress.trends.weakThemes.map((theme) => (
+                                        <div key={theme} className="flex items-center gap-2 rounded-lg bg-red-50 p-2 dark:bg-red-950/30 lg:p-3">
+                                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: THEME_COLORS[theme] }} />
+                                            <span className="flex-1 text-[11px] lg:text-xs">{THEME_LABELS[theme]}</span>
+                                            <Badge variant="destructive" className="text-[10px]">{progress.byTheme[theme]?.accuracy?.toFixed(0)}%</Badge>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="py-4 text-center text-xs text-muted-foreground">Nenhuma área crítica</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             )}
-        </div>
+        </AppLayout>
     );
 }

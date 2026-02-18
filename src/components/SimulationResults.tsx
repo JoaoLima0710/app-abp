@@ -12,10 +12,22 @@ import {
     Home,
     RotateCcw,
     TrendingUp,
-    Award
+    Award,
+    Lightbulb,
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { addCardsToReview } from '../hooks/useFlashcards';
+import { AppLayout } from '@/components/AppLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
@@ -27,16 +39,11 @@ export default function SimulationResults() {
             navigate('/');
             return;
         }
-        // Reload user data to update statistics
         loadUserData();
-
-        // Bridge: add wrong answers to SRS queue for flashcard review
         const wrongIds = simulation.questions
-            .filter(q => q.isCorrect === false)
-            .map(q => q.questionId);
-        if (wrongIds.length > 0) {
-            addCardsToReview(wrongIds);
-        }
+            .filter((q) => q.isCorrect === false)
+            .map((q) => q.questionId);
+        if (wrongIds.length > 0) addCardsToReview(wrongIds);
     }, [simulation, navigate, loadUserData]);
 
     if (!simulation) return null;
@@ -45,7 +52,7 @@ export default function SimulationResults() {
 
     const handleNewSimulation = () => {
         resetSimulation();
-        navigate('/simulado/novo');
+        navigate('/simulado');
     };
 
     const handleGoHome = () => {
@@ -53,7 +60,6 @@ export default function SimulationResults() {
         navigate('/');
     };
 
-    // Prepare chart data
     const themeChartData = Object.entries(stats.byTheme).map(([theme, data]) => ({
         name: THEME_LABELS[theme as keyof typeof THEME_LABELS],
         value: data?.total || 0,
@@ -62,359 +68,185 @@ export default function SimulationResults() {
         color: THEME_COLORS[theme as keyof typeof THEME_COLORS],
     }));
 
-    const scoreColor = stats.accuracy >= 70
-        ? 'var(--success-500)'
-        : stats.accuracy >= 50
-            ? 'var(--warning-500)'
-            : 'var(--error-500)';
-
     const getMessage = () => {
-        if (stats.accuracy >= 80) return { icon: Trophy, text: 'Excelente! Você está no caminho certo!', color: 'var(--success-500)' };
-        if (stats.accuracy >= 70) return { icon: Award, text: 'Muito bom! Continue praticando!', color: 'var(--success-500)' };
-        if (stats.accuracy >= 60) return { icon: TrendingUp, text: 'Bom progresso! Há espaço para melhorar.', color: 'var(--warning-500)' };
-        return { icon: Target, text: 'Continue estudando! A prática leva à perfeição.', color: 'var(--error-500)' };
+        if (stats.accuracy >= 80) return { icon: Trophy, text: 'Excelente! Você está no caminho certo!', cls: 'text-green-500' };
+        if (stats.accuracy >= 70) return { icon: Award, text: 'Muito bom! Continue praticando!', cls: 'text-green-500' };
+        if (stats.accuracy >= 60) return { icon: TrendingUp, text: 'Bom progresso! Há espaço para melhorar.', cls: 'text-yellow-500' };
+        return { icon: Target, text: 'Continue estudando! A prática leva à perfeição.', cls: 'text-red-500' };
     };
 
-    const message = getMessage();
+    const msg = getMessage();
+
+    const kpis = [
+        { label: 'Acertos', value: stats.correct, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-500/10' },
+        { label: 'Erros', value: stats.incorrect, icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+        { label: 'Total', value: stats.totalQuestions, icon: Target, color: 'text-primary', bg: 'bg-primary/10' },
+        { label: 'Tempo Médio', value: `${stats.avgTimePerQuestion.toFixed(0)}s`, icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted' },
+    ];
 
     return (
-        <div className="page animate-fade-in">
-            <header className="page-header text-center">
-                <message.icon size={64} color={message.color} style={{ marginBottom: 'var(--spacing-4)' }} />
-                <h1 className="page-title">Simulado Concluído!</h1>
-                <p className="page-subtitle" style={{ color: message.color }}>{message.text}</p>
-            </header>
+        <AppLayout title="Resultado" subtitle="Detalhes do simulado">
+            {/* Hero Score */}
+            <div className="mb-6 text-center lg:mb-8">
+                <msg.icon className={`mx-auto mb-3 h-12 w-12 lg:h-16 lg:w-16 ${msg.cls}`} />
+                <h2 className="text-2xl font-bold lg:text-3xl">Simulado Concluído!</h2>
+                <p className={`mt-1 text-sm ${msg.cls}`}>{msg.text}</p>
 
-            {/* Main Score */}
-            <div
-                className="card text-center"
-                style={{
-                    maxWidth: 400,
-                    margin: '0 auto var(--spacing-8)',
-                    background: `linear-gradient(135deg, ${scoreColor}10, var(--bg-secondary))`,
-                    border: `2px solid ${scoreColor}30`,
-                }}
-            >
-                <div style={{
-                    fontSize: 'var(--font-size-5xl)',
-                    fontWeight: 800,
-                    color: scoreColor,
-                    lineHeight: 1,
-                }}>
-                    {stats.accuracy.toFixed(0)}%
-                </div>
-                <p style={{
-                    fontSize: 'var(--font-size-lg)',
-                    color: 'var(--text-secondary)',
-                    margin: 'var(--spacing-2) 0 0 0',
-                }}>
-                    de aproveitamento
-                </p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="stats-grid" style={{ marginBottom: 'var(--spacing-8)' }}>
-                <div className="stat-card">
-                    <CheckCircle2 size={32} color="var(--success-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                    <div className="stat-value" style={{
-                        background: 'linear-gradient(135deg, var(--success-500), var(--success-400))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}>
-                        {stats.correct}
-                    </div>
-                    <div className="stat-label">Acertos</div>
-                </div>
-                <div className="stat-card">
-                    <XCircle size={32} color="var(--error-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                    <div className="stat-value" style={{
-                        background: 'linear-gradient(135deg, var(--error-500), var(--error-400))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}>
-                        {stats.incorrect}
-                    </div>
-                    <div className="stat-label">Erros</div>
-                </div>
-                <div className="stat-card">
-                    <Target size={32} color="var(--primary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                    <div className="stat-value">{stats.totalQuestions}</div>
-                    <div className="stat-label">Total de Questões</div>
-                </div>
-                <div className="stat-card">
-                    <Clock size={32} color="var(--secondary-500)" style={{ marginBottom: 'var(--spacing-2)' }} />
-                    <div className="stat-value">{stats.avgTimePerQuestion.toFixed(0)}s</div>
-                    <div className="stat-label">Tempo Médio / Questão</div>
+                <div className={cn(
+                    'mx-auto mt-4 inline-flex flex-col items-center rounded-2xl border-2 px-8 py-4 lg:mt-6 lg:px-12 lg:py-6',
+                    stats.accuracy >= 70 ? 'border-green-500/30 bg-green-50 dark:bg-green-950/20' :
+                        stats.accuracy >= 50 ? 'border-yellow-500/30 bg-yellow-50 dark:bg-yellow-950/20' :
+                            'border-red-500/30 bg-red-50 dark:bg-red-950/20',
+                )}>
+                    <span className={cn(
+                        'text-5xl font-extrabold lg:text-6xl',
+                        stats.accuracy >= 70 ? 'text-green-500' : stats.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500',
+                    )}>
+                        {stats.accuracy.toFixed(0)}%
+                    </span>
+                    <span className="mt-1 text-xs text-muted-foreground lg:text-sm">de aproveitamento</span>
                 </div>
             </div>
 
-            {/* Performance by Theme */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                gap: 'var(--spacing-6)',
-                marginBottom: 'var(--spacing-8)',
-            }}>
-                {/* Chart */}
-                <div className="card">
-                    <h3 className="card-title mb-4">Distribuição por Área</h3>
-                    <div style={{ height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={themeChartData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={100}
-                                    label={({ name, percent }) => `${name.split(' ')[0]} ${(percent * 100).toFixed(0)}%`}
-                                    labelLine={false}
-                                >
-                                    {themeChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    formatter={(value, name, props) => [
-                                        `${props.payload.correct}/${value} (${props.payload.accuracy.toFixed(0)}%)`,
-                                        name
-                                    ]}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Theme Details */}
-                <div className="card">
-                    <h3 className="card-title mb-4">Desempenho por Área</h3>
-                    <div className="flex flex-col gap-3">
-                        {Object.entries(stats.byTheme).map(([theme, data]) => (
-                            <div
-                                key={theme}
-                                style={{
-                                    padding: 'var(--spacing-3)',
-                                    background: 'var(--bg-tertiary)',
-                                    borderRadius: 'var(--radius-lg)',
-                                    borderLeft: `4px solid ${THEME_COLORS[theme as keyof typeof THEME_COLORS]}`,
-                                }}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>
-                                        {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
-                                    </span>
-                                    <span className={`badge ${(data?.accuracy || 0) >= 70 ? 'badge-success' :
-                                        (data?.accuracy || 0) >= 50 ? 'badge-warning' : 'badge-error'
-                                        }`}>
-                                        {data?.correct}/{data?.total} ({data?.accuracy.toFixed(0)}%)
-                                    </span>
-                                </div>
-                                <div className="progress-bar" style={{ height: 6 }}>
-                                    <div
-                                        className="progress-bar-fill"
-                                        style={{
-                                            width: `${data?.accuracy || 0}%`,
-                                            background: THEME_COLORS[theme as keyof typeof THEME_COLORS],
-                                        }}
-                                    />
-                                </div>
+            {/* KPIs */}
+            <div className="mb-4 grid grid-cols-2 gap-2 lg:mb-6 lg:grid-cols-4 lg:gap-4">
+                {kpis.map((k) => (
+                    <Card key={k.label} className="border-none shadow-sm">
+                        <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${k.bg}`}>
+                                <k.icon className={`h-4 w-4 ${k.color}`} />
                             </div>
-                        ))}
-                    </div>
-                </div>
+                            <div>
+                                <span className="text-lg font-bold lg:text-xl">{k.value}</span>
+                                <p className="text-[10px] text-muted-foreground lg:text-xs">{k.label}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
-            {/* Missed Questions Review */}
+            {/* Charts */}
+            <div className="mb-4 grid gap-4 lg:mb-6 lg:grid-cols-2 lg:gap-6">
+                {/* Pie Chart */}
+                <Card>
+                    <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                        <CardTitle className="text-sm lg:text-base">Distribuição por Área</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
+                        <div className="h-[250px] lg:h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={themeChartData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={90}
+                                        label={({ name, percent }) => `${name.split(' ')[0]} ${(percent * 100).toFixed(0)}%`}
+                                        labelLine={false}
+                                    >
+                                        {themeChartData.map((entry, i) => (
+                                            <Cell key={i} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        formatter={(value, _name, props) => [
+                                            `${props.payload.correct}/${value} (${props.payload.accuracy.toFixed(0)}%)`,
+                                            _name,
+                                        ]}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Theme Breakdown */}
+                <Card>
+                    <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                        <CardTitle className="text-sm lg:text-base">Desempenho por Área</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 px-4 pb-4 lg:px-6 lg:pb-6">
+                        {Object.entries(stats.byTheme).map(([theme, data]) => {
+                            const acc = data?.accuracy || 0;
+                            return (
+                                <div key={theme} className="space-y-1">
+                                    <div className="flex items-center justify-between text-[11px] lg:text-xs">
+                                        <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS]}</span>
+                                        <Badge variant={acc >= 70 ? 'default' : acc >= 50 ? 'secondary' : 'destructive'} className="text-[10px] lg:text-xs">
+                                            {data?.correct}/{data?.total} ({acc.toFixed(0)}%)
+                                        </Badge>
+                                    </div>
+                                    <Progress value={acc} className="h-1.5" />
+                                </div>
+                            );
+                        })}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Missed Questions */}
             {stats.incorrect > 0 && (
-                <div className="card" style={{ marginBottom: 'var(--spacing-8)' }}>
-                    <h3 className="card-title mb-4">
-                        <XCircle size={20} color="var(--error-500)" style={{ marginRight: 8 }} />
-                        Questões para Revisar ({stats.incorrect})
-                    </h3>
-                    <div className="flex flex-col gap-3">
+                <Card className="mb-4 lg:mb-6">
+                    <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
+                        <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            Questões para Revisar ({stats.incorrect})
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 px-4 pb-4 lg:space-y-3 lg:px-6 lg:pb-6">
                         {simulation.questions.map((sq, idx) => {
                             if (sq.isCorrect !== false) return null;
                             const q = questions[idx];
                             if (!q) return null;
-
                             return (
-                                <details
-                                    key={sq.questionId}
-                                    style={{
-                                        background: 'var(--bg-tertiary)',
-                                        borderRadius: 'var(--radius-lg)',
-                                        borderLeft: '4px solid var(--error-500)',
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <summary
-                                        style={{
-                                            padding: 'var(--spacing-4)',
-                                            cursor: 'pointer',
-                                            listStyle: 'none',
-                                        }}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <span
-                                                style={{
-                                                    width: 28,
-                                                    height: 28,
-                                                    borderRadius: 'var(--radius-md)',
-                                                    background: 'var(--error-100)',
-                                                    color: 'var(--error-700)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: 'var(--font-size-sm)',
-                                                    fontWeight: 600,
-                                                    flexShrink: 0,
-                                                }}
-                                            >
-                                                {idx + 1}
-                                            </span>
-                                            <div style={{ flex: 1 }}>
-                                                <p style={{
-                                                    fontSize: 'var(--font-size-sm)',
-                                                    color: 'var(--text-primary)',
-                                                    margin: '0 0 var(--spacing-2) 0',
-                                                    lineHeight: 1.5,
-                                                }}>
-                                                    {q.statement.length > 150 ? q.statement.substring(0, 150) + '...' : q.statement}
-                                                </p>
-                                                <div className="flex items-center gap-4">
-                                                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--error-600)' }}>
-                                                        Sua resposta: {sq.userAnswer}
-                                                    </span>
-                                                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-600)' }}>
-                                                        Correta: {q.correctAnswer}
-                                                    </span>
-                                                    <span
-                                                        className="theme-tag"
-                                                        style={{ marginLeft: 'auto' }}
-                                                    >
-                                                        <span
-                                                            className="theme-tag-dot"
-                                                            style={{ background: THEME_COLORS[q.theme] }}
-                                                        />
-                                                        {THEME_LABELS[q.theme]}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </summary>
-
-                                    {/* Expanded content: explanation + itemAnalysis */}
-                                    <div style={{
-                                        padding: '0 var(--spacing-4) var(--spacing-4)',
-                                        borderTop: '1px solid var(--border-primary)',
-                                    }}>
-                                        {/* Correct explanation */}
-                                        <div style={{
-                                            padding: 'var(--spacing-3)',
-                                            background: 'var(--bg-secondary)',
-                                            borderRadius: 'var(--radius-md)',
-                                            borderLeft: '4px solid var(--success-500)',
-                                            marginTop: 'var(--spacing-3)',
-                                        }}>
-                                            <strong style={{ fontSize: 'var(--font-size-sm)', color: 'var(--success-700)', display: 'block', marginBottom: 'var(--spacing-1)' }}>
-                                                Alternativa Correta: {q.correctAnswer}
-                                            </strong>
-                                            <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)', lineHeight: 1.6 }}>
-                                                {q.explanation.correct}
+                                <Collapsible key={sq.questionId}>
+                                    <CollapsibleTrigger className="flex w-full items-start gap-2 rounded-lg border-l-4 border-l-red-500 bg-muted/40 p-3 text-left transition-colors hover:bg-muted lg:gap-3">
+                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-red-100 text-[10px] font-bold text-red-700 dark:bg-red-950 dark:text-red-400 lg:text-xs">
+                                            {idx + 1}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[11px] leading-snug lg:text-xs">
+                                                {q.statement.length > 120 ? q.statement.substring(0, 120) + '...' : q.statement}
                                             </p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] lg:gap-3 lg:text-[11px]">
+                                                <span className="text-red-500">Sua: {sq.userAnswer}</span>
+                                                <span className="text-green-500">Correta: {q.correctAnswer}</span>
+                                                <Badge variant="outline" className="text-[9px] lg:text-[10px]">{THEME_LABELS[q.theme]}</Badge>
+                                            </div>
                                         </div>
-
-                                        {/* Exam Tip */}
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="space-y-2 border-l-4 border-l-red-500/30 bg-muted/20 p-3 lg:p-4">
+                                        <div className="rounded border-l-4 border-l-green-500 bg-muted/50 p-2 lg:p-3">
+                                            <strong className="text-[10px] text-green-600 dark:text-green-400 lg:text-xs">Correta: {q.correctAnswer}</strong>
+                                            <p className="mt-0.5 text-[10px] leading-relaxed lg:text-xs">{q.explanation.correct}</p>
+                                        </div>
                                         {q.explanation.examTip && (
-                                            <div style={{
-                                                padding: 'var(--spacing-3)',
-                                                background: 'linear-gradient(135deg, var(--warning-50), var(--bg-tertiary))',
-                                                borderRadius: 'var(--radius-md)',
-                                                marginTop: 'var(--spacing-2)',
-                                                display: 'flex',
-                                                alignItems: 'flex-start',
-                                                gap: 'var(--spacing-2)',
-                                            }}>
-                                                <Award size={16} color="var(--warning-600)" style={{ flexShrink: 0, marginTop: 2 }} />
-                                                <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-primary)' }}>
-                                                    {q.explanation.examTip}
-                                                </p>
+                                            <div className="flex gap-2 rounded bg-warning/10 p-2 lg:p-3">
+                                                <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-warning" />
+                                                <p className="text-[10px] lg:text-xs">{q.explanation.examTip}</p>
                                             </div>
                                         )}
-
-                                        {/* Item Analysis */}
-                                        {q.itemAnalysis && (
-                                            <div style={{ marginTop: 'var(--spacing-3)' }}>
-                                                <strong style={{
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--text-secondary)',
-                                                    display: 'block',
-                                                    marginBottom: 'var(--spacing-2)',
-                                                }}>
-                                                    Análise por Alternativa:
-                                                </strong>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-                                                    {(['A', 'B', 'C', 'D', 'E'] as const).map((key) => {
-                                                        const text = q.itemAnalysis?.[key];
-                                                        if (!text) return null;
-                                                        const isCorrect = key === q.correctAnswer;
-                                                        const isUserWrong = key === sq.userAnswer && !sq.isCorrect;
-                                                        return (
-                                                            <div
-                                                                key={key}
-                                                                style={{
-                                                                    padding: 'var(--spacing-2)',
-                                                                    background: 'var(--bg-secondary)',
-                                                                    borderRadius: 'var(--radius-sm)',
-                                                                    borderLeft: `3px solid ${isCorrect ? 'var(--success-500)'
-                                                                        : isUserWrong ? 'var(--error-500)'
-                                                                            : 'var(--border-primary)'
-                                                                        }`,
-                                                                }}
-                                                            >
-                                                                <span style={{
-                                                                    fontWeight: 700,
-                                                                    fontSize: 'var(--font-size-xs)',
-                                                                    color: isCorrect ? 'var(--success-600)' : isUserWrong ? 'var(--error-600)' : 'var(--text-secondary)',
-                                                                }}>
-                                                                    {key})
-                                                                </span>
-                                                                {isCorrect && ' ✓'}
-                                                                {isUserWrong && ' ✗'}
-                                                                <p style={{
-                                                                    margin: 'var(--spacing-1) 0 0',
-                                                                    fontSize: 'var(--font-size-xs)',
-                                                                    color: 'var(--text-primary)',
-                                                                    lineHeight: 1.5,
-                                                                }}>
-                                                                    {text}
-                                                                </p>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </details>
+                                    </CollapsibleContent>
+                                </Collapsible>
                             );
                         })}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-center gap-4">
-                <button className="btn btn-secondary btn-lg" onClick={handleGoHome}>
-                    <Home size={20} />
-                    Voltar ao Início
-                </button>
-                <button className="btn btn-primary btn-lg" onClick={handleNewSimulation}>
-                    <RotateCcw size={20} />
+            <div className="flex items-center justify-center gap-3">
+                <Button variant="outline" size="lg" className="gap-1.5 text-xs lg:text-sm" onClick={handleGoHome}>
+                    <Home className="h-4 w-4" />
+                    Início
+                </Button>
+                <Button size="lg" className="gap-1.5 text-xs lg:text-sm" onClick={handleNewSimulation}>
+                    <RotateCcw className="h-4 w-4" />
                     Novo Simulado
-                </button>
+                </Button>
             </div>
-        </div>
+        </AppLayout>
     );
 }
