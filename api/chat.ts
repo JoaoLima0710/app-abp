@@ -38,7 +38,7 @@ async function callPoe(question: string, context: string): Promise<string> {
 // ── Gemini ───────────────────────────────────────────────────────────
 async function callGemini(question: string, context: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     if (!apiKey) throw new Error('GEMINI_API_KEY ausente');
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
