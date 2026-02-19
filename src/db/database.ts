@@ -1,6 +1,36 @@
 import Dexie, { Table } from 'dexie';
 import { Question, Simulation, UserProgress } from '../types';
 
+// ── Fisher-Yates (Knuth) shuffle — O(n), uniformly random ──
+function fisherYatesShuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+// ── Seen-questions cycling (localStorage) ──
+const SEEN_KEY = 'psiq_seen_question_ids';
+
+function getSeenQuestionIds(): Set<string> {
+    try {
+        const raw = localStorage.getItem(SEEN_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+}
+
+function markQuestionsSeen(ids: string[]): void {
+    const seen = getSeenQuestionIds();
+    for (const id of ids) seen.add(id);
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+}
+
+export function resetSeenQuestions(): void {
+    localStorage.removeItem(SEEN_KEY);
+}
+
 export interface FlashcardProgressRecord {
     questionId: string;
     interval: number;
@@ -119,8 +149,24 @@ export async function getRandomQuestions(count: number, themeOrFilter?: string |
         questions = questions.filter(q => !excludeSet.has(q.id));
     }
 
-    const shuffled = questions.sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    // ── Question cycling: exclude already-seen questions ──
+    const seen = getSeenQuestionIds();
+    let unseen = questions.filter(q => !seen.has(q.id));
+
+    // If not enough unseen questions remain, reset the cycle
+    if (unseen.length < count) {
+        resetSeenQuestions();
+        unseen = questions; // all available again
+    }
+
+    // Fisher-Yates shuffle (uniform randomness)
+    const shuffled = fisherYatesShuffle(unseen);
+    const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+
+    // Mark the selected questions as seen
+    markQuestionsSeen(selected.map(q => q.id));
+
+    return selected;
 }
 
 export async function getQuestionById(id: string): Promise<Question | undefined> {
@@ -135,9 +181,16 @@ export async function getAdaptiveQuestions(count: number, progress: UserProgress
     const allQuestions = await db.questions.toArray();
 
     if (!progress || Object.keys(progress.byTheme).length === 0) {
-        // No data yet — fall back to random
-        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, Math.min(count, shuffled.length));
+        // No data yet — fall back to random (with cycling)
+        return getRandomQuestions(count);
+    }
+
+    // ── Question cycling: exclude already-seen questions ──
+    const seen = getSeenQuestionIds();
+    let pool = allQuestions.filter(q => !seen.has(q.id));
+    if (pool.length < count) {
+        resetSeenQuestions();
+        pool = allQuestions;
     }
 
     // Categorize answered question IDs
@@ -152,12 +205,10 @@ export async function getAdaptiveQuestions(count: number, progress: UserProgress
     const weakThemes = new Set(progress.trends.weakThemes);
     const strongThemes = new Set(progress.trends.strongThemes);
 
-    const weakPool = allQuestions.filter(q => weakThemes.has(q.theme));
-    const neverAnswered = allQuestions.filter(q => !answeredIds.has(q.id));
-    const strongPool = allQuestions.filter(q => strongThemes.has(q.theme));
-    const middlePool = allQuestions.filter(q => !weakThemes.has(q.theme) && !strongThemes.has(q.theme));
-
-    const shuffle = (arr: Question[]) => arr.sort(() => Math.random() - 0.5);
+    const weakPool = pool.filter(q => weakThemes.has(q.theme));
+    const neverAnswered = pool.filter(q => !answeredIds.has(q.id));
+    const strongPool = pool.filter(q => strongThemes.has(q.theme));
+    const middlePool = pool.filter(q => !weakThemes.has(q.theme) && !strongThemes.has(q.theme));
 
     const weakCount = Math.round(count * 0.4);
     const newCount = Math.round(count * 0.3);
@@ -165,21 +216,24 @@ export async function getAdaptiveQuestions(count: number, progress: UserProgress
     const strongCount = count - weakCount - newCount - midCount;
 
     const selected: Question[] = [
-        ...shuffle(weakPool).slice(0, weakCount),
-        ...shuffle(neverAnswered).slice(0, newCount),
-        ...shuffle(middlePool).slice(0, midCount),
-        ...shuffle(strongPool).slice(0, strongCount),
+        ...fisherYatesShuffle(weakPool).slice(0, weakCount),
+        ...fisherYatesShuffle(neverAnswered).slice(0, newCount),
+        ...fisherYatesShuffle(middlePool).slice(0, midCount),
+        ...fisherYatesShuffle(strongPool).slice(0, strongCount),
     ];
 
-    // Deduplicate and fill remaining from all questions if needed
+    // Deduplicate and fill remaining from pool if needed
     const usedIds = new Set(selected.map(q => q.id));
-    const remaining = shuffle(allQuestions.filter(q => !usedIds.has(q.id)));
+    const remaining = fisherYatesShuffle(pool.filter(q => !usedIds.has(q.id)));
     while (selected.length < count && remaining.length > 0) {
         selected.push(remaining.pop()!);
     }
 
+    // Mark the selected questions as seen
+    markQuestionsSeen(selected.map(q => q.id));
+
     // Final shuffle to mix categories
-    return shuffle(selected).slice(0, count);
+    return fisherYatesShuffle(selected).slice(0, count);
 }
 
 export async function saveSimulation(simulation: Simulation): Promise<void> {
