@@ -6,23 +6,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+
 import {
     ChevronLeft,
     ChevronRight,
-    ChevronDown,
+
     Clock,
     CheckCircle2,
     XCircle,
     Flag,
     BookOpen,
     Lightbulb,
-    AlertTriangle,
-    List,
+
+
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AiExplanation } from '@/components/AiExplanation';
@@ -44,7 +40,6 @@ export default function SimulationPage() {
     } = useSimulationStore();
 
     const [elapsedTime, setElapsedTime] = useState(0);
-    const [showItemAnalysis, setShowItemAnalysis] = useState(false);
 
     useEffect(() => {
         if (!simulation) navigate('/simulado');
@@ -206,33 +201,7 @@ export default function SimulationPage() {
                                 <p className="text-[12px] leading-relaxed lg:text-sm">{question.explanation.correct}</p>
                             </div>
 
-                            {/* Wrong explanation */}
-                            {!simQuestion.isCorrect && simQuestion.userAnswer && (
-                                <div className="rounded-lg border-l-4 border-l-red-500 bg-muted/50 p-3 lg:p-4">
-                                    <div className="mb-1 flex items-center gap-1.5">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
-                                        <strong className="text-[11px] text-red-700 dark:text-red-400 lg:text-xs">
-                                            Por que {simQuestion.userAnswer} está incorreta:
-                                        </strong>
-                                    </div>
-                                    <p className="text-[12px] leading-relaxed lg:text-sm">
-                                        {question.explanation[`wrong${simQuestion.userAnswer}` as keyof typeof question.explanation] ||
-                                            'Esta alternativa não corresponde aos critérios diagnósticos ou conceitos corretos.'}
-                                    </p>
-                                </div>
-                            )}
 
-                            {/* Key concepts */}
-                            {question.explanation.keyConcepts.length > 0 && (
-                                <div>
-                                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground lg:text-xs">Conceitos-chave:</p>
-                                    <div className="flex flex-wrap gap-1 lg:gap-1.5">
-                                        {question.explanation.keyConcepts.map((c, i) => (
-                                            <Badge key={i} variant="secondary" className="text-[10px] lg:text-xs">{c}</Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Exam tip */}
                             {question.explanation.examTip && (
@@ -245,49 +214,6 @@ export default function SimulationPage() {
                                 </div>
                             )}
 
-                            {/* Item analysis */}
-                            {question.itemAnalysis && (
-                                <Collapsible open={showItemAnalysis} onOpenChange={setShowItemAnalysis}>
-                                    <CollapsibleTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-between gap-2 text-[11px] lg:text-xs">
-                                            <div className="flex items-center gap-1.5">
-                                                <List className="h-3.5 w-3.5 text-primary" />
-                                                Análise por Alternativa
-                                            </div>
-                                            <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', showItemAnalysis && 'rotate-180')} />
-                                        </Button>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent className="mt-2 space-y-1.5 lg:mt-3 lg:space-y-2">
-                                        {(['A', 'B', 'C', 'D', 'E'] as const).map((key) => {
-                                            const text = question.itemAnalysis?.[key];
-                                            if (!text) return null;
-                                            const isCorr = key === question.correctAnswer;
-                                            const isWrong = key === simQuestion?.userAnswer && !simQuestion?.isCorrect;
-                                            return (
-                                                <div
-                                                    key={key}
-                                                    className={cn(
-                                                        'rounded-md border-l-4 bg-muted/30 p-2 lg:p-3',
-                                                        isCorr ? 'border-l-green-500' : isWrong ? 'border-l-red-500' : 'border-l-border',
-                                                    )}
-                                                >
-                                                    <div className="mb-0.5 flex items-center gap-1.5">
-                                                        <span className={cn(
-                                                            'text-[11px] font-bold',
-                                                            isCorr ? 'text-green-600' : isWrong ? 'text-red-600' : 'text-muted-foreground',
-                                                        )}>
-                                                            {key})
-                                                        </span>
-                                                        {isCorr && <CheckCircle2 className="h-3 w-3 text-green-500" />}
-                                                        {isWrong && <XCircle className="h-3 w-3 text-red-500" />}
-                                                    </div>
-                                                    <p className="text-[11px] leading-relaxed lg:text-xs">{text}</p>
-                                                </div>
-                                            );
-                                        })}
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            )}
                             <AiExplanation
                                 questionBody={question.statement}
                                 alternatives={question.options}
