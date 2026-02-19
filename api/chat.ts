@@ -5,6 +5,15 @@
 const POE_API_URL = 'https://api.poe.com/v1/chat/completions';
 
 export default async function handler(req: any, res: any) {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -30,32 +39,38 @@ NUNCA invente ou extrapole informações além do que está nos documentos.
 Cite a fonte (livro e seção/capítulo) sempre que possível.
 Seja conciso, didático e direto.`;
 
+        const requestBody = {
+            model: botName,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Questão: ${question}\n\n${context || ''}` },
+            ],
+            temperature: 0.3,
+            stream: false,
+        };
+
+        console.log('POE Request:', JSON.stringify({ url: POE_API_URL, model: botName, keyPrefix: apiKey.substring(0, 8) + '...' }));
+
         const response = await fetch(POE_API_URL, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                model: botName,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: `Questão: ${question}\n\n${context || ''}` },
-                ],
-                temperature: 0.3, // Baixa temperatura = menos criatividade = menos alucinação
-            }),
+            body: JSON.stringify(requestBody),
         });
 
+        const responseText = await response.text();
+        console.log('POE Response status:', response.status, 'body:', responseText.substring(0, 500));
+
         if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('POE API error:', response.status, errorBody);
             return res.status(502).json({
-                error: 'Erro na comunicação com a IA',
-                details: response.status,
+                error: `Erro POE API (${response.status})`,
+                details: responseText.substring(0, 300),
             });
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         const aiMessage = data.choices?.[0]?.message?.content || 'Sem resposta da IA.';
 
         return res.status(200).json({
@@ -64,6 +79,9 @@ Seja conciso, didático e direto.`;
         });
     } catch (error: any) {
         console.error('AI Proxy error:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
+        return res.status(500).json({
+            error: 'Erro interno do servidor',
+            details: error.message || String(error),
+        });
     }
 }

@@ -22,7 +22,8 @@ export function useAiTutor() {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Erro ${response.status}`);
+                const detail = errorData.details ? ` — ${errorData.details}` : '';
+                throw new Error((errorData.error || `Erro ${response.status}`) + detail);
             }
 
             const data = await response.json();
