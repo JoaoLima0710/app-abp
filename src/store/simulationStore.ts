@@ -97,6 +97,19 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
         const answeredCount = updatedQuestions.filter(q => q.userAnswer).length;
         const correctCount = updatedQuestions.filter(q => q.isCorrect).length;
 
+        // Build byTheme stats from all answered questions
+        const byTheme: Record<string, { correct: number; total: number; accuracy: number }> = {};
+        for (let i = 0; i < updatedQuestions.length; i++) {
+            const sq = updatedQuestions[i];
+            if (!sq.userAnswer) continue;
+            const theme = questions[i]?.theme;
+            if (!theme) continue;
+            if (!byTheme[theme]) byTheme[theme] = { correct: 0, total: 0, accuracy: 0 };
+            byTheme[theme].total += 1;
+            if (sq.isCorrect) byTheme[theme].correct += 1;
+            byTheme[theme].accuracy = (byTheme[theme].correct / byTheme[theme].total) * 100;
+        }
+
         const updatedSimulation: Simulation = {
             ...simulation,
             questions: updatedQuestions,
@@ -105,11 +118,17 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
                 answered: answeredCount,
                 correct: correctCount,
                 incorrect: answeredCount - correctCount,
-                accuracy: (correctCount / answeredCount) * 100,
+                accuracy: answeredCount > 0 ? (correctCount / answeredCount) * 100 : 0,
+                byTheme,
             },
         };
 
         set({ simulation: updatedSimulation });
+
+        // Auto-save to IndexedDB to prevent data loss on tab close
+        saveSimulation(updatedSimulation).catch(err =>
+            console.error('Auto-save failed:', err)
+        );
     },
 
     nextQuestion: () => {
