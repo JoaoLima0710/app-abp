@@ -22,7 +22,7 @@ export function AiExplanation({
     userAnswer,
     className
 }: AiExplanationProps) {
-    const { askAi, isLoading, explanation, error } = useAiTutor();
+    const { askAi, isLoading, explanation, error, provider } = useAiTutor();
     const [isOpen, setIsOpen] = useState(false);
     const [hasAsked, setHasAsked] = useState(false);
 
@@ -112,9 +112,21 @@ ${userAnswer ? `Resposta do Aluno: ${userAnswer}` : ''}
                                             </p>
                                         ))}
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground opacity-70 lg:text-xs">
-                                        <BookOpen className="h-3 w-3" />
-                                        fontes: DSM-5-TR, Tratado de Psiquiatria da ABP
+                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground opacity-70 lg:text-xs">
+                                        <div className="flex items-center gap-1.5">
+                                            <BookOpen className="h-3 w-3" />
+                                            fontes: DSM-5-TR, Tratado de Psiquiatria da ABP
+                                        </div>
+                                        {provider && (
+                                            <span className={cn(
+                                                'rounded-full px-2 py-0.5 text-[9px] font-medium',
+                                                provider === 'poe'
+                                                    ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400'
+                                                    : 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
+                                            )}>
+                                                {provider === 'poe' ? '📚 POE (docs)' : '✨ Gemini'}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             )}

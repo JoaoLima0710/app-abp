@@ -5,11 +5,13 @@ export function useAiTutor() {
     const [isLoading, setIsLoading] = useState(false);
     const [explanation, setExplanation] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [provider, setProvider] = useState<string | null>(null);
 
     const askAi = async (question: string, context: string) => {
         setIsLoading(true);
         setError(null);
         setExplanation(null);
+        setProvider(null);
 
         try {
             const response = await fetch('/api/chat', {
@@ -28,6 +30,7 @@ export function useAiTutor() {
 
             const data = await response.json();
             setExplanation(data.content || 'Sem resposta da IA.');
+            setProvider(data.provider || null);
 
         } catch (err: any) {
             console.error('AI Tutor error:', err);
@@ -41,6 +44,7 @@ export function useAiTutor() {
         askAi,
         isLoading,
         explanation,
-        error
+        error,
+        provider,
     };
 }
