@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AiStudyGuide } from '@/components/AiStudyGuide';
+import { AiPlanAnalysis } from '@/components/AiPlanAnalysis';
 
 export default function StudyPlan() {
     const navigate = useNavigate();
@@ -64,13 +65,6 @@ export default function StudyPlan() {
 
     const topPriorities = studyPriorities.slice(0, 5);
     const lowPriorities = studyPriorities.slice(-3).reverse();
-
-    const studyTips = [
-        { emoji: '📚', title: 'Foque nas Lacunas', text: 'Dedique mais tempo às áreas com baixo aproveitamento. Use simulados focados.', color: 'text-primary' },
-        { emoji: '🔄', title: 'Revisão Espaçada', text: 'Revise questões erradas após 1, 3 e 7 dias para fortalecer a memória.', color: 'text-primary' },
-        { emoji: '⏱️', title: 'Simule a Prova', text: 'Faça simulados completos (100 questões) para treinar resistência e gestão de tempo.', color: 'text-green-500' },
-        { emoji: '📖', title: 'Estude as Explicações', text: 'Leia as explicações de todas as questões, inclusive as que você acertou.', color: 'text-yellow-500' },
-    ];
 
     return (
         <AppLayout title="Plano de Estudos" subtitle="Recomendações baseadas no seu desempenho">
@@ -218,27 +212,8 @@ export default function StudyPlan() {
                         </Card>
                     </div>
 
-                    {/* Study Tips */}
-                    <Card>
-                        <CardHeader className="px-4 pb-2 pt-4 lg:px-6 lg:pb-3 lg:pt-6">
-                            <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
-                                <Brain className="h-4 w-4" />
-                                Dicas de Estudo
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
-                            <div className="grid gap-3 sm:grid-cols-2 lg:gap-4">
-                                {studyTips.map((tip) => (
-                                    <div key={tip.title} className="rounded-lg bg-muted/50 p-3 lg:p-4">
-                                        <h4 className={`mb-1 text-xs font-semibold ${tip.color} lg:text-sm`}>
-                                            {tip.emoji} {tip.title}
-                                        </h4>
-                                        <p className="text-[10px] text-muted-foreground lg:text-xs">{tip.text}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* AI Strategic Analysis (Replaces General Tips) */}
+                    <AiPlanAnalysis progress={progress} />
                 </div>
             )}
         </AppLayout>

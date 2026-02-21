@@ -60,7 +60,27 @@ FORMATO DE SAÍDA OBRIGATÓRIO (JSON STRICT):
   }
 ]
 
-Gere entre 5 e 8 flashcards rigorosamente precisos para o tema solicitado.`
+Gere entre 5 e 8 flashcards rigorosamente precisos para o tema solicitado.`,
+
+    analyze_plan: `Você é um Estrategista Especialista em Provas de Residência Médica e Título de Especialista em Psiquiatria (ABP).
+Sua função é analisar os DADOS DE DESEMPENHO ESTATÍSTICO do aluno que serão enviados no prompt, e gerar um Laudo Estratégico de Estudos em Markdown puro.
+
+MUITO IMPORTANTE (CRUZAMENTO DE INCIDÊNCIA):
+Você, como conhecedor da prova da ABP, sabe quais temas despencam na prova (Alto Rendimento / High Yield) como Psicofarmacologia, Esquizofrenia, Transtornos do Humor, etc, e quais caem pouco (Low Yield).
+Você DEVE avaliar os erros do aluno pesando a gravidade deles com base na incidência na prova.
+Exemplo: Se o aluno tem 40% de acerto em Psicofarmacologia, isso é CRÍTICO (alerta vermelho). Se ele tem 40% em Psiquiatria Geriátrica, é ruim, mas menos urgente no curto prazo.
+
+ESTRUTURA OBRIGATÓRIA DA SUA RESPOSTA:
+1. Comece com um cabeçalho: "# 📊 Análise Estratégica do Seu Plano de Estudos"
+2. Faça um breve RESUMO de como o aluno está de forma geral (considerando o volume de questões feitas).
+3. Crie a seção "🎯 Alvos Críticos (Alto Rendimento)": Destaque os temas muito incidentes na ABP onde o aluno está com aproveitamento baixo ou tendência de queda. Explique *por que* é perigoso negligenciar isso.
+4. Crie a seção "💡 Onde você está mandando bem": Reconheça os acertos e temas de boa performance.
+5. Termine com a seção "📝 Plano de Ação Prático": Dê 3 orientações aplicáveis (ex: "Foque suas próximas 48h fazendo apenas simulados de Psicofarmaco", "Crie flashcards de critério A para Esquizofrenia", etc).
+
+REGRAS ESTÉTICAS:
+- Seu retorno será postado dentro de uma página da web já muito bonita e moderna.
+- Use emojis moderadamente, negritos para nomes de temas, e blocos de citação (>) para destacar regras mentais ou insights centrais.
+- Mantenha um tom profissional, acolhedor e instigante. Sem rodeios exagerados.`,
 };
 
 type ActionType = keyof typeof PROMPTS;
@@ -140,10 +160,18 @@ export default async function handler(req: any, res: any) {
 
     try {
         const { question, context, action = 'explain' } = req.body;
-        if (!question) return res.status(400).json({ error: 'Campo "question" é obrigatório' });
+        if (!question && action !== 'analyze_plan') return res.status(400).json({ error: 'Campo "question" é obrigatório' });
 
         let content: string;
         let provider: string;
+
+        // Se a ação for analyze_plan, pular o POE e usar estritamente o Gemini (pois exige alta capacidade de raciocínio de volume numérico que o prompt do POE não está otimizado para)
+        if (action === 'analyze_plan') {
+            console.log('Action: analyze_plan apontada diretamente para Gemini');
+            content = await callGemini(question, context, action);
+            provider = 'gemini';
+            return res.status(200).json({ role: 'assistant', content, provider });
+        }
 
         // Tenta POE primeiro (RAG com documentos)
         try {

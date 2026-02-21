@@ -7,7 +7,7 @@ export function useAiTutor() {
     const [error, setError] = useState<string | null>(null);
     const [provider, setProvider] = useState<string | null>(null);
 
-    const askAi = async (question: string, context: string, action: 'explain' | 'study_guide' | 'generate_flashcards' = 'explain'): Promise<any> => {
+    const askAi = async (question: string, context: string, action: 'explain' | 'study_guide' | 'generate_flashcards' | 'analyze_plan' = 'explain'): Promise<any> => {
         setIsLoading(true);
         setError(null);
         setExplanation(null);
