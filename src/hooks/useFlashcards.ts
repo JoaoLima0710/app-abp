@@ -127,12 +127,24 @@ export function useFlashcards() {
         return dueQuestions;
     }, [progress]);
 
-    const getStats = useCallback(() => {
+    const getStats = useCallback((customCardsCount: number = 0, customCards: any[] = []) => {
         const items = Object.values(progress);
         const totalLearned = items.filter(i => i.repetition > 0).length;
-        const dueCount = items.filter(i => i.dueDate <= Date.now()).length;
-        // Total available questions - total learned = New/Unseen
-        const totalQuestions = questions.length;
+
+        // Count due items from progress (these are both standard and custom cards that the user has already seen)
+        const now = Date.now();
+        let dueCount = items.filter(i => i.dueDate <= now).length;
+
+        // Count brand NEW custom cards (they are not in progress yet, so repetition = 0)
+        let newCustomCardsCount = 0;
+        if (customCards && customCards.length > 0) {
+            newCustomCardsCount = customCards.filter(c => !progress[c.id] || progress[c.id].repetition === 0).length;
+        }
+
+        dueCount += newCustomCardsCount;
+
+        // Total available questions = standard questions + custom generated cards
+        const totalQuestions = questions.length + customCardsCount;
 
         return {
             totalLearned,

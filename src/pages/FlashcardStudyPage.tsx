@@ -52,10 +52,13 @@ const FlashcardStudyPage: React.FC = () => {
             // Standard due
             const standardDue = getDueCards().filter(q => !themeFilter || q.theme === themeFilter);
 
-            // Custom due
+            // Custom due OR New (we want AI generated cards to be immediately available)
             const customDue = customCards.filter(fc => {
                 const p = progress[fc.id];
-                return p && p.dueDate <= now;
+                // If no progress exists, or repetition is 0, it's new -> due now
+                if (!p || p.repetition === 0) return true;
+                // Otherwise check if it's due based on time
+                return p.dueDate <= now;
             });
 
             cards = [

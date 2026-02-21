@@ -9,6 +9,8 @@ import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { db } from '@/db/database';
+import { CustomFlashcard } from '@/types';
 
 const allQuestions = [...questionsOriginais, ...questionsTreaty];
 
@@ -37,7 +39,17 @@ const themeColors: Record<string, string> = {
 const FlashcardsPage: React.FC = () => {
     const navigate = useNavigate();
     const { progress, getStats } = useFlashcards();
-    const stats = getStats();
+    const [customCards, setCustomCards] = React.useState<CustomFlashcard[]>([]);
+
+    React.useEffect(() => {
+        const fetchCards = async () => {
+            const cards = await db.customFlashcards.toArray();
+            setCustomCards(cards);
+        };
+        fetchCards();
+    }, []);
+
+    const stats = getStats(customCards.length, customCards);
 
     // Calculate per-theme stats
     const categories = useMemo(() => {
@@ -55,6 +67,17 @@ const FlashcardsPage: React.FC = () => {
             }
         }
 
+        for (const c of customCards) {
+            const theme = c.theme;
+            if (!theme) continue;
+            if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
+            byTheme[theme].total++;
+
+            if (progress[c.id] && progress[c.id].repetition > 0) {
+                byTheme[theme].reviewed++;
+            }
+        }
+
         return Object.entries(byTheme).map(([theme, data]) => ({
             theme: theme as PsychiatryTheme,
             name: THEME_LABELS[theme as PsychiatryTheme] || theme,
@@ -64,7 +87,7 @@ const FlashcardsPage: React.FC = () => {
             reviewed: data.reviewed,
             pct: data.total > 0 ? Math.round((data.reviewed / data.total) * 100) : 0,
         }));
-    }, [progress]);
+    }, [progress, customCards]);
 
     const handleStartReview = () => {
         navigate('/flashcards/estudo', { state: { mode: 'due' } });

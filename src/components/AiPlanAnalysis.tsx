@@ -32,7 +32,14 @@ Desempenho Detalhado por Subtema:
         if (progress.byTheme) {
             Object.entries(progress.byTheme).forEach(([themeKey, data]) => {
                 const label = THEME_LABELS[themeKey as keyof typeof THEME_LABELS] || themeKey;
-                statsReport += `- ${label}: ${data.totalAttempts} questões | Acerto: ${data.accuracy.toFixed(1)}% | Tendência recente: ${data.trend}\n`;
+                statsReport += `- **${label}**: ${data.totalAttempts} questões | Acerto: ${data.accuracy.toFixed(1)}% | Tendência recente: ${data.trend}\n`;
+
+                if (data.subthemeStats) {
+                    const sortedSubthemes = Object.entries(data.subthemeStats).sort((a, b) => b[1].errors - a[1].errors);
+                    sortedSubthemes.forEach(([subm, sts]) => {
+                        statsReport += `  ↳ *${subm}*: ${sts.total} feitas, ${sts.errors} erros (${sts.correct} acertos)\n`;
+                    });
+                }
             });
         }
 

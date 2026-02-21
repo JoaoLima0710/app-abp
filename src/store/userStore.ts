@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Simulation, UserProgress, PsychiatryTheme, StudyRecommendation, THEME_LABELS } from '../types';
-import { getAllSimulations, getUserProgress, updateUserProgress } from '../db/database';
+import { Simulation, UserProgress, PsychiatryTheme, StudyRecommendation, THEME_LABELS, SubthemeStats } from '../types';
+import { getAllSimulations, getUserProgress, updateUserProgress, db } from '../db/database';
 
 interface UserState {
     simulations: Simulation[];
@@ -61,6 +61,44 @@ export const useUserStore = create<UserState>((set, get) => ({
             }
         }
 
+        // Rank 4.5: Calculate subtheme statistics
+        // We need to fetch the original questions to know their subthemes
+        const answeredIds = new Set<string>();
+        completedSims.forEach(sim => sim.questions.forEach(q => {
+            if (q.userAnswer) answeredIds.add(q.questionId);
+        }));
+
+        const subthemeData: Record<string, Record<string, SubthemeStats>> = {}; // theme -> subtheme -> stats
+
+        if (answeredIds.size > 0) {
+            const allAnsweredQuestions = await db.questions.where('id').anyOf(Array.from(answeredIds)).toArray();
+            const questionMap = new Map(allAnsweredQuestions.map(q => [q.id, q]));
+
+            for (const sim of completedSims) {
+                for (const sq of sim.questions) {
+                    if (sq.userAnswer) {
+                        const originalQ = questionMap.get(sq.questionId);
+                        if (originalQ && originalQ.subtheme) {
+                            const theme = originalQ.theme;
+                            const subtheme = originalQ.subtheme;
+
+                            if (!subthemeData[theme]) subthemeData[theme] = {};
+                            if (!subthemeData[theme][subtheme]) {
+                                subthemeData[theme][subtheme] = { total: 0, correct: 0, errors: 0 };
+                            }
+
+                            subthemeData[theme][subtheme].total += 1;
+                            if (sq.isCorrect) {
+                                subthemeData[theme][subtheme].correct += 1;
+                            } else {
+                                subthemeData[theme][subtheme].errors += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Rank 5: aggregate commonMistakes — themes with most errors
         const errorRanking = Object.entries(themeData)
             .map(([theme, data]) => ({ theme, errors: data.errors, total: data.total }))
@@ -79,6 +117,7 @@ export const useUserStore = create<UserState>((set, get) => ({
             trend: 'improving' | 'stable' | 'declining';
             recentAccuracy: number;
             commonMistakes: string[];
+            subthemeStats?: Record<string, SubthemeStats>;
         }>> = {};
 
         const themeAccuracies: { theme: PsychiatryTheme; accuracy: number }[] = [];
@@ -109,6 +148,7 @@ export const useUserStore = create<UserState>((set, get) => ({
                 trend,
                 recentAccuracy,
                 commonMistakes: errorRanking.filter(e => e.startsWith(THEME_LABELS[theme as PsychiatryTheme] || theme)),
+                subthemeStats: subthemeData[theme] || undefined
             };
 
             themeAccuracies.push({ theme: theme as PsychiatryTheme, accuracy });

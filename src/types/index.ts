@@ -191,6 +191,12 @@ export interface Simulation {
     stats: SimulationStats;
 }
 
+export interface SubthemeStats {
+    total: number;
+    correct: number;
+    errors: number;
+}
+
 export interface ThemeProgress {
     totalAttempts: number;
     correctAnswers: number;
@@ -198,6 +204,7 @@ export interface ThemeProgress {
     trend: 'improving' | 'stable' | 'declining';
     recentAccuracy: number;
     commonMistakes: string[];
+    subthemeStats?: Record<string, SubthemeStats>;
 }
 
 export interface TrendAnalysis {
