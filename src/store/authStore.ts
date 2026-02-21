@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
 import { setAuthUserId, getAnonymousUserId } from '../lib/supabaseClient';
 import { fullSync } from '../db/cloudSync';
+import { toast } from 'sonner';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthState {
@@ -62,7 +63,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     signInWithGoogle: async () => {
-        if (!supabase) return;
+        if (!supabase) {
+            toast.error('Erro de Configuração', {
+                description: 'As variáveis de ambiente do Supabase não foram encontradas. Verifique se foram configuradas corretamente na Vercel e se o deploy teve sucesso.',
+                duration: 5000,
+            });
+            return;
+        }
         set({ isLoading: true });
 
         try {
