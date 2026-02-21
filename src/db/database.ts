@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { Question, Simulation, UserProgress } from '../types';
+import { syncSimulations, syncUserProgress } from './cloudSync';
 
 // ── Fisher-Yates (Knuth) shuffle — O(n), uniformly random ──
 function fisherYatesShuffle<T>(arr: T[]): T[] {
@@ -238,6 +239,8 @@ export async function getAdaptiveQuestions(count: number, progress: UserProgress
 
 export async function saveSimulation(simulation: Simulation): Promise<void> {
     await db.simulations.put(simulation);
+    // Background cloud sync (non-blocking)
+    syncSimulations().catch(() => { });
 }
 
 export async function getSimulation(id: string): Promise<Simulation | undefined> {
@@ -258,4 +261,6 @@ export async function getUserProgress(): Promise<UserProgress | undefined> {
 
 export async function updateUserProgress(progress: Partial<UserProgress>): Promise<void> {
     await db.userProgress.update('main', { ...progress, lastUpdated: new Date() });
+    // Background cloud sync (non-blocking)
+    syncUserProgress().catch(() => { });
 }

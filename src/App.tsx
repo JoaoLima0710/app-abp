@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { startAutoSync } from './db/cloudSync';
 import Dashboard from './components/Dashboard';
 import SimulationSetup from './components/SimulationSetup';
 import SimulationPage from './components/SimulationPage';
@@ -25,6 +26,7 @@ function App() {
 
     useEffect(() => {
         loadUserData();
+        startAutoSync();
     }, []);
 
     useEffect(() => {
