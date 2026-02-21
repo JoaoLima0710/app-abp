@@ -196,7 +196,10 @@ export async function syncSeenQuestions(): Promise<void> {
         if (error && error.code !== 'PGRST116') throw error;
 
         const cloudIds: string[] = cloudRow?.question_ids || [];
-        const merged = [...new Set([...localIds, ...cloudIds])];
+
+        const safeLocal = Array.isArray(localIds) ? localIds : [];
+        const safeCloud = Array.isArray(cloudIds) ? cloudIds : [];
+        const merged = [...new Set([...safeLocal, ...safeCloud])];
 
         localStorage.setItem(SEEN_KEY, JSON.stringify(merged));
 
