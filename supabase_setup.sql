@@ -5,7 +5,7 @@
 
 -- 1. Tabela de simulações
 CREATE TABLE IF NOT EXISTS simulations (
-    id UUID PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     data JSONB NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
