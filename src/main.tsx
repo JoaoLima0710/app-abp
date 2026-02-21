@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
+import './utils/chunkErrorHandler'
 import { initializeDatabase } from './db/database'
 
 // Apply saved theme (class-based for Tailwind)
