@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Heart, Pill, Brain, Zap, Baby, Wine, ArrowRight, Sparkles } from 'lucide-react';
+import { BookOpen, Heart, Pill, Brain, Zap, Baby, Wine, ArrowRight, Sparkles, Target } from 'lucide-react';
 import { useFlashcards } from '../hooks/useFlashcards';
+import { useUserStore } from '../store/userStore';
 import { questionsOriginais } from '../db/questions_originais';
 import { questionsTreaty } from '../db/questions_treaty';
 import { THEME_LABELS, PsychiatryTheme } from '../types';
@@ -38,7 +39,8 @@ const themeColors: Record<string, string> = {
 
 const FlashcardsPage: React.FC = () => {
     const navigate = useNavigate();
-    const { progress, getStats } = useFlashcards();
+    const { progress: flashcardProgress, getStats } = useFlashcards();
+    const { progress: userProgress } = useUserStore();
     const [customCards, setCustomCards] = React.useState<CustomFlashcard[]>([]);
 
     React.useEffect(() => {
@@ -62,7 +64,7 @@ const FlashcardsPage: React.FC = () => {
             if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
             byTheme[theme].total++;
             // Check if this question has been reviewed (has repetition > 0)
-            if (progress[q.id] && progress[q.id].repetition > 0) {
+            if (flashcardProgress[q.id] && flashcardProgress[q.id].repetition > 0) {
                 byTheme[theme].reviewed++;
             }
         }
@@ -73,7 +75,7 @@ const FlashcardsPage: React.FC = () => {
             if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
             byTheme[theme].total++;
 
-            if (progress[c.id] && progress[c.id].repetition > 0) {
+            if (flashcardProgress[c.id] && flashcardProgress[c.id].repetition > 0) {
                 byTheme[theme].reviewed++;
             }
         }
@@ -87,7 +89,32 @@ const FlashcardsPage: React.FC = () => {
             reviewed: data.reviewed,
             pct: data.total > 0 ? Math.round((data.reviewed / data.total) * 100) : 0,
         }));
-    }, [progress, customCards]);
+    }, [flashcardProgress, customCards]);
+
+    const worstSubthemes = useMemo(() => {
+        if (!userProgress?.byTheme) return [];
+
+        const all: { themeKey: PsychiatryTheme; themeLabel: string; subtheme: string; errors: number; total: number }[] = [];
+
+        Object.entries(userProgress.byTheme).forEach(([themeKey, data]) => {
+            if (data.subthemeStats) {
+                Object.entries(data.subthemeStats).forEach(([subm, sts]) => {
+                    if (sts.errors > 0) {
+                        all.push({
+                            themeKey: themeKey as PsychiatryTheme,
+                            themeLabel: THEME_LABELS[themeKey as PsychiatryTheme] || themeKey,
+                            subtheme: subm,
+                            errors: sts.errors,
+                            total: sts.total
+                        });
+                    }
+                });
+            }
+        });
+
+        // Sort by most errors
+        return all.sort((a, b) => b.errors - a.errors).slice(0, 6);
+    }, [userProgress]);
 
     const handleStartReview = () => {
         navigate('/flashcards/estudo', { state: { mode: 'due' } });
@@ -175,10 +202,55 @@ const FlashcardsPage: React.FC = () => {
                 </Card>
             </div>
 
+            {/* Gap Analysis / Suggested Focus */}
+            {worstSubthemes.length > 0 && (
+                <div className="mt-8 lg:mt-12">
+                    <div className="mb-4 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-destructive" />
+                        <h3 className="text-lg font-bold">Focos Estratégicos Recomendados</h3>
+                    </div>
+                    <p className="mb-4 text-xs text-muted-foreground lg:text-sm">
+                        Baseado no seu histórico de simulados, estes são os subtemas com maior índice de erros.
+                        Recomendamos priorizar a revisão e a criação de flashcards (via Gemini) para estes tópicos.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {worstSubthemes.map((ws, idx) => {
+                            const Icon = themeIcons[ws.themeKey] || BookOpen;
+                            const colorClass = themeColors[ws.themeKey] || 'text-primary bg-primary/10';
+                            return (
+                                <Card
+                                    key={`${ws.themeKey}-${ws.subtheme}-${idx}`}
+                                    className="cursor-pointer transition-colors hover:bg-muted/50"
+                                    onClick={() => navigate('/flashcards/estudo', { state: { mode: 'theme', theme: ws.themeKey } })}
+                                >
+                                    <CardContent className="p-4 flex items-start gap-3">
+                                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${colorClass}`}>
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-xs font-semibold text-muted-foreground">{ws.themeLabel}</p>
+                                            <p className="font-bold text-sm leading-tight text-foreground mt-0.5">{ws.subtheme}</p>
+                                            <div className="mt-2 flex items-center justify-between text-xs">
+                                                <span className="text-destructive font-medium">{ws.errors} erros</span>
+                                                <span className="text-muted-foreground">de {ws.total} questões</span>
+                                            </div>
+                                            <Progress
+                                                value={(ws.errors / ws.total) * 100}
+                                                className="h-1.5 mt-2 bg-destructive/20 [&>div]:bg-destructive"
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Help text */}
             <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-muted-foreground lg:mt-8 lg:text-sm">
                 <BookOpen className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                <span>Clique em uma categoria para iniciar a revisão</span>
+                <span>Clique em uma categoria ou foco estratégico para iniciar a revisão</span>
             </div>
         </AppLayout>
     );
