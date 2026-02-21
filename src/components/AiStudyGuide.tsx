@@ -22,13 +22,64 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
     const [fcSuccess, setFcSuccess] = useState(false);
     const [fcError, setFcError] = useState<string | null>(null);
 
+    const [missedContext, setMissedContext] = useState<string>('');
+
     const themeName = THEME_LABELS[theme];
 
-    const handleAsk = () => {
+    const fetchMissedQuestionsContext = async () => {
+        try {
+            const { db } = await import('@/db/database');
+            const simulations = await db.simulations.toArray();
+            // Sort by most recent
+            simulations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+            const missedIds: string[] = [];
+
+            for (const sim of simulations) {
+                if (!sim.completedAt) continue;
+                for (const q of sim.questions) {
+                    if (q.isCorrect === false && q.userAnswer) {
+                        missedIds.push(q.questionId);
+                    }
+                }
+                if (missedIds.length >= 20) break; // Look at recent errors
+            }
+
+            if (missedIds.length === 0) return '';
+
+            const questions = await db.questions.where('id').anyOf(missedIds).toArray();
+            const themeMistakes = questions.filter(q => q.theme === theme).slice(0, 5);
+
+            if (themeMistakes.length === 0) return '';
+
+            let contextStr = 'Questões que o usuário errou recentemente neste tema:\n\n';
+            themeMistakes.forEach((q, idx) => {
+                contextStr += `${idx + 1}. Enunciado: ${q.statement}\n`;
+                const correctText = q.options[q.correctAnswer];
+                if (correctText) {
+                    contextStr += `   Resposta Correta: ${correctText}\n`;
+                }
+            });
+
+            return contextStr;
+        } catch (err) {
+            console.error('Erro ao buscar questões erradas:', err);
+            return '';
+        }
+    };
+
+    const handleAsk = async () => {
         if (!isOpen) setIsOpen(true);
         if (!hasAsked && !explanation) {
             setHasAsked(true);
-            askAi(themeName, 'Foque nos critérios do DSM-5-TR, epidemiologia, quadro clínico e tratamento.', 'study_guide');
+            const contextStr = await fetchMissedQuestionsContext();
+            setMissedContext(contextStr);
+
+            const fullContext = contextStr
+                ? `Foque nos critérios do DSM-5-TR, epidemiologia, quadro clínico e tratamento.\n\n${contextStr}`
+                : 'Foque nos critérios do DSM-5-TR, epidemiologia, quadro clínico e tratamento.';
+
+            askAi(themeName, fullContext, 'study_guide');
         }
     };
 
@@ -42,8 +93,12 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
         setFcError(null);
 
         try {
+            const fullContext = missedContext
+                ? `Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.\n\n${missedContext}`
+                : 'Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.';
+
             // We use the same hook to fetch JSON flashcards (assuming askAi parses it correctly)
-            const cards = await askAi(themeName, 'Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.', 'generate_flashcards');
+            const cards = await askAi(themeName, fullContext, 'generate_flashcards');
 
             if (Array.isArray(cards) && cards.length > 0) {
                 // Save to local IndexedDB
