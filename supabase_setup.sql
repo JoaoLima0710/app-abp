@@ -39,15 +39,27 @@ CREATE TABLE IF NOT EXISTS flashcard_progress (
 
 CREATE INDEX idx_flashcard_user ON flashcard_progress(user_id);
 
--- 5. Row Level Security (RLS) — permite que cada user só acesse seus dados
+-- 5. Tabela de Custom Flashcards (IA)
+CREATE TABLE IF NOT EXISTS custom_flashcards (
+    id UUID PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    data JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_custom_flashcards_user ON custom_flashcards(user_id);
+
+-- 6. Row Level Security (RLS) — permite que cada user só acesse seus dados
 ALTER TABLE simulations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE seen_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE flashcard_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_flashcards ENABLE ROW LEVEL SECURITY;
 
 -- Políticas: permitir tudo para o anon key (o user_id é filtrado no código)
--- Isso é seguro porque os dados NÃO são sensíveis (apenas progresso de estudo)
 CREATE POLICY "Allow all for anon" ON simulations FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON user_progress FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON seen_questions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON flashcard_progress FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON custom_flashcards FOR ALL USING (true) WITH CHECK (true);

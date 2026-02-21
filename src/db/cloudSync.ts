@@ -10,7 +10,7 @@
  */
 
 import { supabase, getUserId } from '../lib/supabaseClient';
-import { Simulation, UserProgress } from '../types';
+import { Simulation, UserProgress, CustomFlashcard } from '../types';
 
 // Lazy import to avoid circular dependency
 async function getDb() {
@@ -295,7 +295,55 @@ export async function syncFlashcardProgress(): Promise<void> {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// 5. FULL SYNC (all tables)
+// 5. SYNC CUSTOM FLASHCARDS (AI Generated)
+// ══════════════════════════════════════════════════════════════════════
+
+export async function syncCustomFlashcards(): Promise<void> {
+    if (!isCloudAvailable() || !supabase) return;
+    const db = await getDb();
+    const userId = getUserId();
+
+    try {
+        const { data: cloudRows, error } = await supabase
+            .from('custom_flashcards')
+            .select('id, data')
+            .eq('user_id', userId);
+
+        if (error) throw error;
+
+        const localRecords = await db.customFlashcards.toArray();
+        const localMap = new Map<string, CustomFlashcard>();
+        for (const rec of localRecords) localMap.set(rec.id, rec);
+
+        // Pull from cloud
+        for (const row of cloudRows || []) {
+            if (!localMap.has(row.id as string)) {
+                await db.customFlashcards.put(row.data as CustomFlashcard);
+            }
+        }
+
+        // Push to cloud
+        if (localRecords.length > 0) {
+            const upserts = localRecords.map((rec: CustomFlashcard) => ({
+                id: rec.id,
+                user_id: userId,
+                data: serializeDates(rec),
+                updated_at: new Date().toISOString(),
+            }));
+
+            const { error: pushError } = await supabase
+                .from('custom_flashcards')
+                .upsert(upserts, { onConflict: 'id' });
+            if (pushError) throw pushError;
+        }
+    } catch (err) {
+        console.warn('[CloudSync] CustomFlashcards sync failed:', err);
+        throw err;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 6. FULL SYNC (all tables)
 // ══════════════════════════════════════════════════════════════════════
 
 export async function fullSync(): Promise<void> {
@@ -310,6 +358,7 @@ export async function fullSync(): Promise<void> {
             syncUserProgress(),
             syncSeenQuestions(),
             syncFlashcardProgress(),
+            syncCustomFlashcards(),
         ]);
         emitStatus('success', 'Dados sincronizados');
     } catch (err) {
