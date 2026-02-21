@@ -236,3 +236,12 @@ export interface StudyRecommendation {
     message: string;
     suggestedAction: string;
 }
+
+export interface CustomFlashcard {
+    id: string;
+    theme: PsychiatryTheme;
+    front: string;
+    back: string;
+    createdAt: Date;
+    userId?: string;
+}

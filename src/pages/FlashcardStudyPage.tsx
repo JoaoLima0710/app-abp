@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, ThumbsUp, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ThumbsUp, Check, CheckCheck, Sparkles } from 'lucide-react';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { questionsOriginais as questions } from '../db/questions_originais';
 import { SRSGrade } from '../services/srs';
@@ -10,32 +10,77 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { db } from '@/db/database';
+import { CustomFlashcard } from '@/types';
+
+type UnifiedCard =
+    | { isCustom: false; data: Question; id: string }
+    | { isCustom: true; data: CustomFlashcard; id: string };
 
 const FlashcardStudyPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { getDueCards, submitReview, getCardData } = useFlashcards();
-    const [queue, setQueue] = useState<Question[]>([]);
+    const { getDueCards, submitReview, getCardData, progress } = useFlashcards();
+    const [queue, setQueue] = useState<UnifiedCard[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    const [customCards, setCustomCards] = useState<CustomFlashcard[] | undefined>(undefined);
+
     const mode = location.state?.mode || 'due';
+    const themeFilter = location.state?.theme;
+
+    // Fetch custom flashcards from Dexie
+    useEffect(() => {
+        const fetchCustomCards = async () => {
+            const cards = themeFilter
+                ? await db.customFlashcards.where('theme').equals(themeFilter).toArray()
+                : await db.customFlashcards.toArray();
+            setCustomCards(cards);
+        };
+        fetchCustomCards();
+    }, [themeFilter]);
 
     useEffect(() => {
-        let cards: Question[] = [];
+        if (customCards === undefined) return; // Wait until dexie loads
+
+        let cards: UnifiedCard[] = [];
+        const now = Date.now();
+
         if (mode === 'due') {
-            cards = getDueCards();
-        } else if (mode === 'new') {
-            const unlearned = questions.filter((q) => {
-                const data = getCardData(q.id);
-                return data.repetition === 0;
+            // Standard due
+            const standardDue = getDueCards().filter(q => !themeFilter || q.theme === themeFilter);
+
+            // Custom due
+            const customDue = customCards.filter(fc => {
+                const p = progress[fc.id];
+                return p && p.dueDate <= now;
             });
-            cards = unlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+            cards = [
+                ...standardDue.map(q => ({ isCustom: false as const, data: q, id: q.id })),
+                ...customDue.map(c => ({ isCustom: true as const, data: c, id: c.id }))
+            ];
+        } else if (mode === 'new') {
+            // Standard new
+            const standardUnlearned = questions.filter(q => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter));
+            const standardSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+            // Custom new
+            const customUnlearned = customCards.filter(c => getCardData(c.id).repetition === 0);
+            const customSubset = customUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+            cards = [
+                ...standardSubset.map(q => ({ isCustom: false as const, data: q, id: q.id })),
+                ...customSubset.map(c => ({ isCustom: true as const, data: c, id: c.id }))
+            ];
         }
-        setQueue(cards);
+
+        // Shuffle mixed queue
+        setQueue(cards.sort(() => 0.5 - Math.random()));
         setLoading(false);
-    }, [mode, getDueCards, getCardData]);
+    }, [mode, themeFilter, getDueCards, getCardData, customCards, progress]);
 
     const currentCard = queue[currentIndex];
 
@@ -101,18 +146,18 @@ const FlashcardStudyPage: React.FC = () => {
                 <Card className="min-h-[400px] shadow-xl">
                     <CardContent className="flex h-full flex-col justify-between p-6 lg:p-8">
                         <div className="space-y-4">
-                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-                                {isFlipped ? 'Resposta' : 'Pergunta'}
+                            <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wider", currentCard.isCustom ? "border-purple-200 text-purple-700 bg-purple-50 dark:border-purple-800 dark:bg-purple-900/30 dark:text-purple-300" : "")}>
+                                {isFlipped ? 'Resposta' : 'Pergunta'}{currentCard.isCustom ? ' (IA)' : ''}
                             </Badge>
 
-                            <p className="text-base leading-relaxed lg:text-lg lg:leading-7">
-                                {currentCard.statement}
+                            <p className="text-base leading-relaxed lg:text-lg lg:leading-7 font-medium whitespace-pre-wrap">
+                                {currentCard.isCustom ? currentCard.data.front : currentCard.data.statement}
                             </p>
 
-                            {/* Options (shown on question side) */}
-                            {!isFlipped && (
+                            {/* Options (shown on question side, only for standard) */}
+                            {!isFlipped && !currentCard.isCustom && currentCard.data.options && (
                                 <div className="mt-6 space-y-1.5 opacity-60 transition-opacity hover:opacity-100">
-                                    {Object.entries(currentCard.options).map(([key, text]) => (
+                                    {Object.entries(currentCard.data.options).map(([key, text]) => (
                                         <div key={key} className="rounded-md border p-2 text-xs text-muted-foreground">
                                             <span className="mr-2 font-bold">{key})</span> {text as string}
                                         </div>
@@ -123,63 +168,77 @@ const FlashcardStudyPage: React.FC = () => {
                             {/* Answer (shown on flip) */}
                             {isFlipped && (
                                 <div className="mt-4 space-y-4 border-t pt-4">
-                                    <div className="flex items-center gap-2 text-lg font-bold text-green-600 dark:text-green-400 lg:text-xl">
-                                        <Check className="h-5 w-5" />
-                                        Gabarito: {currentCard.correctAnswer}
-                                    </div>
-
-                                    <div className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground lg:p-4 lg:text-sm">
-                                        <p className="whitespace-pre-wrap">{currentCard.explanation.correct}</p>
-                                    </div>
-
-                                    {currentCard.itemAnalysis && (
-                                        <div className="space-y-2">
-                                            <h4 className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground lg:text-xs">
-                                                <span className="h-3.5 w-0.5 rounded-full bg-primary" />
-                                                Análise Item a Item
-                                            </h4>
-                                            <div className="space-y-2">
-                                                {Object.entries(currentCard.itemAnalysis).map(([key, analysis]) => {
-                                                    const isCorrect = key === currentCard.correctAnswer;
-                                                    return (
-                                                        <div
-                                                            key={key}
-                                                            className={cn(
-                                                                'rounded-lg border p-3 text-xs lg:p-4',
-                                                                isCorrect
-                                                                    ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/30'
-                                                                    : 'hover:bg-muted/30',
-                                                            )}
-                                                        >
-                                                            <div className="flex gap-2">
-                                                                <span className={cn(
-                                                                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                                                                    isCorrect
-                                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                                                                        : 'bg-muted text-muted-foreground',
-                                                                )}>
-                                                                    {key}
-                                                                </span>
-                                                                <div className="space-y-0.5">
-                                                                    <p className={cn(
-                                                                        'text-xs font-medium',
-                                                                        isCorrect && 'text-green-900 dark:text-green-100',
-                                                                    )}>
-                                                                        {(currentCard.options as any)[key]}
-                                                                    </p>
-                                                                    <p className={cn(
-                                                                        'text-[10px] leading-relaxed lg:text-xs',
-                                                                        isCorrect ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground',
-                                                                    )}>
-                                                                        {analysis as string}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                    {currentCard.isCustom ? (
+                                        <div className="rounded-lg bg-purple-50/50 p-4 border border-purple-100 dark:bg-purple-900/10 dark:border-purple-900/30">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-purple-600 mb-2 dark:text-purple-400">
+                                                <Sparkles className="h-3.5 w-3.5" />
+                                                Gabarito IA
                                             </div>
+                                            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                                                {currentCard.data.back}
+                                            </p>
                                         </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-2 text-lg font-bold text-green-600 dark:text-green-400 lg:text-xl">
+                                                <Check className="h-5 w-5" />
+                                                Gabarito: {currentCard.data.correctAnswer}
+                                            </div>
+
+                                            <div className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground lg:p-4 lg:text-sm">
+                                                <p className="whitespace-pre-wrap">{currentCard.data.explanation.correct}</p>
+                                            </div>
+
+                                            {currentCard.data.itemAnalysis && (
+                                                <div className="space-y-2">
+                                                    <h4 className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground lg:text-xs">
+                                                        <span className="h-3.5 w-0.5 rounded-full bg-primary" />
+                                                        Análise Item a Item
+                                                    </h4>
+                                                    <div className="space-y-2">
+                                                        {Object.entries(currentCard.data.itemAnalysis).map(([key, analysis]) => {
+                                                            const isCorrect = key === currentCard.data.correctAnswer;
+                                                            return (
+                                                                <div
+                                                                    key={key}
+                                                                    className={cn(
+                                                                        'rounded-lg border p-3 text-xs lg:p-4',
+                                                                        isCorrect
+                                                                            ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/30'
+                                                                            : 'hover:bg-muted/30',
+                                                                    )}
+                                                                >
+                                                                    <div className="flex gap-2">
+                                                                        <span className={cn(
+                                                                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                                                                            isCorrect
+                                                                                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                                                                : 'bg-muted text-muted-foreground',
+                                                                        )}>
+                                                                            {key}
+                                                                        </span>
+                                                                        <div className="space-y-0.5">
+                                                                            <p className={cn(
+                                                                                'text-xs font-medium',
+                                                                                isCorrect && 'text-green-900 dark:text-green-100',
+                                                                            )}>
+                                                                                {(currentCard.data.options as any)[key]}
+                                                                            </p>
+                                                                            <p className={cn(
+                                                                                'text-[10px] leading-relaxed lg:text-xs',
+                                                                                isCorrect ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground',
+                                                                            )}>
+                                                                                {analysis as string}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}

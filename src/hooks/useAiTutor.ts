@@ -7,7 +7,7 @@ export function useAiTutor() {
     const [error, setError] = useState<string | null>(null);
     const [provider, setProvider] = useState<string | null>(null);
 
-    const askAi = async (question: string, context: string) => {
+    const askAi = async (question: string, context: string, action: 'explain' | 'study_guide' | 'generate_flashcards' = 'explain'): Promise<any> => {
         setIsLoading(true);
         setError(null);
         setExplanation(null);
@@ -19,7 +19,7 @@ export function useAiTutor() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ question, context }),
+                body: JSON.stringify({ question, context, action }),
             });
 
             if (!response.ok) {
@@ -29,8 +29,25 @@ export function useAiTutor() {
             }
 
             const data = await response.json();
-            setExplanation(data.content || 'Sem resposta da IA.');
-            setProvider(data.provider || null);
+
+            if (action === 'generate_flashcards') {
+                try {
+                    // Limpar formatação de markdown se houver (ex: ```json\n...\n```)
+                    let contentStr = data.content.trim();
+                    if (contentStr.startsWith('```json')) {
+                        contentStr = contentStr.replace(/^```json\n?/, '').replace(/```\n?$/, '');
+                    } else if (contentStr.startsWith('```')) {
+                        contentStr = contentStr.replace(/^```\n?/, '').replace(/```\n?$/, '');
+                    }
+                    return JSON.parse(contentStr); // Retorna o array de flashcards
+                } catch (e) {
+                    throw new Error("Erro ao parsear flashcards da IA");
+                }
+            } else {
+                setExplanation(data.content || 'Sem resposta da IA.');
+                setProvider(data.provider || null);
+                return data.content;
+            }
 
         } catch (err: any) {
             console.error('AI Tutor error:', err);

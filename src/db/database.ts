@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Question, Simulation, UserProgress } from '../types';
+import { Question, Simulation, UserProgress, CustomFlashcard } from '../types';
 import { syncSimulations, syncUserProgress } from './cloudSync';
 
 // ── Fisher-Yates (Knuth) shuffle — O(n), uniformly random ──
@@ -47,6 +47,7 @@ export class PsiqTituloDB extends Dexie {
     simulations!: Table<Simulation>;
     userProgress!: Table<UserProgress>;
     flashcardProgress!: Table<FlashcardProgressRecord>;
+    customFlashcards!: Table<CustomFlashcard>;
 
     constructor() {
         super('PsiqTituloDB');
@@ -60,6 +61,13 @@ export class PsiqTituloDB extends Dexie {
             simulations: 'id, createdAt, completedAt, focusTheme',
             userProgress: 'id',
             flashcardProgress: 'questionId, dueDate',
+        });
+        this.version(3).stores({
+            questions: 'id, theme, difficulty, *tags',
+            simulations: 'id, createdAt, completedAt, focusTheme',
+            userProgress: 'id',
+            flashcardProgress: 'questionId, dueDate',
+            customFlashcards: 'id, theme, createdAt',
         });
     }
 }
