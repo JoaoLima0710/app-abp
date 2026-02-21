@@ -83,6 +83,7 @@ export async function syncSimulations(): Promise<void> {
     if (!isCloudAvailable() || !supabase) return;
     const db = await getDb();
     const userId = getUserId();
+    console.log(`[CloudSync] Syncing Simulations for User: ${userId}`);
 
     try {
         // Pull from cloud
@@ -139,10 +140,12 @@ export async function syncSimulations(): Promise<void> {
         }));
 
         if (upserts.length > 0) {
+            console.log(`[CloudSync] Pushing ${upserts.length} simulations to cloud...`);
             const { error: pushError } = await supabase
                 .from('simulations')
                 .upsert(upserts, { onConflict: 'id' });
             if (pushError) throw pushError;
+            console.log(`[CloudSync] Simulations push success.`);
         }
     } catch (err) {
         console.warn('[CloudSync] Simulations sync failed:', err);
@@ -158,6 +161,7 @@ export async function syncUserProgress(): Promise<void> {
     if (!isCloudAvailable() || !supabase) return;
     const db = await getDb();
     const userId = getUserId();
+    console.log(`[CloudSync] Syncing User Progress for User: ${userId}`);
 
     try {
         const { data: cloudRow, error } = await supabase
@@ -171,10 +175,12 @@ export async function syncUserProgress(): Promise<void> {
         const localProgress = await db.userProgress.get('main');
 
         if (cloudRow && !localProgress) {
+            console.log('[CloudSync] Found User Progress in cloud, restoring locally...');
             const restored = deserializeDates(cloudRow.data) as UserProgress & { id: string };
             restored.id = 'main';
             await db.userProgress.put(restored);
         } else if (localProgress) {
+            console.log('[CloudSync] Pushing local User Progress to cloud...');
             const { error: pushError } = await supabase
                 .from('user_progress')
                 .upsert({
@@ -183,6 +189,7 @@ export async function syncUserProgress(): Promise<void> {
                     updated_at: new Date().toISOString(),
                 }, { onConflict: 'user_id' });
             if (pushError) throw pushError;
+            console.log('[CloudSync] User Progress push success.');
         }
     } catch (err) {
         console.warn('[CloudSync] UserProgress sync failed:', err);
@@ -347,7 +354,12 @@ export async function syncCustomFlashcards(): Promise<void> {
 // ══════════════════════════════════════════════════════════════════════
 
 export async function fullSync(): Promise<void> {
-    if (!isCloudAvailable() || isSyncing) return;
+    const isAvailable = isCloudAvailable();
+    console.log(`[CloudSync] Starting fullSync. cloudAvailable=${isAvailable}, isSyncing=${isSyncing}`);
+    if (!isAvailable || isSyncing) {
+        console.log(`[CloudSync] Sync aborted (availability: ${isAvailable}, syncing: ${isSyncing})`);
+        return;
+    }
 
     isSyncing = true;
     emitStatus('syncing');
@@ -375,7 +387,11 @@ export async function fullSync(): Promise<void> {
 const SYNC_INTERVAL_MS = 30_000; // 30 seconds
 
 export function startAutoSync(): void {
-    if (syncInterval) return;
+    console.log('[CloudSync] Attempting to startAutoSync...');
+    if (syncInterval) {
+        console.log('[CloudSync] syncInterval already exists, skipping.');
+        return;
+    }
     if (!supabase) {
         console.log('[CloudSync] Supabase not configured — running offline only');
         emitStatus('offline');

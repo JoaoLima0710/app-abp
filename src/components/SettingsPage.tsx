@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, Upload, AlertTriangle, CheckCircle2, Moon, Sun, Info, LogOut, User, Cloud } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Download, Upload, Trash2, Sun, Moon, Cloud, LogOut, Info, User } from 'lucide-react';
+import { getUserId } from '@/lib/supabaseClient';
 
 export default function SettingsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +102,10 @@ export default function SettingsPage() {
                                     <Cloud className="h-3.5 w-3.5 shrink-0" />
                                     Sincronização ativa — dados salvos na nuvem
                                 </div>
+                                <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-2 text-[10px] text-slate-500 font-mono break-all dark:bg-slate-900 dark:text-slate-400">
+                                    <Info className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                    ID: {getUserId()}
+                                </div>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -112,7 +117,13 @@ export default function SettingsPage() {
                                 </Button>
                             </div>
                         ) : (
-                            <p className="text-xs text-muted-foreground">Não conectado</p>
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">Não conectado</p>
+                                <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-2 text-[10px] text-slate-500 font-mono break-all dark:bg-slate-900 dark:text-slate-400">
+                                    <Info className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                    ID Local: {getUserId()}
+                                </div>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
