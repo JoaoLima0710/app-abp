@@ -1,11 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useUserStore } from './store/userStore';
+import { useAuthStore } from './store/authStore';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { startAutoSync } from './db/cloudSync';
+import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import SimulationSetup from './components/SimulationSetup';
 import SimulationPage from './components/SimulationPage';
@@ -18,13 +20,16 @@ import FlashcardsPage from './pages/FlashcardsPage';
 import FlashcardStudyPage from './pages/FlashcardStudyPage';
 import TimedExamPage from './components/TimedExamPage';
 import CoverageHeatmap from './components/CoverageHeatmap';
+import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient();
 
 function App() {
     const { loadUserData, isDarkMode } = useUserStore();
+    const { user, isInitialized, initialize } = useAuthStore();
 
     useEffect(() => {
+        initialize();
         loadUserData();
         startAutoSync();
     }, []);
@@ -36,6 +41,20 @@ function App() {
             document.documentElement.classList.remove('dark');
         }
     }, [isDarkMode]);
+
+    // Show loading while checking auth state
+    if (!isInitialized) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    // Not logged in → show login page
+    if (!user) {
+        return <LoginPage />;
+    }
 
     return (
         <QueryClientProvider client={queryClient}>

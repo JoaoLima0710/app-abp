@@ -12,22 +12,43 @@ if (supabaseUrl && supabaseAnonKey) {
 
 export { supabase };
 
-// ── Anonymous user ID (persisted in localStorage) ──
-const USER_ID_KEY = 'psiq_user_id';
+// ── User ID resolution ──
+// Priority: Supabase Auth user → anonymous UUID fallback
+const ANON_USER_ID_KEY = 'psiq_user_id';
 
+/**
+ * Returns the current user ID for cloud sync.
+ * Uses Supabase Auth user.id when logged in, falls back to anonymous UUID.
+ */
 export function getUserId(): string {
-    let userId = localStorage.getItem(USER_ID_KEY);
+    // If we have a cached auth user ID, use it
+    const authUserId = sessionStorage.getItem('psiq_auth_user_id');
+    if (authUserId) return authUserId;
+
+    // Fallback to anonymous UUID
+    let userId = localStorage.getItem(ANON_USER_ID_KEY);
     if (!userId) {
         userId = crypto.randomUUID();
-        localStorage.setItem(USER_ID_KEY, userId);
+        localStorage.setItem(ANON_USER_ID_KEY, userId);
     }
     return userId;
 }
 
 /**
- * Set a specific userId (for syncing with another device).
- * After calling this, reload the app to pull data from the cloud.
+ * Cache the authenticated user's ID for fast access.
+ * Called by authStore when auth state changes.
  */
-export function setUserId(newId: string): void {
-    localStorage.setItem(USER_ID_KEY, newId);
+export function setAuthUserId(userId: string | null): void {
+    if (userId) {
+        sessionStorage.setItem('psiq_auth_user_id', userId);
+    } else {
+        sessionStorage.removeItem('psiq_auth_user_id');
+    }
+}
+
+/**
+ * Get the anonymous user ID (for data migration on first login).
+ */
+export function getAnonymousUserId(): string | null {
+    return localStorage.getItem(ANON_USER_ID_KEY);
 }
