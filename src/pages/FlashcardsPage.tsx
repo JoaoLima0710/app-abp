@@ -105,7 +105,7 @@ const FlashcardsPage: React.FC = () => {
                     <Card
                         key={cat.theme}
                         className="cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
-                        onClick={() => navigate('/flashcards/estudo', { state: { mode: 'due', theme: cat.theme } })}
+                        onClick={() => navigate('/flashcards/estudo', { state: { mode: 'theme', theme: cat.theme } })}
                     >
                         <CardContent className="p-3 lg:p-5">
                             <div className="flex items-start gap-2.5 lg:gap-4">

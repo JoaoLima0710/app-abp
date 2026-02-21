@@ -65,6 +65,28 @@ const FlashcardStudyPage: React.FC = () => {
                 ...standardDue.map(q => ({ isCustom: false as const, data: q, id: q.id })),
                 ...customDue.map(c => ({ isCustom: true as const, data: c, id: c.id }))
             ];
+        } else if (mode === 'theme') {
+            // Mixed session for a specific theme: All DUE cards + Some NEW cards
+            const standardDue = getDueCards().filter(q => q.theme === themeFilter);
+            const customDue = customCards.filter(fc => {
+                const p = progress[fc.id];
+                if (!p || p.repetition === 0) return true;
+                return p.dueDate <= now && fc.theme === themeFilter;
+            });
+
+            // New cards for theme (Standard limit to 15, Custom limit to 15)
+            const standardUnlearned = questions.filter(q => q.theme === themeFilter && getCardData(q.id).repetition === 0);
+            const standardNewSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 15);
+
+            // Avoid adding custom unlearned twice since they are already caught in customDue logic above
+            // Actually, customDue catches ALL new custom cards if progress repetition === 0. 
+            // So we don't need to add customNewSubset array avoiding duplicates. 
+
+            cards = [
+                ...standardDue.map(q => ({ isCustom: false as const, data: q, id: q.id })),
+                ...customDue.map(c => ({ isCustom: true as const, data: c, id: c.id })),
+                ...standardNewSubset.map(q => ({ isCustom: false as const, data: q, id: q.id }))
+            ];
         } else if (mode === 'new') {
             // Standard new
             const standardUnlearned = questions.filter(q => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter));
