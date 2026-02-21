@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { startAutoSync } from './db/cloudSync';
+import { startAutoSync, onSyncStatus } from './db/cloudSync';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import SimulationSetup from './components/SimulationSetup';
@@ -82,6 +82,15 @@ function AppContent() {
         initialize();
         loadUserData();
         startAutoSync();
+
+        // Listen for sync completions to update the UI (especially on first login/cross-device pull)
+        const unsubscribe = onSyncStatus((status) => {
+            if (status === 'success') {
+                loadUserData(); // Reload Dexie data into Zustand memory
+            }
+        });
+
+        return () => unsubscribe();
     }, []);
 
     useEffect(() => {
