@@ -16,6 +16,9 @@ if (savedDarkMode) {
 initializeDatabase()
     .then(() => {
         console.log('Database initialized');
+        // If we reached here, the chunk loaded successfully. Clear any PWA reload flags.
+        sessionStorage.removeItem('pwa_chunk_reload');
+
         ReactDOM.createRoot(document.getElementById('root')!).render(
             <React.StrictMode>
                 <BrowserRouter>
