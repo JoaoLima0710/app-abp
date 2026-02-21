@@ -32,28 +32,34 @@ export default function SettingsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!confirm('ATENÇÃO: Importar dados irá substituir seu progresso atual. Deseja continuar?')) {
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
+        // Yield main thread to allow button UI update (fixes INP block)
+        setTimeout(async () => {
+            if (!confirm('ATENÇÃO: Importar dados irá substituir seu progresso atual. Deseja continuar?')) {
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
 
-        try {
-            setLoading(true);
-            await importData(file);
-            setStatus({ type: 'success', message: 'Dados restaurados com sucesso! Recarregando...' });
-            setTimeout(() => window.location.reload(), 2000);
-        } catch {
-            setStatus({ type: 'error', message: 'Arquivo inválido ou corrompido.' });
-        } finally {
-            setLoading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
+            try {
+                setLoading(true);
+                await importData(file);
+                setStatus({ type: 'success', message: 'Dados restaurados com sucesso! Recarregando...' });
+                setTimeout(() => window.location.reload(), 2000);
+            } catch {
+                setStatus({ type: 'error', message: 'Arquivo inválido ou corrompido.' });
+            } finally {
+                setLoading(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        }, 10);
     };
 
     const handleSignOut = async () => {
-        if (confirm('Tem certeza que deseja sair? Seus dados locais serão mantidos.')) {
-            await signOut();
-        }
+        // Yield main thread to allow button UI update (fixes INP block)
+        setTimeout(async () => {
+            if (confirm('Tem certeza que deseja sair? Seus dados locais serão mantidos.')) {
+                await signOut();
+            }
+        }, 10);
     };
 
     return (

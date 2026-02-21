@@ -63,11 +63,14 @@ export default function TimedExamPage() {
     };
 
     const handleFinish = async () => {
-        if (confirm('Deseja finalizar a prova? Não será possível voltar.')) {
-            clearInterval(timerRef.current);
-            await finishSimulation();
-            navigate('/simulado/resultado');
-        }
+        // Yield main thread to allow button UI update (fixes INP block)
+        setTimeout(async () => {
+            if (confirm('Deseja finalizar a prova? Não será possível voltar.')) {
+                clearInterval(timerRef.current);
+                await finishSimulation();
+                navigate('/simulado/resultado');
+            }
+        }, 10);
     };
 
     // Pre-exam screen
