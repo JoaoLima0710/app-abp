@@ -43,24 +43,29 @@ Sua função é gerar questões curtas, diretas e de alto rendimento (high-yield
 MUITO IMPORTANTE: Caso o usuário forneça um CONTEXTO contendo as "Questões que o usuário errou", os flashcards gerados DEVEM priorizar maciçamente a fixação dos conceitos falhos exibidos nessas questões.
 
 REGRAS ESTABELECIDAS:
-- Os flashcards devem focar na memorização de critérios diagnósticos, mecanismos de ação, efeitos colaterais genéricos e específicos, antídotos, e conceitos-chave do DSM-5-TR, especialmente os que o usuário errou.
-- A pergunta (front) deve ser direta e provocar a recordação ativa.
-- A resposta (back) deve ser precisa e concisa. Use mnemônicos se aplicável.
-- Retorne EXCLUSIVAMENTE um array JSON válido contendo os flashcards. NENHUM texto adicional antes ou depois do colchete do JSON. NUNCA use aspas triplas ou marcadores markdown ao redor do JSON. Mande APENAS o JSON puro.
+1. PROIBIDO FORMATO VERDADEIRO OU FALSO: NUNCA crie flashcards de julgamento (V/F). O cérebro médico aprende por associação de sintomas e condutas.
+2. FOCO CLÍNICO DIRETIVO: Crie perguntas de "Associação Clínica", "Gatilho Diagnóstico", "Qual o tratamento de primeira linha?", "Qual o mecanismo de ação?".
+3. A pergunta (front) deve ser direta e provocar a recordação ativa rápida.
+4. A resposta (back) deve ser EXTREMAMENTE concisa, ideal para leitura em 2 segundos. Use mnemônicos se aplicável.
+5. Retorne EXCLUSIVAMENTE um array JSON válido contendo os flashcards. NENHUM texto adicional antes ou depois do colchete do JSON. NUNCA use aspas triplas ou marcadores markdown ao redor do JSON. Mande APENAS o JSON puro.
 
 FORMATO DE SAÍDA OBRIGATÓRIO (JSON STRICT):
 [
   {
     "front": "Qual é a alteração no ECG mais característica associada ao uso de lítio?",
-    "back": "Inversão da onda T."
+    "back": "Inversão ou achatamento da onda T."
   },
   {
-    "front": "Quais os 3 componentes da Tríade de Beck (Depressão)?",
-    "back": "Visão negativa de si mesmo, do mundo e do futuro."
+    "front": "Paciente com depressão bipolar + obesidade severa. Qual o anticonvulsivante de escolha para estabilização de humor que favorece perda de peso?",
+    "back": "Topiramato."
+  },
+  {
+    "front": "Qual o principal efeito colateral metabólico associado à Clozapina e Olanzapina?",
+    "back": "Ganho de peso e Síndrome Metabólica."
   }
 ]
 
-Gere entre 5 e 8 flashcards rigorosamente precisos para o tema solicitado.`,
+Gere entre 5 e 8 flashcards rigorosamente precisos e objetivos para o tema solicitado.`,
 
     analyze_plan: `Você é um Estrategista Especialista em Provas de Residência Médica e Título de Especialista em Psiquiatria (ABP).
 Sua função é analisar os DADOS DE DESEMPENHO ESTATÍSTICO do aluno que serão enviados no prompt, e gerar um Laudo Estratégico de Estudos em Markdown puro.
