@@ -18,6 +18,7 @@ import TrendsPage from './components/TrendsPage';
 import SettingsPage from './components/SettingsPage';
 import FlashcardsPage from './pages/FlashcardsPage';
 import FlashcardStudyPage from './pages/FlashcardStudyPage';
+import BlitzModePage from './pages/BlitzModePage';
 import TimedExamPage from './components/TimedExamPage';
 import CoverageHeatmap from './components/CoverageHeatmap';
 import { Loader2 } from 'lucide-react';
@@ -130,6 +131,7 @@ function AppContent() {
                     <Route path="/tendencias" element={<TrendsPage />} />
                     <Route path="/flashcards" element={<FlashcardsPage />} />
                     <Route path="/flashcards/estudo" element={<FlashcardStudyPage />} />
+                    <Route path="/blitz" element={<BlitzModePage />} />
                     <Route path="/prova" element={<TimedExamPage />} />
                     <Route path="/cobertura" element={<CoverageHeatmap />} />
                     <Route path="/configuracoes" element={<SettingsPage />} />

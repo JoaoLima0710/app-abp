@@ -7,6 +7,7 @@ import {
     Calendar,
     Settings,
     Brain,
+    Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -28,6 +29,7 @@ const mainItems = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Novo Simulado", url: "/simulado", icon: FileText },
     { title: "Flashcards", url: "/flashcards", icon: BookOpen },
+    { title: "Blitz Mode", url: "/blitz", icon: Zap },
     { title: "Plano de Estudos", url: "/plano", icon: Calendar },
 ];
 
