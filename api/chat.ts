@@ -86,6 +86,21 @@ REGRAS ESTÉTICAS:
 - Seu retorno será postado dentro de uma página da web já muito bonita e moderna.
 - Use emojis moderadamente, negritos para nomes de temas, e blocos de citação (>) para destacar regras mentais ou insights centrais.
 - Mantenha um tom profissional, acolhedor e instigante. Sem rodeios exagerados.`,
+
+    guided_review: `Você é um Tutor Socrático Especialista na Prova de Título de Psiquiatria da ABP.
+O aluno acabou de finalizar um simulado e ERROU a questão que ele está te apresentando.
+Ele quer entender o porquê errou.
+
+REGRA DE OURO (MÉTODO SOCRÁTICO):
+- NUNCA DÊ A RESPOSTA DIRETAMENTE NO PRIMEIRO CONTATO.
+- Seu objetivo é fazer o aluno raciocinar e chegar à conclusão sozinho.
+- Inicie a conversa de forma empática ("Vi que você marcou a alternativa X, mas o erro comum aqui é...").
+- Faça UMA pergunta direcionada sobre o critério diagnóstico principal, mecanismo de ação, ou pista clínica que ele deixou passar no enunciado.
+
+ESTRUTURA DAS SUAS MENSAGENS:
+- Seja extremamente conciso (pareça um chat de WhatsApp com um colega supervisor).
+- Se o aluno responder corretamente a sua pergunta socrática, parabenize-o e então libere o resumo completo do conceito clínico.
+- Se o aluno continuar errando ou pedir a resposta, explique de forma brilhante e didática usando mnemônicos e o DSM-5-TR.`,
 };
 
 type ActionType = keyof typeof PROMPTS;
@@ -97,7 +112,7 @@ async function callPoe(question: string, context: string, action: ActionType): P
     if (!apiKey) throw new Error('POE_API_KEY ausente');
 
     const systemPrompt = PROMPTS[action] || PROMPTS.explain;
-    const userPrompt = action === 'explain'
+    const userPrompt = action === 'explain' || action === 'guided_review'
         ? `Questão: ${question}\n\n${context || ''}`
         : `Tema a ser abordado: ${question}\n\n${context || ''}`;
 
@@ -129,7 +144,7 @@ async function callGemini(question: string, context: string, action: ActionType)
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const systemPrompt = PROMPTS[action] || PROMPTS.explain;
-    const userPrompt = action === 'explain'
+    const userPrompt = action === 'explain' || action === 'guided_review'
         ? `Questão: ${question}\n\n${context || ''}`
         : `Tema a ser abordado: ${question}\n\n${context || ''}`;
 

@@ -15,6 +15,7 @@ import {
     TrendingUp,
     Award,
     Lightbulb,
+    Bot,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { addCardsToReview } from '../hooks/useFlashcards';
@@ -30,6 +31,8 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { AiExplanation } from '@/components/AiExplanation';
+import { SocraticReviewModal } from '@/components/SocraticReviewModal';
+import { Question } from '../types';
 
 export default function SimulationResults() {
     const navigate = useNavigate();
@@ -46,6 +49,10 @@ export default function SimulationResults() {
             .map((q) => q.questionId);
         if (wrongIds.length > 0) addCardsToReview(wrongIds);
     }, [simulation, navigate, loadUserData]);
+
+    const [socraticModalOpen, setSocraticModalOpen] = useState(false);
+    const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+    const [selectedWrongAnswer, setSelectedWrongAnswer] = useState<string | undefined>(undefined);
 
     const [animatedScore, setAnimatedScore] = useState(0);
 
@@ -284,6 +291,19 @@ export default function SimulationResults() {
                                             userAnswer={sq.userAnswer}
                                             className="mt-3 border-t pt-3"
                                         />
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="gap-2 mt-3 w-full border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
+                                            onClick={() => {
+                                                setSelectedQuestion(q);
+                                                setSelectedWrongAnswer(sq.userAnswer);
+                                                setSocraticModalOpen(true);
+                                            }}
+                                        >
+                                            <Bot className="w-4 h-4" />
+                                            Tutor Socrático: Por que eu errei?
+                                        </Button>
                                     </CollapsibleContent>
                                 </Collapsible>
                             );
@@ -303,6 +323,13 @@ export default function SimulationResults() {
                     Novo Simulado
                 </Button>
             </div>
+
+            <SocraticReviewModal
+                isOpen={socraticModalOpen}
+                onClose={() => setSocraticModalOpen(false)}
+                question={selectedQuestion}
+                userWrongAnswerId={selectedWrongAnswer}
+            />
         </AppLayout>
     );
 }
