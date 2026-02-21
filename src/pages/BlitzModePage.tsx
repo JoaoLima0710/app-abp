@@ -3,11 +3,11 @@ import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-mo
 import { X, Check, Zap, Info } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { questionsOriginais } from '../db/questions_originais';
-import { customCardsDb } from '../db/database'; // we need the actual dexie db
-import { db } from '@/db/database';
-import { CustomFlashcard, Question } from '../types';
+import { db } from '../db/database';
+// type imports removed as they are unused or inferred
 import confetti from 'canvas-confetti';
 
 type UnifiedCard = { isCustom: boolean; data: any; id: string };
@@ -25,7 +25,7 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
     const rightIconOpacity = useTransform(x, [0, 100], [0, 1]);
     const leftIconOpacity = useTransform(x, [-100, 0], [1, 0]);
 
-    const handleDragEnd = (event: any, info: any) => {
+    const handleDragEnd = (_: any, info: any) => {
         const threshold = 100;
         if (info.offset.x > threshold) {
             onSwipe('right');
@@ -34,7 +34,6 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
         }
     };
 
-    const isFlippedDefault = false; // We can implement internal flipping if we want, but swiping is the focus
     const [flipped, setFlipped] = useState(false);
 
     return (
@@ -127,8 +126,8 @@ const BlitzModePage: React.FC = () => {
     }, []);
 
     const handleSwipe = (direction: 'left' | 'right', currentCard: UnifiedCard) => {
-        // Evaluate: Right = Easy (5), Left = Again (1)
-        const grade = direction === 'right' ? 5 : 1;
+        // Evaluate: Right = Easy (5), Left = Again (0)
+        const grade = (direction === 'right' ? 5 : 0) as any;
         submitReview(currentCard.id, grade);
 
         if (direction === 'right') {
