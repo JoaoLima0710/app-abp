@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, ThumbsUp, Check, CheckCheck, Sparkles } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { questionsOriginais as questions } from '../db/questions_originais';
 import { SRSGrade } from '../services/srs';
@@ -107,6 +108,24 @@ const FlashcardStudyPage: React.FC = () => {
         setLoading(false);
     }, [mode, themeFilter, getDueCards, getCardData, customCards, progress]);
 
+    useEffect(() => {
+        if (!loading && queue.length > 0 && currentIndex >= queue.length) {
+            // Big burst on session complete!
+            const duration = 2 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+            const interval: any = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 40 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    }, [loading, queue.length, currentIndex]);
+
     const currentCard = queue[currentIndex];
 
     if (!loading && !currentCard) {
@@ -135,6 +154,14 @@ const FlashcardStudyPage: React.FC = () => {
     };
 
     const handleRate = (grade: SRSGrade) => {
+        if (grade >= 4) { // 4=Bom, 5=Fácil
+            confetti({
+                particleCount: grade === 5 ? 50 : 25,
+                spread: 60,
+                origin: { y: 0.8 },
+                colors: grade === 5 ? ['#22c55e', '#4ade80', '#16a34a'] : ['#3b82f6', '#60a5fa', '#2563eb']
+            });
+        }
         submitReview(currentCard.id, grade);
         setIsFlipped(false);
         setCurrentIndex((prev) => prev + 1);

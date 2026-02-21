@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import { useSimulationStore } from '../store/simulationStore';
 import { useUserStore } from '../store/userStore';
 import { THEME_LABELS, THEME_COLORS } from '../types';
@@ -42,10 +43,57 @@ export default function SimulationResults() {
         }
         loadUserData();
         const wrongIds = simulation.questions
-            .filter((q) => q.isCorrect === false)
             .map((q) => q.questionId);
         if (wrongIds.length > 0) addCardsToReview(wrongIds);
     }, [simulation, navigate, loadUserData]);
+
+    const [animatedScore, setAnimatedScore] = useState(0);
+
+    useEffect(() => {
+        if (!simulation) return;
+
+        const targetScore = simulation.stats.accuracy;
+        const duration = 1500; // 1.5 seconds count-up
+        const startTime = performance.now();
+
+        const animate = (currentTime: number) => {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+
+            // Easing out function for smooth deceleration
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            setAnimatedScore(targetScore * easeOutQuart);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                setAnimatedScore(targetScore);
+
+                // Trigger Confetti after countup finishes if score is good!
+                if (targetScore >= 75) {
+                    const confettiDuration = 3 * 1000;
+                    const animationEnd = Date.now() + confettiDuration;
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+                    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+                    const interval: any = setInterval(function () {
+                        const timeLeft = animationEnd - Date.now();
+
+                        if (timeLeft <= 0) {
+                            return clearInterval(interval);
+                        }
+
+                        const particleCount = 50 * (timeLeft / confettiDuration);
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                    }, 250);
+                }
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }, [simulation]);
 
     if (!simulation) return null;
 
@@ -103,7 +151,7 @@ export default function SimulationResults() {
                         'text-5xl font-extrabold lg:text-6xl',
                         stats.accuracy >= 70 ? 'text-green-500' : stats.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500',
                     )}>
-                        {stats.accuracy.toFixed(0)}%
+                        {animatedScore.toFixed(0)}%
                     </span>
                     <span className="mt-1 text-xs text-muted-foreground lg:text-sm">de aproveitamento</span>
                 </div>
