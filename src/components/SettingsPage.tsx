@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, AlertTriangle, Download, Upload, Trash2, Sun, Moon, Cloud, LogOut, Info, User } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Download, Upload, Sun, Moon, Cloud, LogOut, Info, User } from 'lucide-react';
 import { getUserId } from '@/lib/supabaseClient';
 
 export default function SettingsPage() {
