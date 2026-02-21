@@ -103,10 +103,30 @@ export async function syncSimulations(): Promise<void> {
         const localMap = new Map<string, Simulation>();
         for (const sim of localSims) localMap.set(sim.id, sim);
 
-        // Merge: cloud → local (pull new)
+        // Merge: cloud → local (pull new or newer)
         for (const [id, cloudSim] of cloudMap) {
-            if (!localMap.has(id)) {
+            const localSim = localMap.get(id);
+            if (!localSim) {
+                // New simulation from cloud
                 await db.simulations.put(cloudSim);
+            } else {
+                // Exists locally. Check if cloud is newer (compare lastUpdated if they exist)
+                // We assume cloud data is always the truth if it comes from another device
+                // since simulations are mostly read-only on non-active devices
+                const cloudDate = cloudSim.completedAt ? new Date(cloudSim.completedAt).getTime() : 0;
+                const localDate = localSim.completedAt ? new Date(localSim.completedAt).getTime() : 0;
+
+                // If cloud is completed and local is not, or cloud has more answers, overwrite local
+                const cloudAns = cloudSim.stats?.answered || 0;
+                const localAns = localSim.stats?.answered || 0;
+
+                if (
+                    (!localSim.completedAt && cloudSim.completedAt) ||
+                    (cloudAns > localAns) ||
+                    (cloudAns === localAns && cloudDate > localDate)
+                ) {
+                    await db.simulations.put(cloudSim);
+                }
             }
         }
 
