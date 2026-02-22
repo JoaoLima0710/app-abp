@@ -1,4 +1,3 @@
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Info } from 'lucide-react';
 import { Flashcard } from '@/types';

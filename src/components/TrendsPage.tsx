@@ -49,7 +49,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MasteryBadges } from './MasteryBadges';
 import { cn } from '@/lib/utils';
-import { aggregateCoverageStats, CoverageStat } from '../lib/statistics';
+import { aggregateCoverageStats } from '../lib/statistics';
 
 export default function TrendsPage() {
     const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];

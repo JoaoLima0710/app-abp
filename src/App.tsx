@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import React, { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { useUserStore } from './store/userStore';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from '@/components/ui/toaster';
@@ -26,11 +26,9 @@ const TimedExamPage = lazy(() => import('./components/TimedExamPage'));
 const CoverageHeatmap = lazy(() => import('./components/CoverageHeatmap'));
 
 // Eagerly loaded components for immediate interaction
-import { BlitzModePage } from './pages/BlitzModePage';
+import BlitzModePage from './pages/BlitzModePage';
 
 const queryClient = new QueryClient();
-
-import { AppErrorBoundary } from './components/ErrorBoundary';
 function AppContent() {
     const { loadUserData, isDarkMode } = useUserStore();
     const { user, isInitialized, initialize } = useAuthStore();
