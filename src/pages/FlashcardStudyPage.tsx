@@ -27,6 +27,7 @@ const FlashcardStudyPage: React.FC = () => {
 
     const mode = location.state?.mode || 'due';
     const themeFilter = location.state?.theme;
+    const subthemeFilter = location.state?.subtheme;
 
     // Fetch custom flashcards from Dexie
     useEffect(() => {
@@ -47,10 +48,11 @@ const FlashcardStudyPage: React.FC = () => {
 
         if (mode === 'due') {
             // Standard due
-            const standardDue = getDueCards().filter(q => !themeFilter || q.theme === themeFilter);
+            const standardDue = getDueCards().filter(q => (!themeFilter || q.theme === themeFilter) && (!subthemeFilter || q.subtheme === subthemeFilter));
 
             // Custom due OR New (we want AI generated cards to be immediately available)
             const customDue = customCards.filter(fc => {
+                if (subthemeFilter && fc.subtheme !== subthemeFilter) return false;
                 const p = progress[fc.id];
                 if (!p || p.repetition === 0) return true;
                 return p.dueDate <= now;
@@ -58,24 +60,25 @@ const FlashcardStudyPage: React.FC = () => {
 
             cards = [...standardDue, ...customDue];
         } else if (mode === 'theme') {
-            const standardDue = getDueCards().filter(q => q.theme === themeFilter);
+            const standardDue = getDueCards().filter(q => q.theme === themeFilter && (!subthemeFilter || q.subtheme === subthemeFilter));
             const customDue = customCards.filter(fc => {
+                if (subthemeFilter && fc.subtheme !== subthemeFilter) return false;
                 const p = progress[fc.id];
                 if (!p || p.repetition === 0) return true;
                 return p.dueDate <= now && fc.theme === themeFilter;
             });
 
             const { flashcardsOriginais } = require('../db/flashcards_originais');
-            const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => q.theme === themeFilter && getCardData(q.id).repetition === 0);
+            const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => q.theme === themeFilter && (!subthemeFilter || q.subtheme === subthemeFilter) && getCardData(q.id).repetition === 0);
             const standardNewSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 15);
 
             cards = [...standardDue, ...customDue, ...standardNewSubset];
         } else if (mode === 'new') {
             const { flashcardsOriginais } = require('../db/flashcards_originais');
-            const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter));
+            const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter) && (!subthemeFilter || q.subtheme === subthemeFilter));
             const standardSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
 
-            const customUnlearned = customCards.filter(c => getCardData(c.id).repetition === 0);
+            const customUnlearned = customCards.filter(c => getCardData(c.id).repetition === 0 && (!subthemeFilter || c.subtheme === subthemeFilter));
             const customSubset = customUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
 
             cards = [...standardSubset, ...customSubset];

@@ -15,6 +15,7 @@ interface AiStudyGuideProps {
 
 export function AiStudyGuide({ theme }: AiStudyGuideProps) {
     const { askAi, isLoading, explanation, error, provider } = useAiTutor();
+    const { askAi: askAiCards } = useAiTutor(); // Instância separada para não apagar o guia de estudos da tela
     const [isOpen, setIsOpen] = useState(false);
     const [hasAsked, setHasAsked] = useState(false);
 
@@ -80,7 +81,11 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                 ? `Foque nos critérios do DSM-5-TR, epidemiologia, quadro clínico e tratamento.\n\n${contextStr}`
                 : 'Foque nos critérios do DSM-5-TR, epidemiologia, quadro clínico e tratamento.';
 
-            askAi(themeName, fullContext, 'study_guide');
+            // Espera o guia terminar
+            await askAi(themeName, fullContext, 'study_guide');
+
+            // Dispara geração de flashcards automaticamente em background
+            handleGenerateFlashcards(contextStr);
         }
     };
 
@@ -88,18 +93,19 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
         setIsOpen(!isOpen);
     };
 
-    const handleGenerateFlashcards = async () => {
+    const handleGenerateFlashcards = async (ctx?: string) => {
         if (isGeneratingFc || fcSuccess) return;
         setIsGeneratingFc(true);
         setFcError(null);
 
         try {
-            const fullContext = missedContext
-                ? `Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.\n\n${missedContext}`
+            const contextToUse = ctx !== undefined ? ctx : missedContext;
+            const fullContext = contextToUse
+                ? `Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.\n\n${contextToUse}`
                 : 'Foque nos pontos de alto rendimento: critérios diagnósticos cruciais, antídotos e efeitos adversos específicos.';
 
-            // We use the same hook to fetch JSON flashcards (assuming askAi parses it correctly)
-            const cards = await askAi(themeName, fullContext, 'generate_flashcards');
+            // Use the dedicated flashcard AI hook so it doesn't wipe the study guide from the screen
+            const cards = await askAiCards(themeName, fullContext, 'generate_flashcards');
 
             if (Array.isArray(cards) && cards.length > 0) {
                 // Save to local IndexedDB
@@ -251,7 +257,7 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                                                 </p>
                                                 <Button
                                                     size="sm"
-                                                    onClick={handleGenerateFlashcards}
+                                                    onClick={() => handleGenerateFlashcards()}
                                                     disabled={isGeneratingFc || fcSuccess}
                                                     className="w-full h-8 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white"
                                                 >

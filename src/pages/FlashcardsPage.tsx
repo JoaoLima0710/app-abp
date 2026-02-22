@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { db } from '@/db/database';
 import { CustomFlashcard } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { THEME_SUBDIVISIONS_V2 } from '@/db/taxonomy_definitions';
 
 const allQuestions = flashcardsOriginais;
 
@@ -33,6 +35,7 @@ const FlashcardsPage: React.FC = () => {
     const { progress: flashcardProgress, getStats } = useFlashcards();
     const { progress: userProgress } = useUserStore();
     const [customCards, setCustomCards] = React.useState<CustomFlashcard[]>([]);
+    const [selectedThemeCategory, setSelectedThemeCategory] = React.useState<PsychiatryTheme | null>(null);
 
     React.useEffect(() => {
         const fetchCards = async () => {
@@ -123,7 +126,7 @@ const FlashcardsPage: React.FC = () => {
                     <Card
                         key={cat.theme}
                         className="cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5"
-                        onClick={() => navigate('/flashcards/estudo', { state: { mode: 'theme', theme: cat.theme } })}
+                        onClick={() => setSelectedThemeCategory(cat.theme)}
                     >
                         <CardContent className="p-3 lg:p-5">
                             <div className="flex items-start gap-2.5 lg:gap-4">
@@ -212,7 +215,7 @@ const FlashcardsPage: React.FC = () => {
                                 <Card
                                     key={`${ws.themeKey}-${ws.subtheme}-${idx}`}
                                     className="cursor-pointer transition-colors hover:bg-muted/50"
-                                    onClick={() => navigate('/flashcards/estudo', { state: { mode: 'theme', theme: ws.themeKey } })}
+                                    onClick={() => navigate('/flashcards/estudo', { state: { mode: 'theme', theme: ws.themeKey, subtheme: ws.subtheme } })}
                                 >
                                     <CardContent className="p-4 flex items-start gap-3">
                                         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${colorClass}`}>
@@ -243,6 +246,64 @@ const FlashcardsPage: React.FC = () => {
                 <BookOpen className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 <span>Clique em uma categoria ou foco estratégico para iniciar a revisão</span>
             </div>
+
+            {/* Subtheme Selection Dialog */}
+            <Dialog open={!!selectedThemeCategory} onOpenChange={(open) => !open && setSelectedThemeCategory(null)}>
+                <DialogContent className="sm:max-w-md bg-background dark:bg-zinc-950 border-indigo-100 dark:border-indigo-900/50">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {selectedThemeCategory && THEME_ICONS[selectedThemeCategory] && (
+                                <div className={`flex h-8 w-8 items-center justify-center rounded-md ${themeColors[selectedThemeCategory] || 'bg-primary/10 text-primary'}`}>
+                                    {React.createElement(THEME_ICONS[selectedThemeCategory], { className: "h-4 w-4" })}
+                                </div>
+                            )}
+                            {selectedThemeCategory ? THEME_LABELS[selectedThemeCategory] : 'Selecione a Categoria'}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Estude o tema inteiro ou foque em uma área específica.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex flex-col gap-2 mt-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <Button
+                            variant="default"
+                            className="justify-start h-auto py-3 px-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                            onClick={() => {
+                                if (selectedThemeCategory) {
+                                    navigate('/flashcards/estudo', { state: { mode: 'theme', theme: selectedThemeCategory } });
+                                }
+                            }}
+                        >
+                            <div className="flex flex-col items-start text-left">
+                                <span className="font-semibold text-sm">Misturar Tudo</span>
+                                <span className="text-xs font-normal opacity-80">Revisar todos os conteúdos de {selectedThemeCategory && THEME_LABELS[selectedThemeCategory]}</span>
+                            </div>
+                        </Button>
+
+                        {selectedThemeCategory && THEME_SUBDIVISIONS_V2[selectedThemeCategory] && (
+                            <div className="mt-3 mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-1">
+                                Focar em um Subtema:
+                            </div>
+                        )}
+
+                        {selectedThemeCategory && THEME_SUBDIVISIONS_V2[selectedThemeCategory]?.map((sub) => (
+                            <Button
+                                key={sub.label}
+                                variant="outline"
+                                className="justify-start h-auto py-2.5 px-4 w-full border-indigo-100 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-800/50 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                onClick={() => {
+                                    navigate('/flashcards/estudo', {
+                                        state: { mode: 'theme', theme: selectedThemeCategory, subtheme: sub.label }
+                                    });
+                                }}
+                            >
+                                <span className="text-sm font-medium">{sub.label}</span>
+                            </Button>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
         </AppLayout>
     );
 };

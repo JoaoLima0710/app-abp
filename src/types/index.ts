@@ -248,16 +248,17 @@ export interface StudyRecommendation {
 export interface CustomFlashcard {
     id: string;
     theme: PsychiatryTheme;
+    subtheme?: string;
     front: string;
     back: string;
     createdAt: Date;
     userId?: string;
 }
 
-// Universal Flashcard type (can represent a standard native flashcard or an AI custom one)
 export interface Flashcard {
     id: string;
     theme: PsychiatryTheme;
+    subtheme?: string;
     front: string;
     back: string;
     isCustom?: boolean; // If true, implies it came from CustomFlashcard DB table

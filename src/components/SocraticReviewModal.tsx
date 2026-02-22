@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Send, Bot, User } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { Question } from '../types';
+import { Question, THEME_LABELS, CustomFlashcard } from '../types';
+import { useAiTutor } from '@/hooks/useAiTutor';
+import { getUserId } from '@/lib/supabaseClient';
 
 interface Message {
     role: 'user' | 'ai';
@@ -26,10 +28,18 @@ export function SocraticReviewModal({ isOpen, onClose, question, userWrongAnswer
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    const { askAi: askAiCards } = useAiTutor();
+    const [isGeneratingFc, setIsGeneratingFc] = useState(false);
+    const [fcSuccess, setFcSuccess] = useState(false);
+    const [fcError, setFcError] = useState<string | null>(null);
+
     // Initial contextualization when opening the modal
     useEffect(() => {
         if (isOpen && question) {
             setMessages([]);
+            setIsGeneratingFc(false);
+            setFcSuccess(false);
+            setFcError(null);
             startSocraticReview(question);
         }
     }, [isOpen, question]);
@@ -99,10 +109,51 @@ export function SocraticReviewModal({ isOpen, onClose, question, userWrongAnswer
         }
     };
 
+    const handleGenerateFlashcards = async (explanationText: string, currentQuestion: Question) => {
+        if (isGeneratingFc || fcSuccess) return;
+        setIsGeneratingFc(true);
+        setFcError(null);
+
+        try {
+            const themeName = THEME_LABELS[currentQuestion.theme] || currentQuestion.theme;
+
+            const fullContext = `A questão original era: "${currentQuestion.statement}".\nA explicação do tutor foi: ${explanationText}\n\nExtraia os pontos de alto rendimento dessa interação e gere flashcards cirúrgicos que resolvam justamente o conceito que o aluno errou.`;
+
+            const cards = await askAiCards(themeName, fullContext, 'generate_flashcards');
+
+            if (Array.isArray(cards) && cards.length > 0) {
+                const userId = getUserId() || 'anonymous';
+                const dbObjects: CustomFlashcard[] = cards.map(c => ({
+                    id: crypto.randomUUID(),
+                    theme: currentQuestion.theme,
+                    subtheme: currentQuestion.subtheme,
+                    front: c.front,
+                    back: c.back,
+                    createdAt: new Date(),
+                    userId
+                }));
+
+                const { db: database } = await import('@/db/database');
+                await database.customFlashcards.bulkAdd(dbObjects);
+                setFcSuccess(true);
+            } else {
+                setFcError('IA não retornou um formato JSON válido.');
+            }
+        } catch (err: any) {
+            console.error(err);
+            setFcError(err.message || 'Erro ao gerar flashcards.');
+        } finally {
+            setIsGeneratingFc(false);
+        }
+    };
+
     const startSocraticReview = async (q: Question) => {
         const ctx = formatContext(q, userWrongAnswerId, []);
         const response = await callApi(ctx, q.statement);
         setMessages([{ role: 'ai', content: response }]);
+
+        // Auto-generate flashcards
+        handleGenerateFlashcards(response, q);
     };
 
     const handleSend = async () => {
@@ -137,7 +188,12 @@ export function SocraticReviewModal({ isOpen, onClose, question, userWrongAnswer
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                                         <Bot className="h-5 w-5" />
                                     </div>
-                                    <CardTitle className="text-sm font-bold lg:text-base">Tutor Socrático</CardTitle>
+                                    <div className="flex flex-col">
+                                        <CardTitle className="text-sm font-bold lg:text-base">Tutor Socrático</CardTitle>
+                                        {isGeneratingFc && <span className="text-[10px] text-indigo-500 animate-pulse flex items-center gap-1"><Sparkles className="h-3 w-3" /> Gerando Flashcards Mágicos do zero...</span>}
+                                        {fcSuccess && <span className="text-[10px] text-green-500 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Flashcards personalizados criados!</span>}
+                                        {fcError && <span className="text-[10px] text-red-500">{fcError}</span>}
+                                    </div>
                                 </div>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
                                     <X className="w-5 h-5" />
