@@ -187,6 +187,7 @@ export interface Simulation {
     completedAt?: Date;
     questionCount: number;
     focusTheme?: PsychiatryTheme;
+    isTimedExam?: boolean;
     questions: SimulationQuestion[];
     stats: SimulationStats;
 }

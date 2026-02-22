@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Question, Simulation, SimulationQuestion, AnswerOption, PsychiatryTheme } from '../types';
-import { getRandomQuestions, saveSimulation, QuestionFilter, getAdaptiveQuestions, getUserProgress } from '../db/database';
+import { getRandomQuestions, saveSimulation, QuestionFilter, getAdaptiveQuestions, getUserProgress, db } from '../db/database';
 
 interface SimulationState {
     // Current simulation
@@ -14,6 +14,7 @@ interface SimulationState {
 
     // Actions
     startSimulation: (count: number, themeOrFilter?: PsychiatryTheme | QuestionFilter) => Promise<void>;
+    resumeSimulation: (simulation: Simulation) => Promise<void>;
     submitAnswer: (answer: AnswerOption) => void;
     answerQuestion: (answer: AnswerOption) => void;
     nextQuestion: () => void;
@@ -72,9 +73,29 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
                 },
             };
 
+            await saveSimulation(newSimulation);
+
             set({ simulation: newSimulation, questions, isLoading: false });
         } catch (error) {
             console.error('Error starting simulation:', error);
+            set({ isLoading: false });
+        }
+    },
+
+    resumeSimulation: async (simulation: Simulation) => {
+        set({ isLoading: true, isCompleted: false, focusTheme: simulation.focusTheme });
+
+        try {
+            const questionIds = simulation.questions.map(q => q.questionId);
+            const fetchedQuestions = await Promise.all(questionIds.map(id => db.questions.get(id)));
+            const validQuestions = fetchedQuestions.filter((q): q is Question => q !== undefined);
+
+            const firstUnanswered = simulation.questions.findIndex(q => !q.userAnswer);
+            const currentIndex = firstUnanswered >= 0 ? firstUnanswered : 0;
+
+            set({ simulation, questions: validQuestions, currentIndex, isLoading: false });
+        } catch (error) {
+            console.error('Error resuming simulation:', error);
             set({ isLoading: false });
         }
     },

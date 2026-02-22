@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/userStore';
+import { useSimulationStore } from '../store/simulationStore';
 import {
     TrendingUp,
     Target,
@@ -10,6 +11,7 @@ import {
     AlertCircle,
     FileText,
     BookOpen,
+    PlayCircle,
 } from 'lucide-react';
 import { THEME_LABELS, PsychiatryTheme } from '../types';
 import { THEME_ICONS } from '../lib/themeIcons';
@@ -21,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 export default function Dashboard() {
     const navigate = useNavigate();
     const { simulations, progress, recommendations } = useUserStore();
+    const { resumeSimulation } = useSimulationStore();
 
     const recentSimulations = simulations.slice(0, 5);
 
@@ -164,9 +167,18 @@ export default function Dashboard() {
                                                         {sim.stats.accuracy.toFixed(0)}%
                                                     </span>
                                                 ) : (
-                                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                                        Em andamento
-                                                    </span>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        className="h-7 gap-1.5 text-[10px] lg:text-xs"
+                                                        onClick={async () => {
+                                                            await resumeSimulation(sim);
+                                                            navigate('/simulado/active');
+                                                        }}
+                                                    >
+                                                        <PlayCircle className="h-3 w-3 lg:h-3.5 lg:w-3.5" />
+                                                        Continuar
+                                                    </Button>
                                                 )}
                                             </div>
                                             {sim.completedAt && (

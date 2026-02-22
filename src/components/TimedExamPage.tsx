@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
+import { useUserStore } from '../store/userStore';
 import { AnswerOption } from '../types';
 import { Clock, AlertTriangle, ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,8 @@ const EXAM_DURATION_MS = 5 * 60 * 60 * 1000; // 5 hours
 
 export default function TimedExamPage() {
     const navigate = useNavigate();
-    const { simulation, questions, startSimulation, submitAnswer, finishSimulation } = useSimulationStore();
+    const { simulation, questions, startSimulation, resumeSimulation, submitAnswer, finishSimulation } = useSimulationStore();
+    const { simulations } = useUserStore();
     const [timeRemaining, setTimeRemaining] = useState(EXAM_DURATION_MS);
     const [isStarted, setIsStarted] = useState(false);
     const [selectedAnswer, setSelectedAnswer] = useState<AnswerOption | null>(null);
@@ -23,10 +25,30 @@ export default function TimedExamPage() {
     const timerRef = useRef<ReturnType<typeof setInterval>>();
 
     const handleStart = useCallback(async () => {
-        await startSimulation(TOTAL_QUESTIONS);
-        startTimeRef.current = Date.now();
-        setIsStarted(true);
+        await startSimulation(TOTAL_QUESTIONS, { isTimedExam: true });
+        // startTimeRef and isStarted will be set by the useEffect below watching simulation
     }, [startSimulation]);
+
+    useEffect(() => {
+        // Recover simulation on direct page reload
+        if (!simulation) {
+            const activeExam = simulations.find(s => !s.completedAt && s.isTimedExam);
+            if (activeExam) {
+                resumeSimulation(activeExam);
+            }
+        }
+    }, [simulation, simulations, resumeSimulation]);
+
+    useEffect(() => {
+        if (simulation && simulation.isTimedExam && !simulation.completedAt) {
+            if (!isStarted) {
+                setIsStarted(true);
+                startTimeRef.current = new Date(simulation.createdAt).getTime();
+                const answeredCount = simulation.questions.filter(q => q.userAnswer).length;
+                setCurrentQ(Math.min(answeredCount, simulation.questions.length - 1));
+            }
+        }
+    }, [simulation, isStarted]);
 
     useEffect(() => {
         if (!isStarted) return;

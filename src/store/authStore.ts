@@ -93,6 +93,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
             await supabase.auth.signOut();
             setAuthUserId(null);
+
+            // Import dynamically to avoid circular dependencies
+            const { clearLocalUserData } = await import('../db/database');
+            await clearLocalUserData();
+
+            const { useUserStore } = await import('./userStore');
+            useUserStore.setState({ simulations: [], progress: null, recommendations: [] });
+
             set({ user: null, session: null, isLoading: false });
         } catch (err) {
             console.error('[Auth] Sign-out failed:', err);

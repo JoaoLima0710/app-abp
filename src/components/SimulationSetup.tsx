@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
+import { useUserStore } from '../store/userStore';
 import { PsychiatryTheme, THEME_LABELS } from '../types';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,13 +17,16 @@ import {
     ArrowRight,
     CheckCircle2,
     BookOpen,
+    PlayCircle,
+    AlertCircle,
 } from 'lucide-react';
 
 const QUESTION_COUNTS = [5, 10, 15, 20, 30, 50, 90];
 
 export default function SimulationSetup() {
     const navigate = useNavigate();
-    const { startSimulation, isLoading } = useSimulationStore();
+    const { startSimulation, resumeSimulation, isLoading } = useSimulationStore();
+    const { simulations } = useUserStore();
     const [questionCount, setQuestionCount] = useState(10);
     const [focusTheme, setFocusTheme] = useState<PsychiatryTheme | 'all'>('all');
     const [mode, setMode] = useState<'mixed' | 'focused' | 'adaptive'>('mixed');
@@ -35,9 +39,41 @@ export default function SimulationSetup() {
     };
 
     const themes = Object.entries(THEME_LABELS) as [PsychiatryTheme, string][];
+    const activeSimulation = simulations.find(s => !s.completedAt);
 
     return (
         <AppLayout title="Novo Simulado" subtitle="Configure e inicie">
+            {activeSimulation && (
+                <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 lg:p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 rounded-full bg-primary/20 p-1.5 text-primary">
+                                <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground lg:text-base">
+                                    Simulado em Andamento
+                                </h3>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground lg:text-xs">
+                                    Você tem um simulado não finalizado (criado em {new Date(activeSimulation.createdAt).toLocaleDateString('pt-BR')}).
+                                    Deseja continuar de onde parou?
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            className="w-full shrink-0 gap-2 sm:w-auto"
+                            onClick={async () => {
+                                await resumeSimulation(activeSimulation);
+                                navigate('/simulado/active');
+                            }}
+                        >
+                            <PlayCircle className="h-4 w-4" />
+                            Continuar Simulado
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             <div className="grid gap-4 lg:grid-cols-5 lg:gap-6">
                 {/* Config - 3/5 */}
                 <div className="space-y-4 lg:col-span-3 lg:space-y-6">

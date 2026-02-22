@@ -130,6 +130,7 @@ export interface QuestionFilter {
     tier?: 1 | 2 | 3 | 4;
     excludeIds?: string[];
     adaptive?: boolean;
+    isTimedExam?: boolean;
 }
 
 export async function getRandomQuestions(count: number, themeOrFilter?: string | QuestionFilter): Promise<Question[]> {
@@ -271,4 +272,17 @@ export async function updateUserProgress(progress: Partial<UserProgress>): Promi
     await db.userProgress.update('main', { ...progress, lastUpdated: new Date() });
     // Background cloud sync (non-blocking)
     syncUserProgress().catch(() => { });
+}
+
+export async function clearLocalUserData(): Promise<void> {
+    await db.transaction('rw', db.simulations, db.userProgress, db.flashcardProgress, db.customFlashcards, async () => {
+        await db.simulations.clear();
+        await db.userProgress.clear();
+        await db.flashcardProgress.clear();
+        if (db.customFlashcards) await db.customFlashcards.clear();
+    });
+
+    // Clear known cache keys
+    localStorage.removeItem('psiq_seen_question_ids');
+    localStorage.removeItem('psiq_auth_user_id');
 }
