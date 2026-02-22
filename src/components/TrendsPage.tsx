@@ -49,6 +49,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MasteryBadges } from './MasteryBadges';
 import { cn } from '@/lib/utils';
+import { aggregateCoverageStats, CoverageStat } from '../lib/statistics';
 
 export default function TrendsPage() {
     const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
@@ -62,39 +63,9 @@ export default function TrendsPage() {
         (async () => {
             setIsProgressLoading(true);
             const allQuestions = await db.questions.toArray();
-            const byTheme: Record<string, { total: number }> = {};
-            for (const q of allQuestions) {
-                if (!byTheme[q.theme]) byTheme[q.theme] = { total: 0 };
-                byTheme[q.theme].total++;
-            }
-
             const sims = await db.simulations.toArray();
-            const answeredByTheme: Record<string, { answered: Set<string>; correct: number }> = {};
-            for (const sim of sims) {
-                for (const sq of sim.questions) {
-                    if (!sq.userAnswer) continue;
-                    const q = allQuestions.find((x) => x.id === sq.questionId);
-                    if (!q) continue;
-                    if (!answeredByTheme[q.theme]) answeredByTheme[q.theme] = { answered: new Set(), correct: 0 };
-                    answeredByTheme[q.theme].answered.add(sq.questionId);
-                    if (sq.isCorrect) answeredByTheme[q.theme].correct++;
-                }
-            }
 
-            const data = Object.entries(byTheme).map(([theme, { total }]) => {
-                const answered = answeredByTheme[theme]?.answered.size || 0;
-                const correct = answeredByTheme[theme]?.correct || 0;
-                return {
-                    theme,
-                    label: THEME_LABELS[theme as PsychiatryTheme] || theme,
-                    color: THEME_COLORS[theme as PsychiatryTheme] || '#888',
-                    totalQuestions: total,
-                    answeredQuestions: answered,
-                    correctAnswers: correct,
-                    coverage: total > 0 ? (answered / total) * 100 : 0,
-                    accuracy: answered > 0 ? (correct / answered) * 100 : 0,
-                };
-            });
+            const data = aggregateCoverageStats(allQuestions, sims);
             setCoverageData(data);
             setIsProgressLoading(false);
         })();

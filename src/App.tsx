@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import React, { useEffect, ErrorInfo } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { useUserStore } from './store/userStore';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from '@/components/ui/toaster';
@@ -8,73 +8,29 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { startAutoSync, onSyncStatus } from './db/cloudSync';
 import LoginPage from './components/LoginPage';
-import Dashboard from './components/Dashboard';
-import SimulationSetup from './components/SimulationSetup';
-import SimulationPage from './components/SimulationPage';
-import SimulationResults from './components/SimulationResults';
-import StatisticsPanel from './components/StatisticsPanel';
-import StudyPlan from './components/StudyPlan';
-import TrendsPage from './components/TrendsPage';
-import SettingsPage from './components/SettingsPage';
-import FlashcardsPage from './pages/FlashcardsPage';
-import FlashcardStudyPage from './pages/FlashcardStudyPage';
-import BlitzModePage from './pages/BlitzModePage';
-import TimedExamPage from './components/TimedExamPage';
-import CoverageHeatmap from './components/CoverageHeatmap';
 import { Loader2 } from 'lucide-react';
+import { AppErrorBoundary } from './components/ErrorBoundary';
+
+// Lazy load heavy route components
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const SimulationSetup = lazy(() => import('./components/SimulationSetup'));
+const SimulationPage = lazy(() => import('./components/SimulationPage'));
+const SimulationResults = lazy(() => import('./components/SimulationResults'));
+const StatisticsPanel = lazy(() => import('./components/StatisticsPanel'));
+const StudyPlan = lazy(() => import('./components/StudyPlan'));
+const TrendsPage = lazy(() => import('./components/TrendsPage'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
+const FlashcardsPage = lazy(() => import('./pages/FlashcardsPage'));
+const FlashcardStudyPage = lazy(() => import('./pages/FlashcardStudyPage'));
+const TimedExamPage = lazy(() => import('./components/TimedExamPage'));
+const CoverageHeatmap = lazy(() => import('./components/CoverageHeatmap'));
+
+// Eagerly loaded components for immediate interaction
+import { BlitzModePage } from './pages/BlitzModePage';
 
 const queryClient = new QueryClient();
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null }> {
-    constructor(props: { children: React.ReactNode }) {
-        super(props);
-        this.state = { hasError: false, error: null, errorInfo: null };
-    }
-
-    static getDerivedStateFromError(error: Error) {
-        return { hasError: true, error };
-    }
-
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error("🔴 APP CRASH:", error, errorInfo);
-        this.setState({ errorInfo });
-    }
-
-    render() {
-        if (this.state.hasError) {
-            return (
-                <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center">
-                    <div className="rounded-xl bg-white p-6 shadow-xl max-w-2xl w-full border border-red-100">
-                        <h1 className="mb-4 text-2xl font-bold text-red-600">Erro Fatal na Aplicação</h1>
-                        <p className="mb-6 text-sm text-slate-600">
-                            Por favor, tire um print desta tela e envie para análise.
-                        </p>
-
-                        <div className="mb-4 overflow-auto rounded bg-slate-900 p-4 text-left text-xs text-red-400 max-h-64">
-                            <p className="font-bold">{this.state.error?.toString()}</p>
-                            <pre className="mt-2 opacity-80">{this.state.error?.stack}</pre>
-                        </div>
-
-                        {this.state.errorInfo && (
-                            <div className="overflow-auto rounded bg-slate-900 p-4 text-left text-[10px] text-slate-300 max-h-48">
-                                <pre>{this.state.errorInfo.componentStack}</pre>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="mt-6 rounded-lg bg-primary px-6 py-2 text-white font-medium hover:bg-primary/90"
-                        >
-                            Tentar Novamente
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-        return this.props.children;
-    }
-}
-
+import { AppErrorBoundary } from './components/ErrorBoundary';
 function AppContent() {
     const { loadUserData, isDarkMode } = useUserStore();
     const { user, isInitialized, initialize } = useAuthStore();
@@ -121,22 +77,24 @@ function AppContent() {
             <TooltipProvider>
                 <Toaster />
                 <Sonner />
-                <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/simulado" element={<SimulationSetup />} />
-                    <Route path="/simulado/active" element={<SimulationPage />} />
-                    <Route path="/simulado/:id/resultado" element={<SimulationResults />} />
-                    <Route path="/estatisticas" element={<StatisticsPanel />} />
-                    <Route path="/plano" element={<StudyPlan />} />
-                    <Route path="/tendencias" element={<TrendsPage />} />
-                    <Route path="/flashcards" element={<FlashcardsPage />} />
-                    <Route path="/flashcards/estudo" element={<FlashcardStudyPage />} />
-                    <Route path="/blitz" element={<BlitzModePage />} />
-                    <Route path="/prova" element={<TimedExamPage />} />
-                    <Route path="/cobertura" element={<CoverageHeatmap />} />
-                    <Route path="/configuracoes" element={<SettingsPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+                    <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/simulado" element={<SimulationSetup />} />
+                        <Route path="/simulado/active" element={<SimulationPage />} />
+                        <Route path="/simulado/:id/resultado" element={<SimulationResults />} />
+                        <Route path="/estatisticas" element={<StatisticsPanel />} />
+                        <Route path="/plano" element={<StudyPlan />} />
+                        <Route path="/tendencias" element={<TrendsPage />} />
+                        <Route path="/flashcards" element={<FlashcardsPage />} />
+                        <Route path="/flashcards/estudo" element={<FlashcardStudyPage />} />
+                        <Route path="/blitz" element={<BlitzModePage />} />
+                        <Route path="/prova" element={<TimedExamPage />} />
+                        <Route path="/cobertura" element={<CoverageHeatmap />} />
+                        <Route path="/configuracoes" element={<SettingsPage />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Suspense>
             </TooltipProvider>
         </QueryClientProvider>
     );
@@ -144,9 +102,9 @@ function AppContent() {
 
 function App() {
     return (
-        <ErrorBoundary>
+        <AppErrorBoundary>
             <AppContent />
-        </ErrorBoundary>
+        </AppErrorBoundary>
     );
 }
 

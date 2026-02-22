@@ -17,9 +17,9 @@ export function MasteryBadges({ statsByTheme }: MasteryBadgesProps) {
 
     const getBadgeStatus = (accuracy: number, questionsSeen: number) => {
         if (questionsSeen < 10) return { tier: 'locked', icon: Lock, color: 'text-muted-foreground', bg: 'bg-muted', label: 'Em Progresso (Mín. 10 Qs)' };
-        if (accuracy >= 80) return { tier: 'gold', icon: Trophy, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', label: 'Domínio Ouro' };
-        if (accuracy >= 65) return { tier: 'silver', icon: Award, color: 'text-slate-400', bg: 'bg-slate-400/10 border-slate-400/30', label: 'Domínio Prata' };
-        return { tier: 'bronze', icon: Star, color: 'text-orange-700 dark:text-orange-600', bg: 'bg-orange-700/10 border-orange-700/30 text-orange-700', label: 'Domínio Bronze' };
+        if (accuracy >= 80) return { tier: 'gold', icon: Trophy, color: 'text-amber-700 dark:text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', label: 'Domínio Ouro' };
+        if (accuracy >= 65) return { tier: 'silver', icon: Award, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-500/10 border-slate-500/30', label: 'Domínio Prata' };
+        return { tier: 'bronze', icon: Star, color: 'text-orange-800 dark:text-orange-500', bg: 'bg-orange-700/10 border-orange-700/30', label: 'Domínio Bronze' };
     };
 
     return (

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Check, Zap, Info } from 'lucide-react';
+import { X, Check, Zap } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { FlashcardBase } from '@/components/ui/FlashcardBase';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { db } from '../db/database';
 import { Flashcard } from '../types';
@@ -76,40 +76,15 @@ const SwipeableCard = ({ card, onSwipe, isTop, onFlipChange }: { card: UnifiedCa
                 </motion.div>
 
                 <CardContent className="h-full flex flex-col p-6 relative z-20 bg-card">
-                    {!flipped ? (
-                        <div className="flex flex-col h-full">
-                            <div className="flex items-center gap-2 mb-4 shrink-0">
-                                {card.isCustom && <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 uppercase">Flashcard</Badge>}
-                                <Badge variant="outline" className="text-[10px] font-mono">{card.theme}</Badge>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex items-center justify-center pb-2">
-                                <h3 className="text-sm font-medium leading-relaxed text-center w-full whitespace-pre-wrap break-words">
-                                    {card.front}
-                                </h3>
-                            </div>
-
-                            <p className="mt-3 text-[10px] text-muted-foreground flex items-center justify-center gap-1 shrink-0 pb-1">
-                                <Info className="w-3 h-3" /> Clique no card para revelar resposta
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="w-full h-full flex flex-col animate-in fade-in duration-200">
-                            <div className="flex items-center justify-between mb-4 shrink-0">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                                    {card.isCustom ? 'Gabarito IA' : 'Resposta'}
-                                </span>
-                            </div>
-
-                            <div className="bg-muted/30 p-4 rounded-xl flex-1 overflow-y-auto border border-primary/10 custom-scrollbar flex items-center justify-center">
-                                <p className="text-sm leading-relaxed text-foreground font-medium text-center w-full whitespace-pre-wrap break-words">
-                                    {card.back}
-                                </p>
-                            </div>
-
-                            <p className="mt-4 text-[10px] text-muted-foreground text-center shrink-0">
-                                Agora deslize: 👈 Errei | Acertei 👉
-                            </p>
+                    <FlashcardBase
+                        card={card}
+                        isFlipped={flipped}
+                        onFlip={() => { }} // Flip is handled by the whole card container in swipe mode
+                        showHelpText={false}
+                    />
+                    {flipped && (
+                        <div className="mt-4 pt-4 border-t text-[10px] text-muted-foreground text-center shrink-0">
+                            Agora deslize: 👈 Errei | Acertei 👉
                         </div>
                     )}
                 </CardContent>
@@ -172,6 +147,34 @@ const BlitzModePage: React.FC = () => {
         setIsTopFlipped(false);
         setQueue(prev => prev.slice(1));
     };
+
+    // Keyboard Accessibility
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (loading || queue.length === 0) return;
+
+            const currentCard = queue[0];
+
+            if (!isTopFlipped && (e.code === 'Space' || e.code === 'Enter')) {
+                e.preventDefault();
+                setIsTopFlipped(true);
+                return;
+            }
+
+            if (isTopFlipped) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    handleSwipe('left', currentCard);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    handleSwipe('right', currentCard);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [loading, queue, isTopFlipped]);
 
     if (loading) {
         return (

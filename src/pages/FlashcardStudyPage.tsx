@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, ThumbsUp, CheckCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ThumbsUp, CheckCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { SRSGrade } from '../services/srs';
 import { Flashcard } from '../types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
 import { db } from '@/db/database';
 import { CustomFlashcard } from '@/types';
+import { FlashcardBase } from '@/components/ui/FlashcardBase';
 
 type UnifiedCard = Flashcard;
 
@@ -146,6 +145,41 @@ const FlashcardStudyPage: React.FC = () => {
         setCurrentIndex((prev) => prev + 1);
     };
 
+    // Keyboard Accessibility
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (loading || !currentCard) return;
+
+            // Flip card on Space or Enter (if not flipped)
+            if (!isFlipped && (e.code === 'Space' || e.code === 'Enter')) {
+                e.preventDefault();
+                handleFlip();
+                return;
+            }
+
+            // Rate card when flipped
+            if (isFlipped) {
+                switch (e.key) {
+                    case '1':
+                        handleRate(0); // Errei
+                        break;
+                    case '2':
+                        handleRate(3); // Difícil
+                        break;
+                    case '3':
+                        handleRate(4); // Bom
+                        break;
+                    case '4':
+                        handleRate(5); // Fácil
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [loading, currentCard, isFlipped, handleRate]);
+
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -176,29 +210,13 @@ const FlashcardStudyPage: React.FC = () => {
                 {/* Flash Card */}
                 <Card className="min-h-[400px] shadow-xl">
                     <CardContent className="flex h-full flex-col justify-between p-6 lg:p-8">
-                        <div className="space-y-4">
-                            <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wider", currentCard.isCustom ? "border-purple-200 text-purple-700 bg-purple-50 dark:border-purple-800 dark:bg-purple-900/30 dark:text-purple-300" : "")}>
-                                {isFlipped ? 'Resposta' : 'Pergunta'}{currentCard.isCustom ? ' (IA)' : ''}
-                            </Badge>
-
-                            <p className="text-base leading-relaxed lg:text-lg lg:leading-7 font-medium whitespace-pre-wrap">
-                                {currentCard.front}
-                            </p>
-
-                            {/* Answer (shown on flip) */}
-                            {isFlipped && (
-                                <div className="mt-4 space-y-4 border-t pt-4">
-                                    <div className="rounded-lg bg-purple-50/50 p-4 border border-purple-100 dark:bg-purple-900/10 dark:border-purple-900/30">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-purple-600 mb-2 dark:text-purple-400">
-                                            <Sparkles className="h-3.5 w-3.5" />
-                                            {currentCard.isCustom ? 'Gabarito IA' : 'Resposta'}
-                                        </div>
-                                        <p className="whitespace-pre-wrap text-lg leading-relaxed text-foreground/90 font-medium">
-                                            {currentCard.back}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="space-y-4 h-full flex flex-col">
+                            <FlashcardBase
+                                card={currentCard}
+                                isFlipped={isFlipped}
+                                onFlip={() => !isFlipped && handleFlip()}
+                                showHelpText={false}
+                            />
                         </div>
 
                         {/* Controls */}
@@ -215,6 +233,7 @@ const FlashcardStudyPage: React.FC = () => {
                                     >
                                         <RotateCcw className="mb-0.5 h-4 w-4 lg:h-5 lg:w-5" />
                                         <span className="text-[9px] font-bold uppercase lg:text-[10px]">Errei</span>
+                                        <span className="hidden lg:inline-block mt-0.5 text-[8px] opacity-70">[1]</span>
                                     </button>
                                     <button
                                         onClick={() => handleRate(3)}
@@ -222,6 +241,7 @@ const FlashcardStudyPage: React.FC = () => {
                                     >
                                         <span className="mb-0.5 text-base lg:text-lg">😐</span>
                                         <span className="text-[9px] font-bold uppercase lg:text-[10px]">Difícil</span>
+                                        <span className="hidden lg:inline-block mt-0.5 text-[8px] opacity-70">[2]</span>
                                     </button>
                                     <button
                                         onClick={() => handleRate(4)}
@@ -229,6 +249,7 @@ const FlashcardStudyPage: React.FC = () => {
                                     >
                                         <ThumbsUp className="mb-0.5 h-4 w-4 lg:h-5 lg:w-5" />
                                         <span className="text-[9px] font-bold uppercase lg:text-[10px]">Bom</span>
+                                        <span className="hidden lg:inline-block mt-0.5 text-[8px] opacity-70">[3]</span>
                                     </button>
                                     <button
                                         onClick={() => handleRate(5)}
@@ -236,6 +257,7 @@ const FlashcardStudyPage: React.FC = () => {
                                     >
                                         <CheckCheck className="mb-0.5 h-4 w-4 lg:h-5 lg:w-5" />
                                         <span className="text-[9px] font-bold uppercase lg:text-[10px]">Fácil</span>
+                                        <span className="hidden lg:inline-block mt-0.5 text-[8px] opacity-70">[4]</span>
                                     </button>
                                 </div>
                             )}

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Simulation, UserProgress, PsychiatryTheme, StudyRecommendation, THEME_LABELS, SubthemeStats } from '../types';
 import { getAllSimulations, getUserProgress, updateUserProgress, db } from '../db/database';
+import { aggregateThemeStats, aggregateSubthemeStats, calculateTrend, rankTopErrors, calculateStreak } from '../lib/statistics';
 
 interface UserState {
     simulations: Simulation[];
@@ -45,70 +46,24 @@ export const useUserStore = create<UserState>((set, get) => ({
         const completedSims = simulations.filter(s => s.completedAt);
         if (completedSims.length === 0) return;
 
-        const themeData: Record<string, { attempts: number[]; correct: number; total: number; errors: number }> = {};
-
-        for (const sim of completedSims) {
-            for (const [theme, stats] of Object.entries(sim.stats.byTheme)) {
-                if (!themeData[theme]) {
-                    themeData[theme] = { attempts: [], correct: 0, total: 0, errors: 0 };
-                }
-                themeData[theme].correct += stats?.correct || 0;
-                themeData[theme].total += stats?.total || 0;
-                themeData[theme].errors += (stats?.total || 0) - (stats?.correct || 0);
-                if (stats) {
-                    themeData[theme].attempts.push(stats.accuracy);
-                }
-            }
-        }
+        const themeData = aggregateThemeStats(completedSims);
 
         // Rank 4.5: Calculate subtheme statistics
-        // We need to fetch the original questions to know their subthemes
         const answeredIds = new Set<string>();
         completedSims.forEach(sim => sim.questions.forEach(q => {
             if (q.userAnswer) answeredIds.add(q.questionId);
         }));
 
-        const subthemeData: Record<string, Record<string, SubthemeStats>> = {}; // theme -> subtheme -> stats
+        let subthemeData: Record<string, Record<string, SubthemeStats>> = {};
 
         if (answeredIds.size > 0) {
             const allAnsweredQuestions = await db.questions.where('id').anyOf(Array.from(answeredIds)).toArray();
             const questionMap = new Map(allAnsweredQuestions.map(q => [q.id, q]));
-
-            for (const sim of completedSims) {
-                for (const sq of sim.questions) {
-                    if (sq.userAnswer) {
-                        const originalQ = questionMap.get(sq.questionId);
-                        if (originalQ && originalQ.subtheme) {
-                            const theme = originalQ.theme;
-                            const subtheme = originalQ.subtheme;
-
-                            if (!subthemeData[theme]) subthemeData[theme] = {};
-                            if (!subthemeData[theme][subtheme]) {
-                                subthemeData[theme][subtheme] = { total: 0, correct: 0, errors: 0 };
-                            }
-
-                            subthemeData[theme][subtheme].total += 1;
-                            if (sq.isCorrect) {
-                                subthemeData[theme][subtheme].correct += 1;
-                            } else {
-                                subthemeData[theme][subtheme].errors += 1;
-                            }
-                        }
-                    }
-                }
-            }
+            subthemeData = aggregateSubthemeStats(completedSims, questionMap);
         }
 
         // Rank 5: aggregate commonMistakes — themes with most errors
-        const errorRanking = Object.entries(themeData)
-            .map(([theme, data]) => ({ theme, errors: data.errors, total: data.total }))
-            .filter(t => t.errors > 0)
-            .sort((a, b) => b.errors - a.errors)
-            .slice(0, 5)
-            .map(t => {
-                const label = THEME_LABELS[t.theme as PsychiatryTheme] || t.theme;
-                return `${label}: ${t.errors} erro(s) em ${t.total} questões`;
-            });
+        const errorRankingStrings = rankTopErrors(themeData);
 
         const byTheme: Partial<Record<PsychiatryTheme, {
             totalAttempts: number;
@@ -129,17 +84,7 @@ export const useUserStore = create<UserState>((set, get) => ({
                 ? recentAttempts.reduce((a, b) => a + b, 0) / recentAttempts.length
                 : 0;
 
-            // Calculate trend
-            let trend: 'improving' | 'stable' | 'declining' = 'stable';
-            if (recentAttempts.length >= 3) {
-                const firstHalf = recentAttempts.slice(0, Math.floor(recentAttempts.length / 2));
-                const secondHalf = recentAttempts.slice(Math.floor(recentAttempts.length / 2));
-                const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-                const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-
-                if (secondAvg > firstAvg + 5) trend = 'improving';
-                else if (secondAvg < firstAvg - 5) trend = 'declining';
-            }
+            const trend = calculateTrend(data.attempts);
 
             byTheme[theme as PsychiatryTheme] = {
                 totalAttempts: data.total,
@@ -147,7 +92,7 @@ export const useUserStore = create<UserState>((set, get) => ({
                 accuracy,
                 trend,
                 recentAccuracy,
-                commonMistakes: errorRanking.filter(e => e.startsWith(THEME_LABELS[theme as PsychiatryTheme] || theme)),
+                commonMistakes: errorRankingStrings.filter(e => e.startsWith(THEME_LABELS[theme as PsychiatryTheme] || theme)),
                 subthemeStats: subthemeData[theme] || undefined
             };
 
@@ -163,25 +108,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         const totalCorrect = completedSims.reduce((sum, s) => sum + s.stats.correct, 0);
 
         // Rank 6: functional streak calculation
-        const previousStreak = get().progress?.streak || 0;
-        const previousActivityDate = get().progress?.lastActivityDate;
-        let newStreak = 1;
-
-        if (previousActivityDate) {
-            const lastDate = new Date(previousActivityDate);
-            const today = new Date();
-            lastDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-            const diffDays = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 0) {
-                newStreak = Math.max(previousStreak, 1);
-            } else if (diffDays === 1) {
-                newStreak = previousStreak + 1;
-            } else {
-                newStreak = 1;
-            }
-        }
+        const newStreak = calculateStreak(get().progress?.streak || 0, get().progress?.lastActivityDate);
 
         const progress: UserProgress = {
             totalSimulations: completedSims.length,

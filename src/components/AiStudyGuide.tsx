@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Bot, BookOpen, AlertTriangle, RefreshCw, ChevronDown, ChevronUp, Layers, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getUserId } from '@/lib/supabaseClient';
 
 interface AiStudyGuideProps {
@@ -155,111 +156,122 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                         </Button>
                     </div>
 
-                    {isOpen && (
-                        <CardContent className="border-t border-indigo-100 px-3 py-3 dark:border-indigo-800/50 lg:px-4 lg:py-4">
-                            {isLoading ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground lg:text-xs">
-                                        <Sparkles className="h-3 w-3 animate-pulse" />
-                                        Escrevendo guia super detalhado...
-                                    </div>
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-[90%]" />
-                                    <Skeleton className="h-4 w-[95%]" />
-                                    <Skeleton className="h-4 w-[85%]" />
-                                    <Skeleton className="h-4 w-[60%]" />
-                                </div>
-                            ) : error ? (
-                                <div className="flex flex-col items-center gap-2 text-center py-2">
-                                    <div className="flex items-center gap-2 text-xs text-red-500">
-                                        <AlertTriangle className="h-4 w-4" />
-                                        Erro ao consultar IA
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground">{error}</p>
-                                    <Button variant="outline" size="sm" onClick={() => askAi(themeName, '', 'study_guide')} className="mt-2 h-7 gap-1.5 text-[10px]">
-                                        <RefreshCw className="h-3 w-3" /> Tentar Novamente
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed text-foreground/90 lg:text-sm">
-                                        {/* Simple formatting for markdown-like structures */}
-                                        {explanation?.split('\n').map((line, i) => {
-                                            if (line.trim() === '') return <br key={i} className="my-1" />;
-                                            let content: React.ReactNode = line;
+                    {/* Content Area */}
+                    <AnimatePresence>
+                        {isOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                className="overflow-hidden"
+                            >
+                                <CardContent className="border-t border-indigo-100 px-3 py-3 dark:border-indigo-800/50 lg:px-4 lg:py-4">
+                                    {isLoading ? (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground lg:text-xs">
+                                                <Sparkles className="h-3 w-3 animate-pulse" />
+                                                Escrevendo guia super detalhado...
+                                            </div>
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-[90%]" />
+                                            <Skeleton className="h-4 w-[95%]" />
+                                            <Skeleton className="h-4 w-[85%]" />
+                                            <Skeleton className="h-4 w-[60%]" />
+                                        </div>
+                                    ) : error ? (
+                                        <div className="flex flex-col items-center gap-2 text-center py-2">
+                                            <div className="flex items-center gap-2 text-xs text-red-500">
+                                                <AlertTriangle className="h-4 w-4" />
+                                                Erro ao consultar IA
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground">{error}</p>
+                                            <Button variant="outline" size="sm" onClick={() => askAi(themeName, '', 'study_guide')} className="mt-2 h-7 gap-1.5 text-[10px]">
+                                                <RefreshCw className="h-3 w-3" /> Tentar Novamente
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed text-foreground/90 lg:text-sm">
+                                                {/* Simple formatting for markdown-like structures */}
+                                                {explanation?.split('\n').map((line, i) => {
+                                                    if (line.trim() === '') return <br key={i} className="my-1" />;
+                                                    let content: React.ReactNode = line;
 
-                                            // Handle bold **text**
-                                            const boldParts = line.split(/(\*\*.*?\*\*)/g);
-                                            if (boldParts.length > 1) {
-                                                content = boldParts.map((part, idx) => {
-                                                    if (part.startsWith('**') && part.endsWith('**')) {
-                                                        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+                                                    // Handle bold **text**
+                                                    const boldParts = line.split(/(\*\*.*?\*\*)/g);
+                                                    if (boldParts.length > 1) {
+                                                        content = boldParts.map((part, idx) => {
+                                                            if (part.startsWith('**') && part.endsWith('**')) {
+                                                                return <strong key={idx}>{part.slice(2, -2)}</strong>;
+                                                            }
+                                                            return part;
+                                                        });
                                                     }
-                                                    return part;
-                                                });
-                                            }
 
-                                            return (
-                                                <p key={i} className={cn(
-                                                    "min-h-[1em]",
-                                                    line.startsWith('## ') ? "text-sm font-bold text-indigo-700 dark:text-indigo-400 mt-3 mb-1" : "",
-                                                    line.startsWith('### ') ? "text-[13px] font-semibold text-foreground mt-2" : "",
-                                                    line.startsWith('- ') || line.startsWith('• ') ? "pl-4 mb-0.5 list-item ml-4" : "",
-                                                    line.match(/^\d+\. /) ? "pl-4 mb-0.5 list-item ml-4" : ""
-                                                )}>
-                                                    {content}
+                                                    return (
+                                                        <p key={i} className={cn(
+                                                            "min-h-[1em]",
+                                                            line.startsWith('## ') ? "text-sm font-bold text-indigo-700 dark:text-indigo-400 mt-3 mb-1" : "",
+                                                            line.startsWith('### ') ? "text-[13px] font-semibold text-foreground mt-2" : "",
+                                                            line.startsWith('- ') || line.startsWith('• ') ? "pl-4 mb-0.5 list-item ml-4" : "",
+                                                            line.match(/^\d+\. /) ? "pl-4 mb-0.5 list-item ml-4" : ""
+                                                        )}>
+                                                            {content}
+                                                        </p>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <div className="flex items-center justify-between border-t border-indigo-100/50 pt-3 dark:border-indigo-800/30">
+                                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground opacity-70">
+                                                    <BookOpen className="h-3 w-3" />
+                                                    fontes: DSM-5-TR, Tratado ABP
+                                                </div>
+                                                {provider && (
+                                                    <span className={cn(
+                                                        'rounded-full px-2 py-0.5 text-[9px] font-medium',
+                                                        provider === 'poe'
+                                                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400'
+                                                            : 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
+                                                    )}>
+                                                        {provider === 'poe' ? '📚 POE' : '✨ Gemini'}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Generate Flashcards Button Section */}
+                                            <div className="rounded-lg bg-background p-3 shadow-sm border mt-3">
+                                                <div className="mb-2 flex items-center gap-2">
+                                                    <Layers className="h-4 w-4 text-primary" />
+                                                    <span className="text-xs font-semibold">Decore os detalhes</span>
+                                                </div>
+                                                <p className="mb-3 text-[10px] sm:text-[11px] text-muted-foreground leading-snug">
+                                                    Transforme este guia em cards de memória (Flashcards) e estude eles usando repetição espaçada na aba Flashcards.
                                                 </p>
-                                            );
-                                        })}
-                                    </div>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleGenerateFlashcards}
+                                                    disabled={isGeneratingFc || fcSuccess}
+                                                    className="w-full h-8 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                >
+                                                    {isGeneratingFc ? (
+                                                        <><Sparkles className="mr-2 h-3 w-3 animate-pulse" /> Criando cards mágicos...</>
+                                                    ) : fcSuccess ? (
+                                                        <><CheckCircle2 className="mr-2 h-3.5 w-3.5 text-green-300" /> Sucesso! Ver aba Flashcards</>
+                                                    ) : (
+                                                        <><Bot className="mr-2 h-3.5 w-3.5" /> Gerar Flashcards Específicos</>
+                                                    )}
+                                                </Button>
+                                                {fcError && <p className="mt-2 text-[10px] text-red-500 text-center">{fcError}</p>}
+                                            </div>
 
-                                    <div className="flex items-center justify-between border-t border-indigo-100/50 pt-3 dark:border-indigo-800/30">
-                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground opacity-70">
-                                            <BookOpen className="h-3 w-3" />
-                                            fontes: DSM-5-TR, Tratado ABP
                                         </div>
-                                        {provider && (
-                                            <span className={cn(
-                                                'rounded-full px-2 py-0.5 text-[9px] font-medium',
-                                                provider === 'poe'
-                                                    ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400'
-                                                    : 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
-                                            )}>
-                                                {provider === 'poe' ? '📚 POE' : '✨ Gemini'}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Generate Flashcards Button Section */}
-                                    <div className="rounded-lg bg-background p-3 shadow-sm border mt-3">
-                                        <div className="mb-2 flex items-center gap-2">
-                                            <Layers className="h-4 w-4 text-primary" />
-                                            <span className="text-xs font-semibold">Decore os detalhes</span>
-                                        </div>
-                                        <p className="mb-3 text-[10px] sm:text-[11px] text-muted-foreground leading-snug">
-                                            Transforme este guia em cards de memória (Flashcards) e estude eles usando repetição espaçada na aba Flashcards.
-                                        </p>
-                                        <Button
-                                            size="sm"
-                                            onClick={handleGenerateFlashcards}
-                                            disabled={isGeneratingFc || fcSuccess}
-                                            className="w-full h-8 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white"
-                                        >
-                                            {isGeneratingFc ? (
-                                                <><Sparkles className="mr-2 h-3 w-3 animate-pulse" /> Criando cards mágicos...</>
-                                            ) : fcSuccess ? (
-                                                <><CheckCircle2 className="mr-2 h-3.5 w-3.5 text-green-300" /> Sucesso! Ver aba Flashcards</>
-                                            ) : (
-                                                <><Bot className="mr-2 h-3.5 w-3.5" /> Gerar Flashcards Específicos</>
-                                            )}
-                                        </Button>
-                                        {fcError && <p className="mt-2 text-[10px] text-red-500 text-center">{fcError}</p>}
-                                    </div>
-
-                                </div>
-                            )}
-                        </CardContent>
-                    )}
+                                    )}
+                                </CardContent>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </Card>
             )}
         </div>

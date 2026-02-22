@@ -13,6 +13,15 @@ export function useAiTutor() {
         setExplanation(null);
         setProvider(null);
 
+        if (!navigator.onLine) {
+            setError('Você está offline. Conecte-se à internet para usar o Tutor de IA.');
+            setIsLoading(false);
+            throw new Error('Você está offline. Conecte-se à internet para usar o Tutor de IA.');
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -20,7 +29,10 @@ export function useAiTutor() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ question, context, action }),
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -51,7 +63,15 @@ export function useAiTutor() {
 
         } catch (err: any) {
             console.error('AI Tutor error:', err);
+
+            if (err.name === 'AbortError') {
+                const timeoutMsg = 'O servidor de IA demorou muito para responder (Timeout). Tente novamente em alguns instantes.';
+                setError(timeoutMsg);
+                throw new Error(timeoutMsg);
+            }
+
             setError(err.message || 'Erro desconhecido');
+            throw err; // Re-throw para o chamador capturar
         } finally {
             setIsLoading(false);
         }
