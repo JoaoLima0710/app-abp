@@ -83,8 +83,8 @@ const SwipeableCard = ({ card, onSwipe, isTop, onFlipChange }: { card: UnifiedCa
                                 <Badge variant="outline" className="text-[10px] font-mono">{card.theme}</Badge>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
-                                <h3 className="text-sm font-medium leading-relaxed text-left">
+                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex items-center justify-center pb-2">
+                                <h3 className="text-sm font-medium leading-relaxed text-center w-full whitespace-pre-wrap break-words">
                                     {card.front}
                                 </h3>
                             </div>
@@ -101,8 +101,8 @@ const SwipeableCard = ({ card, onSwipe, isTop, onFlipChange }: { card: UnifiedCa
                                 </span>
                             </div>
 
-                            <div className="bg-muted/30 p-4 rounded-xl flex-1 overflow-y-auto border border-primary/10 custom-scrollbar">
-                                <p className="text-sm leading-relaxed text-foreground font-medium mb-3">
+                            <div className="bg-muted/30 p-4 rounded-xl flex-1 overflow-y-auto border border-primary/10 custom-scrollbar flex items-center justify-center">
+                                <p className="text-sm leading-relaxed text-foreground font-medium text-center w-full whitespace-pre-wrap break-words">
                                     {card.back}
                                 </p>
                             </div>

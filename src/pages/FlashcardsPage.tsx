@@ -4,8 +4,7 @@ import { BookOpen, ArrowRight, Sparkles, Target } from 'lucide-react';
 import { THEME_ICONS } from '../lib/themeIcons';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { useUserStore } from '../store/userStore';
-import { questionsOriginais } from '../db/questions_originais';
-import { questionsTreaty } from '../db/questions_treaty';
+import { flashcardsOriginais } from '../db/flashcards_originais';
 import { THEME_LABELS, PsychiatryTheme } from '../types';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { db } from '@/db/database';
 import { CustomFlashcard } from '@/types';
 
-const allQuestions = [...questionsOriginais, ...questionsTreaty];
+const allQuestions = flashcardsOriginais;
 
 // Icons imported from centralized THEME_ICONS
 
