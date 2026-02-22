@@ -72,7 +72,7 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
                                 <Badge variant="outline" className="text-[10px]">{card.data.theme}</Badge>
                             </div>
                             <h3 className="text-lg font-medium leading-relaxed mt-4">
-                                {card.isCustom ? card.data.front : card.data.text}
+                                {card.isCustom ? card.data.front : card.data.statement}
                             </h3>
                             <p className="absolute bottom-4 text-xs text-muted-foreground flex items-center gap-1">
                                 <Info className="w-3 h-3" /> Clique no card para revelar
@@ -82,7 +82,7 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
                         <div className="w-full h-full flex flex-col justify-center animate-in fade-in duration-200">
                             <div className="bg-muted/50 p-6 rounded-xl flex-1 flex items-center justify-center overflow-auto">
                                 <p className="text-md leading-relaxed text-foreground">
-                                    {card.isCustom ? card.data.back : (card.data.options?.find((o: any) => o.isCorrect)?.text || 'Sem resposta cadastrada')}
+                                    {card.isCustom ? card.data.back : (card.data.options[card.data.correctAnswer] || 'Sem resposta cadastrada')}
                                 </p>
                             </div>
                         </div>
