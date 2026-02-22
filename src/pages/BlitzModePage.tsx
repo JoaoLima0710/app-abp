@@ -8,6 +8,7 @@ import { useFlashcards } from '../hooks/useFlashcards';
 import { db } from '../db/database';
 import { Flashcard } from '../types';
 import confetti from 'canvas-confetti';
+import { flashcardsOriginais } from '../db/flashcards_originais';
 
 type UnifiedCard = Flashcard;
 
@@ -104,9 +105,6 @@ const BlitzModePage: React.FC = () => {
         const loadCards = async () => {
             const standardDue = getDueCards();
             const customCardsResponse = await db.customFlashcards.toArray();
-
-            // Load from native flashcards DB
-            const { flashcardsOriginais } = require('../db/flashcards_originais');
 
             // Generate a random pool of standard cards
             const randomStandards = [...flashcardsOriginais].sort(() => 0.5 - Math.random()).slice(0, 30);

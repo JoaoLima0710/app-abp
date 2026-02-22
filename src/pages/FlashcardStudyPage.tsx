@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { db } from '@/db/database';
 import { CustomFlashcard } from '@/types';
 import { FlashcardBase } from '@/components/ui/FlashcardBase';
+import { flashcardsOriginais } from '../db/flashcards_originais';
 
 type UnifiedCard = Flashcard;
 
@@ -68,13 +69,11 @@ const FlashcardStudyPage: React.FC = () => {
                 return p.dueDate <= now && fc.theme === themeFilter;
             });
 
-            const { flashcardsOriginais } = require('../db/flashcards_originais');
             const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => q.theme === themeFilter && (!subthemeFilter || q.subtheme === subthemeFilter) && getCardData(q.id).repetition === 0);
             const standardNewSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 15);
 
             cards = [...standardDue, ...customDue, ...standardNewSubset];
         } else if (mode === 'new') {
-            const { flashcardsOriginais } = require('../db/flashcards_originais');
             const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter) && (!subthemeFilter || q.subtheme === subthemeFilter));
             const standardSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
 
