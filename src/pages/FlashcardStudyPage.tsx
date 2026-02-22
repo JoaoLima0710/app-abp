@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, ThumbsUp, Check, CheckCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ThumbsUp, CheckCheck, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { SRSGrade } from '../services/srs';
