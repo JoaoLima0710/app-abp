@@ -110,6 +110,28 @@ const FlashcardsPage: React.FC = () => {
         return all.sort((a, b) => b.errors - a.errors).slice(0, 6);
     }, [userProgress]);
 
+    // Compute available subthemes and their counts for the selected category
+    const availableSubthemes = useMemo(() => {
+        if (!selectedThemeCategory) return new Map<string, number>();
+        const counts = new Map<string, number>();
+
+        const countCard = (subtheme?: string) => {
+            if (subtheme) {
+                counts.set(subtheme, (counts.get(subtheme) || 0) + 1);
+            }
+        };
+
+        allQuestions.forEach(q => {
+            if (q.theme === selectedThemeCategory) countCard(q.subtheme);
+        });
+
+        customCards.forEach(c => {
+            if (c.theme === selectedThemeCategory) countCard(c.subtheme);
+        });
+
+        return counts;
+    }, [selectedThemeCategory, customCards]);
+
     const handleStartReview = () => {
         navigate('/flashcards/estudo', { state: { mode: 'due' } });
     };
@@ -280,26 +302,40 @@ const FlashcardsPage: React.FC = () => {
                             </div>
                         </Button>
 
-                        {selectedThemeCategory && THEME_SUBDIVISIONS_V2[selectedThemeCategory] && (
-                            <div className="mt-3 mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-1">
-                                Focar em um Subtema:
+                        {availableSubthemes.size > 0 ? (
+                            <>
+                                <div className="mt-3 mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground pl-1">
+                                    Focar em um Subtema:
+                                </div>
+                                {selectedThemeCategory && THEME_SUBDIVISIONS_V2[selectedThemeCategory]?.map((sub) => {
+                                    const count = availableSubthemes.get(sub.label) || 0;
+                                    if (count === 0) return null; // Hide subthemes with no cards
+
+                                    return (
+                                        <Button
+                                            key={sub.label}
+                                            variant="outline"
+                                            className="justify-between h-auto py-2.5 px-4 w-full border-indigo-100 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-800/50 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                            onClick={() => {
+                                                navigate('/flashcards/estudo', {
+                                                    state: { mode: 'theme', theme: selectedThemeCategory, subtheme: sub.label }
+                                                });
+                                            }}
+                                        >
+                                            <span className="text-sm font-medium text-left break-words overflow-hidden">{sub.label}</span>
+                                            <span className="text-xs font-semibold text-indigo-500 bg-indigo-100 dark:bg-indigo-900/50 dark:text-indigo-300 px-2 py-0.5 rounded-full ml-2 shrink-0">
+                                                {count} {count === 1 ? 'cartão' : 'cartões'}
+                                            </span>
+                                        </Button>
+                                    );
+                                })}
+                            </>
+                        ) : (
+                            <div className="mt-4 p-4 text-center rounded-lg bg-muted/50 border border-dashed border-border">
+                                <p className="text-sm font-medium text-muted-foreground">Não há subtemas específicos com cartões disponíveis ainda.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Utilize "Misturar Tudo" ou crie seus próprios flashcards com a IA.</p>
                             </div>
                         )}
-
-                        {selectedThemeCategory && THEME_SUBDIVISIONS_V2[selectedThemeCategory]?.map((sub) => (
-                            <Button
-                                key={sub.label}
-                                variant="outline"
-                                className="justify-start h-auto py-2.5 px-4 w-full border-indigo-100 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-800/50 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
-                                onClick={() => {
-                                    navigate('/flashcards/estudo', {
-                                        state: { mode: 'theme', theme: selectedThemeCategory, subtheme: sub.label }
-                                    });
-                                }}
-                            >
-                                <span className="text-sm font-medium">{sub.label}</span>
-                            </Button>
-                        ))}
                     </div>
                 </DialogContent>
             </Dialog>
