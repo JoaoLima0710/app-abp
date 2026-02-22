@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/userStore';
 import {
@@ -10,7 +11,8 @@ import {
     FileText,
     BookOpen,
 } from 'lucide-react';
-import { THEME_LABELS } from '../types';
+import { THEME_LABELS, PsychiatryTheme } from '../types';
+import { THEME_ICONS } from '../lib/themeIcons';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -218,7 +220,10 @@ export default function Dashboard() {
                             return (
                                 <div key={theme} className="space-y-1">
                                     <div className="flex items-center justify-between text-[12px] lg:text-sm">
-                                        <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS]}</span>
+                                        <div className="flex items-center gap-2">
+                                            {React.createElement(THEME_ICONS[theme as PsychiatryTheme] || Target, { className: "h-3.5 w-3.5 text-muted-foreground" })}
+                                            <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS]}</span>
+                                        </div>
                                         <span className={`font-bold ${accuracy >= 70 ? 'text-success' : accuracy >= 50 ? 'text-warning' : 'text-destructive'}`}>
                                             {accuracy.toFixed(0)}%
                                         </span>

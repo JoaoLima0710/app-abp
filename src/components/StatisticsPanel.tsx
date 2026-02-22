@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useUserStore } from '../store/userStore';
-import { THEME_LABELS, THEME_COLORS } from '../types';
+import { THEME_LABELS, THEME_COLORS, PsychiatryTheme } from '../types';
+import { THEME_ICONS } from '../lib/themeIcons';
 import {
     BarChart3,
     TrendingUp,
@@ -9,6 +10,7 @@ import {
     Target,
     Calendar,
     Award,
+    BookOpen
 } from 'lucide-react';
 import {
     LineChart,
@@ -202,6 +204,7 @@ export default function StatisticsPanel() {
                                                     <TableCell className="text-xs">
                                                         <div className="flex items-center gap-2">
                                                             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: THEME_COLORS[theme as keyof typeof THEME_COLORS] }} />
+                                                            {React.createElement(THEME_ICONS[theme as PsychiatryTheme] || BookOpen, { className: "h-3.5 w-3.5 text-muted-foreground mr-1" })}
                                                             {THEME_LABELS[theme as keyof typeof THEME_LABELS]}
                                                         </div>
                                                     </TableCell>

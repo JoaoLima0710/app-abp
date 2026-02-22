@@ -1,5 +1,6 @@
-import { useState, useMemo, Fragment, useEffect } from 'react';
+import React, { useState, useMemo, Fragment, useEffect } from 'react';
 import { THEME_LABELS, THEME_COLORS, PsychiatryTheme } from '../types';
+import { THEME_ICONS } from '../lib/themeIcons';
 import { examTrends } from '../data/examTrends';
 import { THEME_SUBDIVISIONS_V2, SubthemeCategory } from '../db/taxonomy_definitions';
 import { questionsOriginais } from '../db/questions_originais';
@@ -16,7 +17,8 @@ import {
     Trophy,
     BarChart3,
     Radar as RadarIcon,
-    Loader2
+    Loader2,
+    BookOpen
 } from 'lucide-react';
 import {
     LineChart,
@@ -270,7 +272,10 @@ export default function TrendsPage() {
                                                                 ) : (
                                                                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                                                                 )}
-                                                                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: THEME_COLORS[item.theme] }} />
+                                                                {React.createElement(THEME_ICONS[item.theme as PsychiatryTheme] || BookOpen, {
+                                                                    className: "h-3.5 w-3.5 shrink-0",
+                                                                    style: { color: THEME_COLORS[item.theme as PsychiatryTheme] }
+                                                                })}
                                                                 <span className={cn(isExpanded && 'font-semibold')}>
                                                                     {THEME_LABELS[item.theme]}
                                                                 </span>

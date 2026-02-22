@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Heart, Pill, Brain, Zap, Baby, Wine, ArrowRight, Sparkles, Target } from 'lucide-react';
+import { BookOpen, ArrowRight, Sparkles, Target } from 'lucide-react';
+import { THEME_ICONS } from '../lib/themeIcons';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { useUserStore } from '../store/userStore';
 import { questionsOriginais } from '../db/questions_originais';
@@ -15,16 +16,7 @@ import { CustomFlashcard } from '@/types';
 
 const allQuestions = [...questionsOriginais, ...questionsTreaty];
 
-const themeIcons: Record<string, React.ElementType> = {
-    transtornos_humor: Heart,
-    psicofarmacologia: Pill,
-    esquizofrenia: Brain,
-    transtornos_ansiedade: Zap,
-    psiquiatria_infantil: Baby,
-    dependencia_quimica: Wine,
-    transtornos_personalidade: Brain,
-    neuropsiquiatria: Brain,
-};
+// Icons imported from centralized THEME_ICONS
 
 const themeColors: Record<string, string> = {
     transtornos_humor: 'text-destructive bg-destructive/10',
@@ -83,7 +75,7 @@ const FlashcardsPage: React.FC = () => {
         return Object.entries(byTheme).map(([theme, data]) => ({
             theme: theme as PsychiatryTheme,
             name: THEME_LABELS[theme as PsychiatryTheme] || theme,
-            icon: themeIcons[theme] || BookOpen,
+            icon: THEME_ICONS[theme as PsychiatryTheme] || BookOpen,
             color: themeColors[theme] || 'text-primary bg-primary/10',
             total: data.total,
             reviewed: data.reviewed,
@@ -215,7 +207,7 @@ const FlashcardsPage: React.FC = () => {
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {worstSubthemes.map((ws, idx) => {
-                            const Icon = themeIcons[ws.themeKey] || BookOpen;
+                            const Icon = THEME_ICONS[ws.themeKey as PsychiatryTheme] || BookOpen;
                             const colorClass = themeColors[ws.themeKey] || 'text-primary bg-primary/10';
                             return (
                                 <Card
