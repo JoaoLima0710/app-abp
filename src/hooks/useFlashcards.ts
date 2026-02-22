@@ -1,8 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { questionsOriginais } from '../db/questions_originais';
-import { questionsTreaty } from '../db/questions_treaty';
-const questions = [...questionsOriginais, ...questionsTreaty];
+import { flashcardsOriginais } from '../db/flashcards_originais';
 import { calculateReview, INITIAL_ITEM, SRSGrade, SRSItem } from '../services/srs';
 
 // Storage Key
@@ -122,9 +120,9 @@ export function useFlashcards() {
             .map(p => p.questionId);
 
         // Map to full question objects
-        const dueQuestions = questions.filter(q => dueIds.includes(q.id));
+        const dueFlashcards = flashcardsOriginais.filter(q => dueIds.includes(q.id));
 
-        return dueQuestions;
+        return dueFlashcards;
     }, [progress]);
 
     const getStats = useCallback((customCardsCount: number = 0, customCards: any[] = []) => {
@@ -144,7 +142,7 @@ export function useFlashcards() {
         dueCount += newCustomCardsCount;
 
         // Total available questions = standard questions + custom generated cards
-        const totalQuestions = questions.length + customCardsCount;
+        const totalQuestions = flashcardsOriginais.length + customCardsCount;
 
         return {
             totalLearned,

@@ -252,3 +252,12 @@ export interface CustomFlashcard {
     createdAt: Date;
     userId?: string;
 }
+
+// Universal Flashcard type (can represent a standard native flashcard or an AI custom one)
+export interface Flashcard {
+    id: string;
+    theme: PsychiatryTheme;
+    front: string;
+    back: string;
+    isCustom?: boolean; // If true, implies it came from CustomFlashcard DB table
+}

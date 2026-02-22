@@ -217,6 +217,18 @@ export default async function handler(req: any, res: any) {
             }
         }
 
+        // Cleanup AI artifacts and formatting
+        if (content) {
+            // Remove POE citations like [[1]] or [[1]][doc_1]
+            content = content.replace(/\[\[\d+\]\](\[doc_\d+\])?/g, '');
+            // Remove fallback citations like [1]
+            content = content.replace(/\[\d+\]/g, '');
+            // Remove Markdown bolding asterisks to prevent literal '**' bleeding into UI
+            content = content.replace(/\*\*(.*?)\*\*/g, '$1');
+            // Safely trim 
+            content = content.trim();
+        }
+
         return res.status(200).json({
             role: 'assistant',
             content,

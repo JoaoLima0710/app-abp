@@ -5,14 +5,13 @@ import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useFlashcards } from '../hooks/useFlashcards';
-import { questionsOriginais } from '../db/questions_originais';
 import { db } from '../db/database';
-// type imports removed as they are unused or inferred
+import { Flashcard } from '../types';
 import confetti from 'canvas-confetti';
 
-type UnifiedCard = { isCustom: boolean; data: any; id: string };
+type UnifiedCard = Flashcard;
 
-const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean }) => {
+const SwipeableCard = ({ card, onSwipe, isTop, onFlipChange }: { card: UnifiedCard; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean; onFlipChange?: (flipped: boolean) => void }) => {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-200, 200], [-30, 30]);
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -36,10 +35,16 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
 
     const [flipped, setFlipped] = useState(false);
 
+    useEffect(() => {
+        if (isTop && onFlipChange) {
+            onFlipChange(flipped);
+        }
+    }, [flipped, isTop, onFlipChange]);
+
     return (
         <motion.div
             style={isTop ? { x, rotate, opacity } : {}}
-            drag={isTop ? "x" : false}
+            drag={isTop && flipped ? "x" : false}
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={isTop ? handleDragEnd : undefined}
             className={`absolute inset-0 w-full h-full flex items-center justify-center ${!isTop && 'pointer-events-none'}`}
@@ -49,42 +54,62 @@ const SwipeableCard = ({ card, onSwipe, isTop }: { card: UnifiedCard; onSwipe: (
             transition={{ duration: 0.3 }}
             onClick={() => isTop && setFlipped(!flipped)}
         >
-            <Card className="w-full max-w-sm h-96 relative overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border-2 border-border/10 bg-card">
+            <Card className="w-full h-[450px] relative overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border-2 border-border/10 bg-card">
 
                 {/* Visual Feedback Overlays */}
-                <motion.div style={{ backgroundColor: backgroundRight }} className="absolute inset-0 z-10 pointer-events-none flex items-center justify-end pr-8">
-                    <motion.div style={{ opacity: rightIconOpacity }} className="bg-green-500 rounded-full p-4 shadow-lg">
+                <motion.div style={{ backgroundColor: backgroundRight }} className="absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center">
+                    <motion.div style={{ opacity: rightIconOpacity }} className="bg-green-500 rounded-full p-4 shadow-lg mb-2">
                         <Check className="text-white w-12 h-12" />
                     </motion.div>
+                    <motion.span style={{ opacity: rightIconOpacity }} className="text-green-600 font-bold text-xl uppercase tracking-widest bg-white/90 px-4 py-1 rounded-lg">
+                        Acertei
+                    </motion.span>
                 </motion.div>
 
-                <motion.div style={{ backgroundColor: backgroundLeft }} className="absolute inset-0 z-10 pointer-events-none flex items-center justify-start pl-8">
-                    <motion.div style={{ opacity: leftIconOpacity }} className="bg-red-500 rounded-full p-4 shadow-lg">
+                <motion.div style={{ backgroundColor: backgroundLeft }} className="absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center">
+                    <motion.div style={{ opacity: leftIconOpacity }} className="bg-red-500 rounded-full p-4 shadow-lg mb-2">
                         <X className="text-white w-12 h-12" />
                     </motion.div>
+                    <motion.span style={{ opacity: leftIconOpacity }} className="text-red-600 font-bold text-xl uppercase tracking-widest bg-white/90 px-4 py-1 rounded-lg">
+                        Errei
+                    </motion.span>
                 </motion.div>
 
-                <CardContent className="h-full flex flex-col items-center justify-center p-8 text-center relative z-20 bg-card">
+                <CardContent className="h-full flex flex-col p-6 relative z-20 bg-card">
                     {!flipped ? (
-                        <>
-                            <div className="absolute top-4 left-4 flex gap-2">
-                                {card.isCustom && <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">IA</Badge>}
-                                <Badge variant="outline" className="text-[10px]">{card.data.theme}</Badge>
+                        <div className="flex flex-col h-full">
+                            <div className="flex items-center gap-2 mb-4 shrink-0">
+                                {card.isCustom && <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 uppercase">Flashcard</Badge>}
+                                <Badge variant="outline" className="text-[10px] font-mono">{card.theme}</Badge>
                             </div>
-                            <h3 className="text-lg font-medium leading-relaxed mt-4">
-                                {card.isCustom ? card.data.front : card.data.statement}
-                            </h3>
-                            <p className="absolute bottom-4 text-xs text-muted-foreground flex items-center gap-1">
-                                <Info className="w-3 h-3" /> Clique no card para revelar
+
+                            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
+                                <h3 className="text-sm font-medium leading-relaxed text-left">
+                                    {card.front}
+                                </h3>
+                            </div>
+
+                            <p className="mt-3 text-[10px] text-muted-foreground flex items-center justify-center gap-1 shrink-0 pb-1">
+                                <Info className="w-3 h-3" /> Clique no card para revelar resposta
                             </p>
-                        </>
+                        </div>
                     ) : (
-                        <div className="w-full h-full flex flex-col justify-center animate-in fade-in duration-200">
-                            <div className="bg-muted/50 p-6 rounded-xl flex-1 flex items-center justify-center overflow-auto">
-                                <p className="text-md leading-relaxed text-foreground">
-                                    {card.isCustom ? card.data.back : (card.data.options[card.data.correctAnswer] || 'Sem resposta cadastrada')}
+                        <div className="w-full h-full flex flex-col animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between mb-4 shrink-0">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                                    {card.isCustom ? 'Gabarito IA' : 'Resposta'}
+                                </span>
+                            </div>
+
+                            <div className="bg-muted/30 p-4 rounded-xl flex-1 overflow-y-auto border border-primary/10 custom-scrollbar">
+                                <p className="text-sm leading-relaxed text-foreground font-medium mb-3">
+                                    {card.back}
                                 </p>
                             </div>
+
+                            <p className="mt-4 text-[10px] text-muted-foreground text-center shrink-0">
+                                Agora deslize: 👈 Errei | Acertei 👉
+                            </p>
                         </div>
                     )}
                 </CardContent>
@@ -97,6 +122,7 @@ const BlitzModePage: React.FC = () => {
     const { getDueCards, submitReview } = useFlashcards();
     const [queue, setQueue] = useState<UnifiedCard[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isTopFlipped, setIsTopFlipped] = useState(false);
 
     // Initial load
     useEffect(() => {
@@ -104,13 +130,16 @@ const BlitzModePage: React.FC = () => {
             const standardDue = getDueCards();
             const customCardsResponse = await db.customFlashcards.toArray();
 
+            // Load from native flashcards DB
+            const { flashcardsOriginais } = require('../db/flashcards_originais');
+
             // Generate a random pool of standard cards
-            const randomStandards = [...questionsOriginais].sort(() => 0.5 - Math.random()).slice(0, 30);
+            const randomStandards = [...flashcardsOriginais].sort(() => 0.5 - Math.random()).slice(0, 30);
 
             const pool: UnifiedCard[] = [
-                ...standardDue.map(q => ({ isCustom: false as const, data: q, id: q.id })),
-                ...randomStandards.map(q => ({ isCustom: false as const, data: q, id: q.id })),
-                ...customCardsResponse.map(c => ({ isCustom: true as const, data: c, id: c.id }))
+                ...standardDue,
+                ...randomStandards,
+                ...customCardsResponse
             ];
 
             // Unique shuffle
@@ -140,6 +169,7 @@ const BlitzModePage: React.FC = () => {
         }
 
         // Pop card from queue
+        setIsTopFlipped(false);
         setQueue(prev => prev.slice(1));
     };
 
@@ -164,7 +194,7 @@ const BlitzModePage: React.FC = () => {
                     <p className="text-sm text-muted-foreground">Deslize para a Esquerda (Errei) ou Direita (Acertei/Fácil)</p>
                 </div>
 
-                <div className="relative w-full max-w-sm h-96 flex items-center justify-center perspective-1000">
+                <div className="relative w-full max-w-sm h-[450px] flex items-center justify-center perspective-1000">
                     <AnimatePresence>
                         {queue.slice(0, 3).reverse().map((card, index) => (
                             <SwipeableCard
@@ -172,6 +202,7 @@ const BlitzModePage: React.FC = () => {
                                 card={card}
                                 onSwipe={(dir) => handleSwipe(dir, card)}
                                 isTop={index === queue.slice(0, 3).length - 1} // Array is reversed so last item in slice is visually on top
+                                onFlipChange={(f) => setIsTopFlipped(f)}
                             />
                         ))}
                     </AnimatePresence>
@@ -189,14 +220,16 @@ const BlitzModePage: React.FC = () => {
                 {queue.length > 0 && (
                     <div className="flex items-center gap-6 mt-12 z-10 pb-10">
                         <button
+                            disabled={!isTopFlipped}
                             onClick={() => handleSwipe('left', queue[0])}
-                            className="bg-white border-2 border-red-100 shadow-md p-4 rounded-full text-red-500 hover:bg-red-50 hover:scale-110 transition-all active:scale-95"
+                            className={`bg-white border-2 border-red-100 shadow-md p-4 rounded-full text-red-500 transition-all ${isTopFlipped ? 'hover:bg-red-50 hover:scale-110 active:scale-95 cursor-pointer' : 'opacity-40 grayscale cursor-not-allowed'}`}
                         >
                             <X className="w-8 h-8" strokeWidth={3} />
                         </button>
                         <button
+                            disabled={!isTopFlipped}
                             onClick={() => handleSwipe('right', queue[0])}
-                            className="bg-white border-2 border-green-100 shadow-md p-4 rounded-full text-green-500 hover:bg-green-50 hover:scale-110 transition-all active:scale-95"
+                            className={`bg-white border-2 border-green-100 shadow-md p-4 rounded-full text-green-500 transition-all ${isTopFlipped ? 'hover:bg-green-50 hover:scale-110 active:scale-95 cursor-pointer' : 'opacity-40 grayscale cursor-not-allowed'}`}
                         >
                             <Check className="w-8 h-8" strokeWidth={3} />
                         </button>
