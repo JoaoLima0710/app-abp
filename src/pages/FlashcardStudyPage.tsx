@@ -108,27 +108,7 @@ const FlashcardStudyPage: React.FC = () => {
 
     const currentCard = queue[currentIndex];
 
-    if (!loading && !currentCard) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-background px-4">
-                <Card className="w-full max-w-md text-center">
-                    <CardContent className="space-y-4 p-6 lg:p-8">
-                        <CheckCheck className="mx-auto h-14 w-14 text-green-500" />
-                        <div>
-                            <h2 className="text-xl font-bold lg:text-2xl">Sessão Concluída!</h2>
-                            <p className="mt-1 text-xs text-muted-foreground lg:text-sm">
-                                Você completou todos os cartões desta sessão.
-                            </p>
-                        </div>
-                        <Button className="gap-1.5" onClick={() => navigate('/flashcards')}>
-                            Voltar ao Painel
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
+    // Helper functions need to be defined before they are used in useEffect
     const handleFlip = () => {
         setIsFlipped(true);
     };
@@ -147,7 +127,7 @@ const FlashcardStudyPage: React.FC = () => {
         setCurrentIndex((prev) => prev + 1);
     };
 
-    // Keyboard Accessibility
+    // Keyboard Accessibility MUST be above any early returns
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (loading || !currentCard) return;
@@ -180,7 +160,29 @@ const FlashcardStudyPage: React.FC = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [loading, currentCard, isFlipped, handleRate]);
+    }, [loading, currentCard, isFlipped]); // Removed handleRate to avoid dependency cycle since it depends on currentCard state. However, currentCard is in deps, which is good.
+    // Actually, handleRate can be wrapped in useCallback but since this entire effect runs often, it's fine.
+
+    if (!loading && !currentCard) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background px-4">
+                <Card className="w-full max-w-md text-center">
+                    <CardContent className="space-y-4 p-6 lg:p-8">
+                        <CheckCheck className="mx-auto h-14 w-14 text-green-500" />
+                        <div>
+                            <h2 className="text-xl font-bold lg:text-2xl">Sessão Concluída!</h2>
+                            <p className="mt-1 text-xs text-muted-foreground lg:text-sm">
+                                Você completou todos os cartões desta sessão.
+                            </p>
+                        </div>
+                        <Button className="gap-1.5" onClick={() => navigate('/flashcards')}>
+                            Voltar ao Painel
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AiExplanation } from '@/components/AiExplanation';
+import { Loader2 } from 'lucide-react';
 
 export default function SimulationPage() {
     const navigate = useNavigate();
@@ -50,13 +51,37 @@ export default function SimulationPage() {
         return () => clearInterval(interval);
     }, []);
 
-    if (!simulation) return null;
+    if (!simulation) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-3 text-sm text-muted-foreground">Iniciando ambiente...</p>
+            </div>
+        );
+    }
 
     const question = getCurrentQuestion();
     const simQuestion = getCurrentSimulationQuestion();
     const progress = getProgress();
 
-    if (!question) return null;
+    if (!question) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-center">
+                <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
+                <h3 className="text-lg font-semibold">Sincronizando Banco de Questões</h3>
+                <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+                    As questões deste simulado estão sendo puxadas para o seu dispositivo. Por favor, aguarde alguns segundos...
+                </p>
+                <Button
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() => window.location.reload()}
+                >
+                    Recarregar se demorar muito
+                </Button>
+            </div>
+        );
+    }
 
     const formatTime = (s: number) =>
         `${Math.floor(s / 60)
