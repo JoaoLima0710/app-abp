@@ -60,17 +60,22 @@ function serializeDates(obj: unknown): unknown {
 const DATE_KEYS = new Set(['createdAt', 'completedAt', 'answeredAt', 'lastActivityDate', 'lastUpdated', 'lastLogin', 'nextReviewDate', 'lastReviewed']);
 
 function deserializeDates(obj: unknown): unknown {
-    if (Array.isArray(obj)) return obj.map(item => deserializeDates(item));
-    if (obj && typeof obj === 'object') {
-        const result: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-            if (DATE_KEYS.has(key) && typeof value === 'string') {
-                result[key] = new Date(value);
-            } else {
-                result[key] = deserializeDates(value);
+    if (!obj) return obj;
+    try {
+        if (Array.isArray(obj)) return obj.map(item => deserializeDates(item));
+        if (obj && typeof obj === 'object') {
+            const result: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+                if (DATE_KEYS.has(key) && typeof value === 'string') {
+                    result[key] = new Date(value);
+                } else {
+                    result[key] = deserializeDates(value);
+                }
             }
+            return result;
         }
-        return result;
+    } catch (err) {
+        console.warn('[CloudSync] Failed to deserialize dates for object:', obj, err);
     }
     return obj;
 }
@@ -211,7 +216,10 @@ export async function syncSeenQuestions(): Promise<void> {
         let localIds: string[] = [];
         try {
             const raw = localStorage.getItem(SEEN_KEY);
-            if (raw) localIds = JSON.parse(raw);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                localIds = Array.isArray(parsed) ? parsed : [];
+            }
         } catch { /* empty */ }
 
         const { data: cloudRow, error } = await supabase
@@ -222,11 +230,12 @@ export async function syncSeenQuestions(): Promise<void> {
 
         if (error && error.code !== 'PGRST116') throw error;
 
-        const cloudIds: string[] = cloudRow?.question_ids || [];
+        // CRITICAL FIX: Ensure cloudIds is an array to avoid "non-iterable" spread error
+        const cloudIdsRaw = cloudRow?.question_ids;
+        const cloudIds: string[] = Array.isArray(cloudIdsRaw) ? cloudIdsRaw : [];
 
         const safeLocal = Array.isArray(localIds) ? localIds : [];
-        const safeCloud = Array.isArray(cloudIds) ? cloudIds : [];
-        const merged = [...new Set([...safeLocal, ...safeCloud])];
+        const merged = [...new Set([...safeLocal, ...cloudIds])];
 
         localStorage.setItem(SEEN_KEY, JSON.stringify(merged));
 
@@ -365,13 +374,23 @@ export async function fullSync(): Promise<void> {
     emitStatus('syncing');
 
     try {
-        await Promise.all([
-            syncSimulations(),
-            syncUserProgress(),
-            syncSeenQuestions(),
-            syncFlashcardProgress(),
-            syncCustomFlashcards(),
-        ]);
+        // Run syncs sequentially or with individual error handling to prevent one failure from stopping others
+        const syncTasks = [
+            { name: 'Simulations', fn: syncSimulations },
+            { name: 'UserProgress', fn: syncUserProgress },
+            { name: 'SeenQuestions', fn: syncSeenQuestions },
+            { name: 'FlashcardProgress', fn: syncFlashcardProgress },
+            { name: 'CustomFlashcards', fn: syncCustomFlashcards },
+        ];
+
+        for (const task of syncTasks) {
+            try {
+                await task.fn();
+            } catch (taskErr) {
+                console.warn(`[CloudSync] Individual task failed: ${task.name}`, taskErr);
+            }
+        }
+
         emitStatus('success', 'Dados sincronizados');
     } catch (err) {
         emitStatus('error', (err as Error).message);

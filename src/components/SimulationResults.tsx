@@ -45,9 +45,12 @@ export default function SimulationResults() {
             return;
         }
         loadUserData();
-        const wrongIds = simulation.questions
-            .map((q) => q.questionId);
-        if (wrongIds.length > 0) addCardsToReview(wrongIds);
+
+        // Safety guard: simulation.questions might be missing if sync is incomplete
+        if (simulation.questions) {
+            const questionIds = simulation.questions.map((q) => q.questionId);
+            if (questionIds.length > 0) addCardsToReview(questionIds);
+        }
     }, [simulation, navigate, loadUserData]);
 
     const [socraticModalOpen, setSocraticModalOpen] = useState(false);
@@ -116,13 +119,15 @@ export default function SimulationResults() {
         navigate('/');
     };
 
-    const themeChartData = Object.entries(stats.byTheme).map(([theme, data]) => ({
-        name: THEME_LABELS[theme as keyof typeof THEME_LABELS],
-        value: data?.total || 0,
-        correct: data?.correct || 0,
-        accuracy: data?.accuracy || 0,
-        color: THEME_COLORS[theme as keyof typeof THEME_COLORS],
-    }));
+    const themeChartData = stats.byTheme
+        ? Object.entries(stats.byTheme).map(([theme, data]) => ({
+            name: THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme,
+            value: data?.total || 0,
+            correct: data?.correct || 0,
+            accuracy: data?.accuracy || 0,
+            color: THEME_COLORS[theme as keyof typeof THEME_COLORS] || '#888',
+        }))
+        : [];
 
     const getMessage = () => {
         if (stats.accuracy >= 80) return { icon: Trophy, text: 'Excelente! Você está no caminho certo!', cls: 'text-green-500' };
@@ -224,12 +229,12 @@ export default function SimulationResults() {
                         <CardTitle className="text-sm lg:text-base">Desempenho por Área</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 px-4 pb-4 lg:px-6 lg:pb-6">
-                        {Object.entries(stats.byTheme).map(([theme, data]) => {
+                        {stats.byTheme ? Object.entries(stats.byTheme).map(([theme, data]) => {
                             const acc = data?.accuracy || 0;
                             return (
                                 <div key={theme} className="space-y-1">
                                     <div className="flex items-center justify-between text-[11px] lg:text-xs">
-                                        <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS]}</span>
+                                        <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme}</span>
                                         <Badge variant={acc >= 70 ? 'default' : acc >= 50 ? 'secondary' : 'destructive'} className="text-[10px] lg:text-xs">
                                             {data?.correct}/{data?.total} ({acc.toFixed(0)}%)
                                         </Badge>
@@ -237,7 +242,9 @@ export default function SimulationResults() {
                                     <Progress value={acc} className="h-1.5" />
                                 </div>
                             );
-                        })}
+                        }) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">Dados de desempenho não disponíveis</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -252,7 +259,7 @@ export default function SimulationResults() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 px-4 pb-4 lg:space-y-3 lg:px-6 lg:pb-6">
-                        {simulation.questions.map((sq, idx) => {
+                        {simulation.questions ? simulation.questions.map((sq, idx) => {
                             if (sq.isCorrect !== false) return null;
                             const q = questions[idx];
                             if (!q) return null;
@@ -307,7 +314,9 @@ export default function SimulationResults() {
                                     </CollapsibleContent>
                                 </Collapsible>
                             );
-                        })}
+                        }) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma questão disponível para revisão</p>
+                        )}
                     </CardContent>
                 </Card>
             )}

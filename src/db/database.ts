@@ -23,8 +23,11 @@ function getSeenQuestionIds(): Set<string> {
 }
 
 function markQuestionsSeen(ids: string[]): void {
+    if (!ids || !Array.isArray(ids)) return;
     const seen = getSeenQuestionIds();
-    for (const id of ids) seen.add(id);
+    for (const id of ids) {
+        if (id) seen.add(id);
+    }
     localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
 }
 
@@ -79,8 +82,12 @@ export async function initializeDatabase() {
     const { questionsTreaty } = await import('./questions_treaty');
 
     const count = await db.questions.count();
-    if (count === 0) {
-        await db.questions.bulkAdd([...questionsOriginais, ...questionsTreaty]);
+    // If count is 0 OR significantly lower than expected (~1500), force re-import
+    // This handles cases where sync or initial import was interrupted.
+    if (count < 1000) {
+        console.log(`[Database] Low question count (${count}). Re-importing base questions...`);
+        // Use bulkPut to overwrite existing or add new, ensuring we have the latest base questions
+        await db.questions.bulkPut([...questionsOriginais, ...questionsTreaty]);
     }
 
     const progress = await db.userProgress.get('main');

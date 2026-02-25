@@ -74,7 +74,7 @@ export function aggregateThemeStats(simulations: Simulation[]): Record<string, T
     for (const sim of simulations) {
         if (!sim.completedAt) continue;
 
-        for (const [theme, stats] of Object.entries(sim.stats.byTheme)) {
+        for (const [theme, stats] of Object.entries(sim.stats.byTheme || {})) {
             if (!themeData[theme]) {
                 themeData[theme] = { attempts: [], correct: 0, total: 0, errors: 0 };
             }

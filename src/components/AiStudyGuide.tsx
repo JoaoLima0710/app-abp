@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserId } from '@/lib/supabaseClient';
+import { addCardsToReview } from '@/hooks/useFlashcards';
+import { toast } from 'sonner';
 
 interface AiStudyGuideProps {
     theme: PsychiatryTheme;
@@ -124,9 +126,16 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                 const { db: database } = await import('@/db/database');
                 await database.customFlashcards.bulkAdd(dbObjects);
 
+                // Enqueue into Spaced Repetition System immediately
+                addCardsToReview(dbObjects.map(c => c.id));
+
                 setFcSuccess(true);
+                toast.success('Flashcards mágicos criados com sucesso!', {
+                    description: `${cards.length} novos cards adicionados ao seu baralho.`
+                });
             } else {
                 setFcError('IA não retornou um formato JSON válido.');
+                toast.error('Falha ao gerar flashcards');
             }
         } catch (err: any) {
             setFcError(err.message || 'Erro ao gerar flashcards.');

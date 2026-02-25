@@ -83,6 +83,11 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     },
 
     resumeSimulation: async (simulation: Simulation) => {
+        if (!simulation || !simulation.questions) {
+            console.warn('[SimulationStore] Cannot resume simulation: missing data');
+            return;
+        }
+
         set({ isLoading: true, isCompleted: false, focusTheme: simulation.focusTheme });
 
         try {
@@ -107,7 +112,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
         const currentQuestion = questions[currentIndex];
         const isCorrect = answer === currentQuestion.correctAnswer;
 
-        const updatedQuestions = [...simulation.questions];
+        const updatedQuestions = simulation.questions ? [...simulation.questions] : [];
+        if (updatedQuestions.length === 0) return;
+
         updatedQuestions[currentIndex] = {
             ...updatedQuestions[currentIndex],
             userAnswer: answer,
@@ -217,7 +224,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
     getProgress: () => {
         const { simulation, questions } = get();
-        const answered = simulation?.questions.filter(q => q.userAnswer).length || 0;
+        if (!simulation || !simulation.questions || !questions) {
+            return { answered: 0, total: 0, percentage: 0 };
+        }
+        const answered = simulation.questions.filter(q => q.userAnswer).length || 0;
         const total = questions.length;
         return {
             answered,

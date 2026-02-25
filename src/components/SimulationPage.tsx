@@ -70,15 +70,30 @@ export default function SimulationPage() {
                 <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
                 <h3 className="text-lg font-semibold">Sincronizando Banco de Questões</h3>
                 <p className="mt-2 text-sm text-muted-foreground max-w-sm">
-                    As questões deste simulado estão sendo puxadas para o seu dispositivo. Por favor, aguarde alguns segundos...
+                    As questões deste simulado estão sendo recuperadas. Isso pode levar alguns segundos se você acabou de entrar em um novo dispositivo.
                 </p>
-                <Button
-                    variant="outline"
-                    className="mt-6"
-                    onClick={() => window.location.reload()}
-                >
-                    Recarregar se demorar muito
-                </Button>
+
+                <div className="mt-8 flex flex-col gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={() => window.location.reload()}
+                    >
+                        Recarregar Página
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        onClick={async () => {
+                            const { initializeDatabase } = await import('../db/database');
+                            await initializeDatabase();
+                            window.location.reload();
+                        }}
+                    >
+                        Reiniciar Sincronização Local
+                    </Button>
+                </div>
             </div>
         );
     }

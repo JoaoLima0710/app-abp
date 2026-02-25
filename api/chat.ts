@@ -54,7 +54,6 @@ REGRAS ESTABELECIDAS:
 5. Retorne EXCLUSIVAMENTE um array JSON válido contendo os flashcards. NENHUM texto adicional antes ou depois do colchete do JSON. NUNCA use aspas triplas ou marcadores markdown ao redor do JSON. Mande APENAS o JSON puro.
 
 FORMATO DE SAÍDA OBRIGATÓRIO (JSON STRICT):
-[
   {
     "front": "Qual é a alteração no ECG mais característica associada ao uso de lítio?",
     "back": "Inversão ou achatamento da onda T."
@@ -68,7 +67,9 @@ FORMATO DE SAÍDA OBRIGATÓRIO (JSON STRICT):
     "back": "Ganho de peso e Síndrome Metabólica."
   }
 ]
+]
 
+IMPORTANTE: O RETORNO DEVE SER APENAS O ARRAY JSON, COMEÇANDO COM [ E TERMINANDO COM ], MAIS NADA.
 Gere entre 5 e 8 flashcards rigorosamente precisos e objetivos para o tema solicitado.`,
 
     analyze_plan: `Você é um Estrategista Especialista em Provas de Residência Médica e Título de Especialista em Psiquiatria (ABP).
@@ -228,8 +229,14 @@ export default async function handler(req: any, res: any) {
             content = content.replace(/\[\[\d+\]\](\[doc_\d+\])?/g, '');
             // Remove fallback citations like [1]
             content = content.replace(/\[\d+\]/g, '');
-            // Remove Markdown bolding asterisks to prevent literal '**' bleeding into UI
-            content = content.replace(/\*\*(.*?)\*\*/g, '$1');
+
+            if (action === 'generate_flashcards') {
+                // Remove Markdown codeblocks that the AI might accidentally add
+                content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+            } else {
+                // Remove Markdown bolding asterisks only for non-JSON text
+                content = content.replace(/\*\*(.*?)\*\*/g, '$1');
+            }
             // Safely trim 
             content = content.trim();
         }
