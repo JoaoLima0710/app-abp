@@ -10,6 +10,15 @@ import { Flashcard } from '../types';
 import confetti from 'canvas-confetti';
 import { flashcardsOriginais } from '../db/flashcards_originais';
 
+function shuffleArray<T>(array: T[]): T[] {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
 type UnifiedCard = Flashcard;
 
 const SwipeableCard = ({ card, onSwipe, isTop, onFlipChange }: { card: UnifiedCard; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean; onFlipChange?: (flipped: boolean) => void }) => {
@@ -107,7 +116,7 @@ const BlitzModePage: React.FC = () => {
             const customCardsResponse = await db.customFlashcards.toArray();
 
             // Generate a random pool of standard cards
-            const randomStandards = [...flashcardsOriginais].sort(() => 0.5 - Math.random()).slice(0, 30);
+            const randomStandards = shuffleArray([...flashcardsOriginais]).slice(0, 30);
 
             const pool: UnifiedCard[] = [
                 ...standardDue,
@@ -118,7 +127,7 @@ const BlitzModePage: React.FC = () => {
             // Unique shuffle
             const uniqueMap = new Map();
             pool.forEach(c => uniqueMap.set(c.id, c));
-            const finalPool = Array.from(uniqueMap.values()).sort(() => 0.5 - Math.random());
+            const finalPool = shuffleArray(Array.from(uniqueMap.values()));
 
             setQueue(finalPool);
             setLoading(false);

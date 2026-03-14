@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Bot, BookOpen, ChevronDown, ChevronUp, AlertTriangle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PsychiatryTheme, CustomFlashcard } from '../types';
 
 interface AiExplanationProps {
     questionBody: string;
@@ -23,10 +24,50 @@ export function AiExplanation({
     className
 }: AiExplanationProps) {
     const { askAi, isLoading, explanation, error, provider } = useAiTutor();
+    const { askAi: askAiCards } = useAiTutor();
     const [isOpen, setIsOpen] = useState(false);
     const [hasAsked, setHasAsked] = useState(false);
 
-    const handleAsk = () => {
+    const [isGeneratingFc, setIsGeneratingFc] = useState(false);
+    const [fcSuccess, setFcSuccess] = useState(false);
+    const [fcError, setFcError] = useState<string | null>(null);
+
+    const handleGenerateFlashcards = async (explanationText: string) => {
+        setIsGeneratingFc(true);
+        setFcError(null);
+        try {
+            const { getUserId } = await import('@/lib/supabaseClient');
+            const fullContext = `A questão original era: "${questionBody}".\nA explicação do tutor foi: ${explanationText}\n\nExtraia os pontos de alto rendimento dessa interação e gere flashcards cirúrgicos que resolvam justamente o conceito abordado.`;
+            
+            const cards = await askAiCards(questionBody, fullContext, 'generate_flashcards');
+
+            if (Array.isArray(cards) && cards.length > 0) {
+                const userId = getUserId() || 'anonymous';
+                const dbObjects: CustomFlashcard[] = cards.map((c: any) => ({
+                    id: crypto.randomUUID(),
+                    theme: 'geral' as PsychiatryTheme, // Substituted since theme is not in props
+                    subtheme: 'Revisão IA',
+                    front: c.front,
+                    back: c.back,
+                    createdAt: new Date(),
+                    userId
+                }));
+
+                const { db: database } = await import('@/db/database');
+                await database.customFlashcards.bulkAdd(dbObjects);
+                setFcSuccess(true);
+            } else {
+                setFcError('IA não retornou um formato JSON válido.');
+            }
+        } catch (err: any) {
+            console.error(err);
+            setFcError(err.message || 'Erro ao gerar flashcards.');
+        } finally {
+            setIsGeneratingFc(false);
+        }
+    };
+
+    const handleAsk = async () => {
         if (!isOpen) setIsOpen(true);
         if (!hasAsked && !explanation) {
             setHasAsked(true);
@@ -41,7 +82,11 @@ E) ${alternatives.E}
 Gabarito Oficial: ${correctAnswer}
 ${userAnswer ? `Resposta do Aluno: ${userAnswer}` : ''}
             `.trim();
-            askAi(questionBody, context);
+            askAi(questionBody, context).then((response) => {
+                if (response) {
+                    handleGenerateFlashcards(response);
+                }
+            }).catch(console.error);
         }
     };
 
@@ -70,9 +115,14 @@ ${userAnswer ? `Resposta do Aluno: ${userAnswer}` : ''}
                             <Bot className="h-4 w-4" />
                             Tutor IA
                         </div>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-indigo-500">
-                            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {isGeneratingFc && <span className="text-[10px] text-indigo-500 animate-pulse flex items-center gap-1"><Sparkles className="h-3 w-3" /> Gerando Flashcards...</span>}
+                            {fcSuccess && <span className="text-[10px] text-green-500 hidden md:inline-flex items-center gap-1">Flashcards criados!</span>}
+                            {fcError && <span className="text-[10px] text-red-500 hidden md:inline-flex">{fcError}</span>}
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-indigo-500">
+                                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                        </div>
                     </div>
 
                     {isOpen && (

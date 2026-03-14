@@ -13,6 +13,15 @@ import { CustomFlashcard } from '@/types';
 import { FlashcardBase } from '@/components/ui/FlashcardBase';
 import { flashcardsOriginais } from '../db/flashcards_originais';
 
+function shuffleArray<T>(array: T[]): T[] {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
 type UnifiedCard = Flashcard;
 
 const FlashcardStudyPage: React.FC = () => {
@@ -72,21 +81,21 @@ const FlashcardStudyPage: React.FC = () => {
             });
 
             const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => q.theme === themeFilter && (!subthemeFilter || q.subtheme === subthemeFilter) && getCardData(q.id).repetition === 0);
-            const standardNewSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 15);
+            const standardNewSubset = shuffleArray(standardUnlearned).slice(0, 15);
 
             cards = [...standardDue, ...customDue, ...standardNewSubset];
         } else if (mode === 'new') {
             const standardUnlearned = flashcardsOriginais.filter((q: Flashcard) => getCardData(q.id).repetition === 0 && (!themeFilter || q.theme === themeFilter) && (!subthemeFilter || q.subtheme === subthemeFilter));
-            const standardSubset = standardUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
+            const standardSubset = shuffleArray(standardUnlearned).slice(0, 10);
 
             const customUnlearned = customCards.filter(c => getCardData(c.id).repetition === 0 && (!themeFilter || c.theme === themeFilter) && (!subthemeFilter || c.subtheme === subthemeFilter));
-            const customSubset = customUnlearned.sort(() => 0.5 - Math.random()).slice(0, 10);
+            const customSubset = shuffleArray(customUnlearned).slice(0, 10);
 
             cards = [...standardSubset, ...customSubset];
         }
 
         // Shuffle mixed queue
-        setQueue(cards.sort(() => 0.5 - Math.random()));
+        setQueue(shuffleArray(cards));
         setLoading(false);
     }, [mode, themeFilter, getDueCards, getCardData, customCards, progress]);
 
