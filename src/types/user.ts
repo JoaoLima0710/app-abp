@@ -42,6 +42,7 @@ export interface UserProgress {
     byTheme: Partial<Record<PsychiatryTheme, ThemeProgress>>;
     trends: TrendAnalysis;
     streak: number;
+    aiDossier?: string;
     lastActivityDate?: Date;
     lastUpdated: Date;
 }

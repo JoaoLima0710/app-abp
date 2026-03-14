@@ -105,6 +105,7 @@ export async function initializeDatabase() {
                 recommendations: []
             },
             streak: 0,
+            aiDossier: 'O aluno está recém-chegado ou ainda não acumulou dados suficientes. Trate-o como um clínico geral em fase inicial de especialização, priorizando explicações didáticas e amplas.',
             lastActivityDate: new Date(),
             lastUpdated: new Date(),
         };

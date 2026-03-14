@@ -37,12 +37,12 @@ export const THEME_LABELS: Record<PsychiatryTheme, string> = {
     psicoterapia: 'Psicoterapia',
     transtornos_alimentares: 'Transtornos Alimentares',
     saude_publica: 'Saúde Pública',
-    geral: 'Geral (Legado)',
-    diagnostico: 'Diagnóstico (Legado)',
-    etica_legal: 'Ética Legal (Legado)',
-    psiquiatria_forense: 'Forense (Legado)',
-    neurociencias_diagnostico: 'Neurociência (Legado)',
-    psiquiatria_geriatrica: 'Geriátrica (Legado)',
+    geral: 'Clínica Psiquiátrica Geral',
+    diagnostico: 'Psicopatologia e Diagnóstico',
+    etica_legal: 'Ética, Forense e Legislação',
+    psiquiatria_forense: 'Ética, Forense e Legislação',
+    neurociencias_diagnostico: 'Neurociência',
+    psiquiatria_geriatrica: 'Psicogeriatria',
 };
 
 export const THEME_COLORS: Record<PsychiatryTheme, string> = {

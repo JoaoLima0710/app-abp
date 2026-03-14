@@ -5,6 +5,15 @@ import { Simulation, Question, PsychiatryTheme, SubthemeStats, THEME_LABELS, THE
  * Separa a lógica de negócios da camada de UI e Store (Zustand).
  */
 
+export const LEGACY_THEME_MAP: Record<string, PsychiatryTheme> = {
+    diagnostico: 'psicopatologia_diagnostico',
+    etica_legal: 'etica_forense_legal',
+    psiquiatria_forense: 'etica_forense_legal',
+    neurociencias_diagnostico: 'neurociencias',
+    psiquiatria_geriatrica: 'psicogeriatria',
+    // 'geral' will not be mapped since it has no direct single equivalent, but we will remove the '(Legado)' label in themes.ts
+};
+
 export interface ThemeAggregatedStats {
     attempts: number[];
     correct: number;
@@ -49,9 +58,10 @@ export function aggregateCoverageStats(allQuestions: Question[], sims: Simulatio
         }
     }
 
-    return Object.entries(byTheme).map(([theme, { total }]) => {
-        const answered = answeredByTheme[theme]?.answered.size || 0;
-        const correct = answeredByTheme[theme]?.correct || 0;
+    return Object.entries(byTheme).map(([rawTheme, { total }]) => {
+        const theme = LEGACY_THEME_MAP[rawTheme] || rawTheme;
+        const answered = answeredByTheme[rawTheme]?.answered.size || 0;
+        const correct = answeredByTheme[rawTheme]?.correct || 0;
         return {
             theme,
             label: THEME_LABELS[theme as PsychiatryTheme] || theme,
@@ -74,7 +84,9 @@ export function aggregateThemeStats(simulations: Simulation[]): Record<string, T
     for (const sim of simulations) {
         if (!sim.completedAt) continue;
 
-        for (const [theme, stats] of Object.entries(sim.stats.byTheme || {})) {
+        for (const [rawTheme, stats] of Object.entries(sim.stats.byTheme || {})) {
+            const theme = LEGACY_THEME_MAP[rawTheme] || rawTheme;
+            
             if (!themeData[theme]) {
                 themeData[theme] = { attempts: [], correct: 0, total: 0, errors: 0 };
             }
@@ -107,7 +119,7 @@ export function aggregateSubthemeStats(
             if (sq.userAnswer) {
                 const originalQ = questionMap.get(sq.questionId);
                 if (originalQ && originalQ.subtheme) {
-                    const theme = originalQ.theme;
+                    const theme = LEGACY_THEME_MAP[originalQ.theme] || originalQ.theme;
                     const subtheme = originalQ.subtheme;
 
                     if (!subthemeData[theme]) subthemeData[theme] = {};

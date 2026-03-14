@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { GlobalAiTutor } from "@/components/GlobalAiTutor";
 
 interface AppLayoutProps {
     children: React.ReactNode;
@@ -26,11 +27,12 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                             </div>
                         )}
                     </header>
-                    <div className="mx-auto max-w-[1200px] p-4 md:p-6 lg:p-8">
+                    <div className="mx-auto max-w-[1200px] p-4 md:p-6 lg:p-8 relative">
                         {children}
                     </div>
                 </main>
             </div>
+            <GlobalAiTutor />
         </SidebarProvider>
     );
 }

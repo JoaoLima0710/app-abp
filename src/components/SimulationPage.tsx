@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulationStore } from '../store/simulationStore';
+import { useUserStore } from '../store/userStore';
+import { useAiTutor } from '../hooks/useAiTutor';
 import { AnswerOption, THEME_LABELS } from '../types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +41,9 @@ export default function SimulationPage() {
         getCurrentSimulationQuestion,
         getProgress,
     } = useSimulationStore();
+
+    const { progress: userProgress, loadUserData } = useUserStore();
+    const { syncSocraticDossier } = useAiTutor();
 
     const [elapsedTime, setElapsedTime] = useState(0);
 
@@ -110,6 +115,42 @@ export default function SimulationPage() {
 
     const handleFinish = async () => {
         await finishSimulation();
+        
+        // Background AI Dossier Synthesis
+        try {
+            const wrongQuestionsData = simulation.questions
+                .filter(sq => sq.userAnswer && !sq.isCorrect)
+                .map(sq => {
+                    const fullQ = questions.find(q => q.id === sq.questionId);
+                    if (!fullQ) return null;
+                    const correctOptionText = (fullQ.options as any)[fullQ.correctAnswer] || fullQ.correctAnswer;
+                    return {
+                        theme: THEME_LABELS[fullQ.theme] || fullQ.theme,
+                        statement: fullQ.statement.substring(0, 300), // Limiting length to save tokens
+                        correctAnswer: correctOptionText
+                    };
+                })
+                .filter(Boolean);
+
+            if (wrongQuestionsData.length > 0) {
+                // Determine current dossier, fallback to a default if empty
+                const currentDossier = userProgress?.aiDossier || 'O aluno não possui dados históricos.';
+                
+                // Fire and forget (don't block UI navigation)
+                syncSocraticDossier(currentDossier, wrongQuestionsData).then(async (newDossier) => {
+                    if (newDossier) {
+                        const { updateUserProgress, getUserProgress } = await import('../db/database');
+                        const currentData = await getUserProgress();
+                        if (currentData) {
+                            await updateUserProgress({ ...currentData, aiDossier: newDossier });
+                            // Optionally reload user data so the Store reflects the DB
+                            loadUserData();
+                        }
+                    }
+                }).catch(e => console.error("Background dossier sync failed", e));
+            }
+        } catch(e) { /* Safe fail */ }
+
         navigate(`/simulado/${simulation.id}/resultado`);
     };
 

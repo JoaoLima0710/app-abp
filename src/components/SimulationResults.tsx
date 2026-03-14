@@ -40,16 +40,19 @@ export default function SimulationResults() {
     const { loadUserData } = useUserStore();
 
     useEffect(() => {
-        if (!simulation?.completedAt) {
+        // Only redirect if simulation is explicitly null (meaning store was reset)
+        // If it exists but lacks completedAt, it might just be finishing up the state update
+        if (simulation === null) {
             navigate('/');
             return;
         }
-        loadUserData();
-
-        // Safety guard: simulation.questions might be missing if sync is incomplete
-        if (simulation.questions) {
-            const questionIds = simulation.questions.map((q) => q.questionId);
-            if (questionIds.length > 0) addCardsToReview(questionIds);
+        
+        if (simulation?.completedAt) {
+            loadUserData();
+            if (simulation.questions) {
+                const questionIds = simulation.questions.map((q) => q.questionId);
+                if (questionIds.length > 0) addCardsToReview(questionIds);
+            }
         }
     }, [simulation, navigate, loadUserData]);
 
@@ -105,7 +108,13 @@ export default function SimulationResults() {
         requestAnimationFrame(animate);
     }, [simulation]);
 
-    if (!simulation) return null;
+    if (!simulation) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     const { stats } = simulation;
 
@@ -230,13 +239,13 @@ export default function SimulationResults() {
                     </CardHeader>
                     <CardContent className="space-y-3 px-4 pb-4 lg:px-6 lg:pb-6">
                         {stats.byTheme ? Object.entries(stats.byTheme).map(([theme, data]) => {
-                            const acc = data?.accuracy || 0;
+                            const acc = (data as any)?.accuracy || 0;
                             return (
                                 <div key={theme} className="space-y-1">
                                     <div className="flex items-center justify-between text-[11px] lg:text-xs">
                                         <span className="font-medium">{THEME_LABELS[theme as keyof typeof THEME_LABELS] || theme}</span>
                                         <Badge variant={acc >= 70 ? 'default' : acc >= 50 ? 'secondary' : 'destructive'} className="text-[10px] lg:text-xs">
-                                            {data?.correct}/{data?.total} ({acc.toFixed(0)}%)
+                                            {(data as any)?.correct}/{(data as any)?.total} ({acc.toFixed(0)}%)
                                         </Badge>
                                     </div>
                                     <Progress value={acc} className="h-1.5" />

@@ -7,7 +7,11 @@ export function useAiTutor() {
     const [error, setError] = useState<string | null>(null);
     const [provider, setProvider] = useState<string | null>(null);
 
-    const askAi = async (question: string, context: string, action: 'explain' | 'study_guide' | 'generate_flashcards' | 'analyze_plan' = 'explain'): Promise<any> => {
+    const askAi = async (
+        question: string, 
+        context: string, 
+        action: 'explain' | 'study_guide' | 'generate_flashcards' | 'analyze_plan' | 'sync_dossier' = 'explain'
+    ): Promise<any> => {
         setIsLoading(true);
         setError(null);
         setExplanation(null);
@@ -77,8 +81,33 @@ export function useAiTutor() {
         }
     };
 
+    /**
+     * Synthesizes newly missed questions into the rolling AI Dossier paragraph.
+     * Normally called in the background after finishing a simulation.
+     */
+    const syncSocraticDossier = async (currentDossier: string, missedQuestionsData: any[]): Promise<string | null> => {
+        if (!navigator.onLine || missedQuestionsData.length === 0) return null;
+
+        const context = `Dossiê Atual do Aluno:\n"${currentDossier}"\n\nErros Recentes Submetidos:\n${missedQuestionsData.map(q => `- Tema: ${q.theme}\n  Pergunta: ${q.statement}\n  Resposta Correta: ${q.correctAnswer}`).join('\n\n')}`;
+        
+        const prompt = `Sintetize as novas falhas junto com o dossiê antigo em um ÚNICO parágrafo (máx 500 palavras) sobre o perfil de aprendizado clínico do aluno. 
+PRIORIDADE ABSOLUTA: 
+1. Mantenha um tom descritivo de "prontuário" sobre as fraquezas dele. 
+2. NUNCA remova uma fraqueza teórica do dossiê antigo a menos que o espaço exija compressão (nesse caso agrupe problemas similares, ex: "Dificuldade na família do Espectro da Esquizofrenia"). 
+3. Retorne APENAS o texto do novo dossiê, sem saudações ou comentários.`;
+
+        try {
+            const newDossier = await askAi(prompt, context, 'sync_dossier');
+            return typeof newDossier === 'string' ? newDossier.trim() : null;
+        } catch (e) {
+            console.error("Failed to sync AI dossier:", e);
+            return null; // Ensure we don't accidentally wipe it out if it fails
+        }
+    };
+
     return {
         askAi,
+        syncSocraticDossier,
         isLoading,
         explanation,
         error,
