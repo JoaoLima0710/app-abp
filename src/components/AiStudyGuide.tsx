@@ -46,13 +46,13 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                         missedIds.push(q.questionId);
                     }
                 }
-                if (missedIds.length >= 20) break; // Look at recent errors
+                if (missedIds.length >= 50) break; // Look at recent errors
             }
 
             if (missedIds.length === 0) return '';
 
             const questions = await db.questions.where('id').anyOf(missedIds).toArray();
-            const themeMistakes = questions.filter(q => q.theme === theme).slice(0, 5);
+            const themeMistakes = questions.filter(q => q.theme === theme).slice(0, 15);
 
             if (themeMistakes.length === 0) return '';
 
@@ -64,6 +64,11 @@ export function AiStudyGuide({ theme }: AiStudyGuideProps) {
                     contextStr += `   Resposta Correta: ${correctText}\n`;
                 }
             });
+
+            // Truncate at ~6000 chars to avoid blowing up the LLM context window limits
+            if(contextStr.length > 6000) {
+                contextStr = contextStr.substring(0, 6000) + '\n...[Lista truncada por limite de texto]';
+            }
 
             return contextStr;
         } catch (err) {

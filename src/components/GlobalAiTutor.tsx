@@ -51,17 +51,23 @@ export function GlobalAiTutor() {
                             missedIds.push(q.questionId);
                         }
                     }
-                    if (missedIds.length >= 15) break;
+                    if (missedIds.length >= 40) break;
                 }
 
                 if (missedIds.length === 0) return 'O aluno ainda não tem erros recentes registrados.';
 
                 const questions = await db.questions.where('id').anyOf(missedIds).toArray();
                 let text = '';
-                questions.slice(0, 15).forEach((q, idx) => {
+                questions.slice(0, 40).forEach((q, idx) => {
                     const themeName = THEME_LABELS[q.theme as keyof typeof THEME_LABELS] || q.theme;
                     text += `${idx + 1}. [${themeName} - ${q.subtheme}] Falhou na questão: "${q.statement}". A resposta correta era: "${q.options[q.correctAnswer]}".\n`;
                 });
+                
+                // Truncate at ~6000 chars to avoid blowing up the LLM context window limits
+                if(text.length > 6000) {
+                    text = text.substring(0, 6000) + '\n...[Lista truncada por limite de texto]';
+                }
+                
                 return text;
             } catch (err) {
                 console.error(err);
@@ -114,7 +120,7 @@ export function GlobalAiTutor() {
 Estatísticas Detalhadas por Tema e Subtema (USE ISSO PARA BASEAR SUAS RECOMENDAÇÕES):
 ${detailedStats || 'Ainda não há dados detalhados. O aluno é novo.'}
 
-Últimas 15 Questões Que o Aluno Errou nos Simulados (Exame Cirúrgico das Falhas Teóricas):
+Últimas 40 Questões Que o Aluno Errou nos Simulados (Exame Cirúrgico das Falhas Teóricas):
 ${recentMistakesText}
 
 Histórico da Conversa:
