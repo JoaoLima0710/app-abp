@@ -44,16 +44,40 @@ export function GlobalAiTutor() {
             // Build the intelligent context string
             const weakThemes = progress?.trends?.weakThemes?.map(t => THEME_LABELS[t] || t).join(', ') || 'Nenhum identificado ainda';
             const strongThemes = progress?.trends?.strongThemes?.map(t => THEME_LABELS[t] || t).join(', ') || 'Nenhum identificado ainda';
-            const accuracy = progress?.overallAccuracy ? progress.overallAccuracy.toFixed(0) + '%' : 'N/A';
-            const aiDossier = progress?.aiDossier || 'O aluno é recém-chegado. Não há dossiê longo de fraquezas teóricas.';
+            const accuracy = progress?.overallAccuracy ? progress.overallAccuracy.toFixed(0) + '%' : '0%';
+            const totalQuestions = progress?.totalQuestionsAnswered || 0;
+            const totalSimulations = progress?.totalSimulations || 0;
+            
+            let detailedStats = '';
+            if (progress?.byTheme) {
+                Object.entries(progress.byTheme).forEach(([themeKey, data]) => {
+                    if (!data) return;
+                    const themeName = THEME_LABELS[themeKey as keyof typeof THEME_LABELS] || themeKey;
+                    detailedStats += `- ${themeName}: ${data.accuracy.toFixed(0)}% de acerto.`;
+                    
+                    if (data.subthemeStats) {
+                        const worstSubthemes = Object.entries(data.subthemeStats)
+                            .filter(([_, stats]) => stats.errors > 0)
+                            .sort((a, b) => b[1].errors - a[1].errors)
+                            .map(([name, stats]) => `${name} (${stats.errors}/${stats.total} erros)`)
+                            .slice(0, 3);
+                            
+                        if (worstSubthemes.length > 0) {
+                            detailedStats += ` Subtemas críticos: ${worstSubthemes.join(', ')}.`;
+                        }
+                    }
+                    detailedStats += '\n';
+                });
+            }
 
             let promptContext = `Contexto de Desempenho do Aluno:
+- Aluno já respondeu ${totalQuestions} questões em ${totalSimulations} simulados.
 - Acerto Geral Atual: ${accuracy}
 - Pontos Fortes: ${strongThemes}
 - Pontos Fracos (Matérias Críticas): ${weakThemes}
 
-Dossiê de Fraquezas Comportamentais e Teóricas (Histórico de Erros):
-${aiDossier}
+Estatísticas Detalhadas por Tema e Subtema (USE ISSO PARA BASEAR SUAS RECOMENDAÇÕES):
+${detailedStats || 'Ainda não há dados detalhados. O aluno é novo.'}
 
 Histórico da Conversa:
 `;
