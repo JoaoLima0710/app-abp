@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useUserStore } from '../store/userStore';
 import { useAiTutor } from '../hooks/useAiTutor';
 import { THEME_LABELS } from '../types';
+import { db } from '../db/database';
 import { Bot, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,38 @@ export function GlobalAiTutor() {
         const userMsg = message.trim();
         setMessage('');
 
+        // Fetch exactly what the user got wrong recently
+        const fetchRecentMistakesText = async () => {
+            try {
+                const simulations = await db.simulations.toArray();
+                simulations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+                
+                const missedIds: string[] = [];
+                for (const sim of simulations) {
+                    if (!sim.completedAt) continue;
+                    for (const q of sim.questions) {
+                        if (q.isCorrect === false && q.userAnswer) {
+                            missedIds.push(q.questionId);
+                        }
+                    }
+                    if (missedIds.length >= 15) break;
+                }
+
+                if (missedIds.length === 0) return 'O aluno ainda não tem erros recentes registrados.';
+
+                const questions = await db.questions.where('id').anyOf(missedIds).toArray();
+                let text = '';
+                questions.slice(0, 15).forEach((q, idx) => {
+                    const themeName = THEME_LABELS[q.theme as keyof typeof THEME_LABELS] || q.theme;
+                    text += `${idx + 1}. [${themeName} - ${q.subtheme}] Falhou na questão: "${q.statement}". A resposta correta era: "${q.options[q.correctAnswer]}".\n`;
+                });
+                return text;
+            } catch (err) {
+                console.error(err);
+                return 'Houve um erro ao buscar o histórico de questões.';
+            }
+        };
+
         // Add user msg to UI immediately
         const updatedHistory: ChatMessage[] = [...history, { role: 'user', content: userMsg }];
         setHistory(updatedHistory);
@@ -69,6 +102,8 @@ export function GlobalAiTutor() {
                     detailedStats += '\n';
                 });
             }
+            
+            const recentMistakesText = await fetchRecentMistakesText();
 
             let promptContext = `Contexto de Desempenho do Aluno:
 - Aluno já respondeu ${totalQuestions} questões em ${totalSimulations} simulados.
@@ -78,6 +113,9 @@ export function GlobalAiTutor() {
 
 Estatísticas Detalhadas por Tema e Subtema (USE ISSO PARA BASEAR SUAS RECOMENDAÇÕES):
 ${detailedStats || 'Ainda não há dados detalhados. O aluno é novo.'}
+
+Últimas 15 Questões Que o Aluno Errou nos Simulados (Exame Cirúrgico das Falhas Teóricas):
+${recentMistakesText}
 
 Histórico da Conversa:
 `;
