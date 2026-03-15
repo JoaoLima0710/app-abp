@@ -1,6 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { Question, Simulation, UserProgress, CustomFlashcard } from '../types';
 import { syncSimulations, syncUserProgress } from './cloudSync';
+import { LEGACY_THEME_MAP } from '../lib/statistics';
 
 // ── Fisher-Yates (Knuth) shuffle — O(n), uniformly random ──
 function fisherYatesShuffle<T>(arr: T[]): T[] {
@@ -150,7 +151,10 @@ export async function getRandomQuestions(count: number, themeOrFilter?: string |
     let questions: Question[];
 
     if (filter.theme) {
-        questions = await db.questions.where('theme').equals(filter.theme).toArray();
+        // Collect all target themes (modern + any legacy keys that map to this modern theme)
+        const legacyThemes = Object.keys(LEGACY_THEME_MAP).filter(k => LEGACY_THEME_MAP[k] === filter.theme);
+        const allTargetThemes = [filter.theme, ...legacyThemes];
+        questions = await db.questions.where('theme').anyOf(allTargetThemes).toArray();
     } else {
         questions = await db.questions.toArray();
     }
@@ -171,10 +175,13 @@ export async function getRandomQuestions(count: number, themeOrFilter?: string |
     const seen = getSeenQuestionIds();
     let unseen = questions.filter(q => !seen.has(q.id));
 
-    // If not enough unseen questions remain, reset the cycle
+    // If not enough unseen questions remain, recycle only the current scope
     if (unseen.length < count) {
-        resetSeenQuestions();
-        unseen = questions; // all available again
+        const scopeIds = new Set(questions.map(q => q.id));
+        const newSeenList = [...seen].filter(id => !scopeIds.has(id));
+        localStorage.setItem(SEEN_KEY, JSON.stringify(newSeenList));
+        
+        unseen = questions; // all available again for this specific filter scope
     }
 
     // Fisher-Yates shuffle (uniform randomness)
