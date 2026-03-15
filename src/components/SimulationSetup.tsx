@@ -38,7 +38,14 @@ export default function SimulationSetup() {
         navigate('/simulado/active');
     };
 
-    const themes = Object.entries(THEME_LABELS) as [PsychiatryTheme, string][];
+    // Deduplicate themes by their display label so legacy clones don't appear twice
+    const uniqueThemes = Object.entries(THEME_LABELS).reduce((acc, [key, label]) => {
+        if (!acc.find(t => t.label === label)) {
+            acc.push({ key: key as PsychiatryTheme, label });
+        }
+        return acc;
+    }, [] as { key: PsychiatryTheme; label: string }[]);
+
     const activeSimulation = simulations.find(s => !s.completedAt);
 
     return (
@@ -140,7 +147,7 @@ export default function SimulationSetup() {
                             </CardHeader>
                             <CardContent className="px-4 pb-4 lg:px-6 lg:pb-6">
                                 <div className="flex flex-wrap gap-1.5 lg:gap-2">
-                                    {themes.map(([key, label]) => (
+                                    {uniqueThemes.map(({ key, label }) => (
                                         <Badge
                                             key={key}
                                             variant={focusTheme === key ? 'default' : 'outline'}
