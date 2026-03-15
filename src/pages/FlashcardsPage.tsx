@@ -14,6 +14,7 @@ import { db } from '@/db/database';
 import { CustomFlashcard } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { THEME_SUBDIVISIONS_V2 } from '@/db/taxonomy_definitions';
+import { LEGACY_THEME_MAP } from '../lib/statistics';
 
 const allQuestions = flashcardsOriginais;
 
@@ -53,8 +54,9 @@ const FlashcardsPage: React.FC = () => {
         const byTheme: Record<string, { total: number; reviewed: number }> = {};
 
         for (const q of allQuestions) {
-            const theme = q.theme;
-            if (!theme) continue;
+            const rawTheme = q.theme;
+            if (!rawTheme) continue;
+            const theme = LEGACY_THEME_MAP[rawTheme] || rawTheme;
             if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
             byTheme[theme].total++;
             // Check if this question has been reviewed (has repetition > 0)
@@ -64,8 +66,9 @@ const FlashcardsPage: React.FC = () => {
         }
 
         for (const c of customCards) {
-            const theme = c.theme;
-            if (!theme) continue;
+            const rawTheme = c.theme;
+            if (!rawTheme) continue;
+            const theme = LEGACY_THEME_MAP[rawTheme] || rawTheme;
             if (!byTheme[theme]) byTheme[theme] = { total: 0, reviewed: 0 };
             byTheme[theme].total++;
 
